@@ -1,0 +1,4 @@
+node_modules/*
+browser/*
+dist/*
+webpack.config.js
