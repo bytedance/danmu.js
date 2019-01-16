@@ -1,13 +1,13 @@
 import util from './utils/util'
 
 /**
- * [Buulet 弹幕构造类]
+ * [Bullet 弹幕构造类]
  * @type {Class}
  */
 class Bullet {
   constructor (danmu, options) {
     this.danmu = danmu
-    this.duration = options.duration / 1000
+    this.duration = options.duration
     this.id = options.id
     this.container = danmu.container
     this.start = options.start
@@ -69,13 +69,29 @@ class Bullet {
       if(isFullscreen) {
         let pastDuration = (new Date().getTime() - self.moveTime) / 1000
         let pastS = pastDuration * this.moveV
-        let nowS = (self.moveMoreS - pastS) / (self.moveContainerWidth + self.width) * (containerPos.width + self.width)
-        this.el.style.left = `${nowS - self.width}px`
+        let ratio = 0
+        let nowS = 0
+        // console.log('self.moveMoreS: ' + self.moveMoreS)
+        // console.log('pastS: ' + pastS)
+        if(self.moveMoreS - pastS >= 0) {
+          ratio = (self.moveMoreS - pastS) / self.moveContainerWidth
+          nowS = ratio * containerPos.width
+        } else {
+          nowS = self.moveMoreS - pastS
+        }
+        // console.log('nowS: ' + nowS)
+        this.el.style.left = `${nowS}px`
       } else {
         this.el.style.left = `${this.el.getBoundingClientRect().left - containerPos.left}px`
       }
       this.el.style.transform = 'translateX(0px) translateY(0px) translateZ(0px)'
       this.el.style.transition = 'transform 0s linear 0s'
+    } else {
+      if(!this.pastDuration || !this.startTime) {
+        this.pastDuration = 1
+      } else {
+        this.pastDuration = this.pastDuration + new Date().getTime() - this.startTime
+      }
     }
   }
   startMove (containerPos) {
@@ -93,9 +109,8 @@ class Bullet {
         if(self.mode === 'scroll') {
           let containerPos_ = self.danmu.container.getBoundingClientRect()
           let bulletPos = self.el.getBoundingClientRect()
-          if (bulletPos && bulletPos.right <= containerPos_.left) {
+          if (bulletPos && bulletPos.right <= containerPos_.left + 100) {
             self.status = 'end'
-            console.log('1')
             self.remove()
           } else {
             self.pauseMove(containerPos_)
@@ -103,23 +118,21 @@ class Bullet {
           }
         } else {
           self.status = 'end'
-          console.log('2')
           self.remove()
         }
       }
     }
     if(this.mode === 'scroll') {
-      this.moveV = (containerPos.width + this.width) / this.duration
+      this.moveV = (containerPos.width + this.width) / this.duration * 1000
       let leftDuration = (self.el.getBoundingClientRect().right - containerPos.left) / this.moveV
-      this.leftDuration = leftDuration
       this.el.style.transition = `transform ${leftDuration}s linear 0s`
       setTimeout(function () {
         if (self.el) {
           self.el.style.transform = `translateX(-${self.el.getBoundingClientRect().right - containerPos.left}px) translateY(0px) translateZ(0px)`
           self.moveTime = new Date().getTime()
-          self.moveMoreS = self.el.getBoundingClientRect().right - containerPos.left
+          self.moveMoreS = self.el.getBoundingClientRect().left - containerPos.left
           self.moveContainerWidth = containerPos.width
-          self.removeTimer = setTimeout(func, leftDuration * 1000 + 1000)
+          self.removeTimer = setTimeout(func, leftDuration * 1000)
         }
       }, 20)
     } else {
@@ -127,11 +140,16 @@ class Bullet {
       // this.el.style.height = `${this.height}px`
       this.el.style.left = '50%'
       this.el.style.margin = `0 0 0 -${this.width/2}px`
-      this.removeTimer = setTimeout(func, self.duration * 1000 + 1000)
+      if(!this.pastDuration) {
+        this.pastDuration = 1
+      }
+      let leftDuration = this.duration >= this.pastDuration ? this.duration - this.pastDuration : 0
+      this.removeTimer = setTimeout(func, leftDuration)
+      this.startTime = new Date().getTime()
     }
   }
   remove () {
-    console.log('remove')
+    // console.log('remove')
     let self = this
     if (this.removeTimer) {
       clearTimeout(this.removeTimer)
