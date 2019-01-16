@@ -26,6 +26,8 @@ class Main {
       if (item.id === rdata.bullet.id) {
         self.queue.splice(index, 1)
         return true
+      } else {
+        return false
       }
     })
   }
@@ -45,7 +47,7 @@ class Main {
   start () {
     let self = this
     this.status = 'playing'
-    this.queue.length = 0
+    this.queue = []
     this.container.innerHTML = ''
     this.channel.resetWithCb(self.init, self)
   }
@@ -55,7 +57,7 @@ class Main {
     clearInterval(self.retryTimer)
     self.retryTimer = null
     self.channel.reset()
-    self.queue.length = 0
+    this.queue = []
     self.container.innerHTML = ''
   }
   play () {
@@ -66,7 +68,15 @@ class Main {
       ['scroll', 'top', 'bottom'].forEach( key => {
         for (let i = 0; i < channels.length; i++) {
           channels[i].queue[key].forEach(item => {
-            item.startMove(containerPos)
+            if(!item.resized) {
+              item.startMove(containerPos)
+              item.resized = true
+            }
+          })
+        }
+        for (let i = 0; i < channels.length; i++) {
+          channels[i].queue[key].forEach(item => {
+            item.resized = false
           })
         }
       })
@@ -104,7 +114,10 @@ class Main {
     let self = this, danmu = this.danmu, currentTime = util.formatTime(danmu.player.currentTime)
     let bullet, interval = self.interval, channel = self.channel, result
     let list = self.data.filter(item => {
-      return item.start - interval <= currentTime && currentTime <= item.start + interval
+      if(!item.start && self.danmu.hideArr.indexOf(item.mode) < 0) {
+        item.start = currentTime
+      }
+      return self.danmu.hideArr.indexOf(item.mode) < 0 && item.start - interval <= currentTime && currentTime <= item.start + interval
     })
     if (list.length > 0) {
       list.forEach(item => {

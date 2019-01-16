@@ -12,8 +12,15 @@ class DanmuJs {
       },
       comments: []
     }, options)
+    this.hideArr = []
     EventEmitter(this)
     let self = this
+    this.config.comments.forEach(comment => {
+      comment.duration = comment.duration < 5000 ? 5000 : comment.duration
+      if(!comment.mode) {
+        comment.mode = 'scroll'
+      }
+    })
     if(this.config.container && this.config.container.nodeType === 1) {
       this.container = this.config.container
     } else {
@@ -69,8 +76,68 @@ class DanmuJs {
   }
 
   sendComment (comment) {
-    if (comment && comment.id && comment.duration && comment.start && (comment.el || comment.txt)) {
+    if (comment && comment.id && comment.duration && (comment.el || comment.txt)) {
+      comment.duration = comment.duration < 5000 ? 5000 : comment.duration
       this.bulletBtn.main.data.push(comment)
+    }
+  }
+
+  setCommentDuration (id, duration) {
+    let containerPos_ = this.container.getBoundingClientRect()
+    if (id && duration) {
+      duration = duration < 5000 ? 5000 : duration
+      this.bulletBtn.main.data.some(data => {
+        if(data.id === id) {
+          data.duration = duration
+          return true
+        } else {
+          return false
+        }
+      })
+      this.bulletBtn.main.queue.some(item => {
+        if(item.id === id) {
+          item.duration = duration
+          item.pauseMove(containerPos_)
+          item.startMove(containerPos_)
+          return true
+        } else {
+          return false
+        }
+      })
+    }
+  }
+
+  setAllDuration (mode = 'scroll', duration) {
+    let containerPos_ = this.container.getBoundingClientRect()
+    if (duration) {
+      duration = duration < 5000 ? 5000 : duration
+      this.bulletBtn.main.data.forEach(data => {
+        if(mode === data.mode) {
+          data.duration = duration
+        }
+      })
+      this.bulletBtn.main.queue.forEach(item => {
+        if(mode === item.mode) {
+          item.duration = duration
+          item.pauseMove(containerPos_)
+          item.startMove(containerPos_)
+        }
+      })
+    }
+  }
+
+  hide (mode = 'scroll') {
+    if(this.hideArr.indexOf(mode) < 0) {
+      this.hideArr.push(mode)
+    }
+    let arr = this.bulletBtn.main.queue.filter(item => mode === item.mode)
+    arr.forEach(item => item.remove())
+  }
+
+  show (mode = 'scroll') {
+    let index = this.hideArr.indexOf(mode)
+    if(index > -1) {
+      this.hideArr.splice(index, 1)
     }
   }
 }

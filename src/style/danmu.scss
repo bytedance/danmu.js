@@ -1,5 +1,7 @@
 .danmu {
   overflow: hidden;
+  user-select: none;
+  -ms-user-select: none;
   > * {
     position: absolute;
     white-space: nowrap;

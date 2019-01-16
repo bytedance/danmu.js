@@ -31,14 +31,17 @@ class Channel {
         self.containerHeight = self.containerPos.height
         self.containerLeft = self.containerPos.left
         self.containerRight = self.containerPos.right
-        self.resize()
-      }
-    }, 50);
-    ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'].forEach(item => {
-      document.addEventListener(item, function () {
         self.resize(true)
-      })
-    })
+      }
+    }, 50)
+    // ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'].forEach(item => {
+    //   document.addEventListener(item, function () {
+    //     console.log(item)
+    //     setTimeout(function () {
+    //       self.resize(true)
+    //     }, 20)
+    //   })
+    // })
   }
   resize (isFullscreen = false) {
     let container = this.danmu.container
@@ -99,8 +102,11 @@ class Channel {
             self.channels[i].queue[key].forEach(item => {
               if (item.el) {
                 channels[i].queue[key].push(item)
-                item.pauseMove(self.containerPos, isFullscreen)
-                item.startMove(self.containerPos)
+                if(!item.resized) {
+                  item.pauseMove(self.containerPos, isFullscreen)
+                  item.startMove(self.containerPos)
+                  item.resized = true
+                }
               }
             })
           })
@@ -116,11 +122,24 @@ class Channel {
                 }
                 item.topInit()
               }
-              item.pauseMove(self.containerPos, isFullscreen)
-              item.startMove(self.containerPos)
+              if(!item.resized) {
+                item.pauseMove(self.containerPos, isFullscreen)
+                item.startMove(self.containerPos)
+                item.resized = true
+              }
             }
           })
         }
+        for (let i = 0; i < channels.length; i++) {
+          ['scroll', 'top', 'bottom'].forEach(key => {
+            channels[i].queue[key].forEach(item => {
+              // console.log('resized 重置:' + item)
+              item.resized = false
+            })
+          })
+        }
+        self.channels = channels
+        self.channelHeight = fontSize
       } else if (self.channels && self.channels.length > channels.length) {
         for (let i = 0; i < channels.length; i++) {
           channels[i] = {
@@ -158,8 +177,11 @@ class Channel {
                       item.topInit()
                     }
                   }
-                  item.pauseMove(self.containerPos, isFullscreen)
-                  item.startMove(self.containerPos)
+                  if(!item.resized) {
+                    item.pauseMove(self.containerPos, isFullscreen)
+                    item.startMove(self.containerPos)
+                    item.resized = true
+                  }
                 }
                 self.channels[num].queue[key].splice(index, 1)
               })
@@ -174,9 +196,17 @@ class Channel {
             })
           })
         }
+        for (let i = 0; i < channels.length; i++) {
+          ['scroll', 'top', 'bottom'].forEach(key => {
+            channels[i].queue[key].forEach(item => {
+              // console.log('resized 重置:' + item)
+              item.resized = false
+            })
+          })
+        }
+        self.channels = channels
+        self.channelHeight = fontSize
       }
-      self.channels = channels
-      self.channelHeight = fontSize
     }, 10)
   }
   addBullet (bullet) {
@@ -407,6 +437,7 @@ class Channel {
     }
   }
   removeBullet (bullet) {
+    // console.log('removeBullet')
     let channels = this.channels
     let channelId = bullet.channel_id
     let channel
@@ -419,6 +450,8 @@ class Channel {
           if (item.id === bullet.id) {
             i = index
             return true
+          } else {
+            return false
           }
         })
         if (i > -1) {
