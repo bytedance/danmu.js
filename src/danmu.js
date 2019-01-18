@@ -82,6 +82,30 @@ class DanmuJs {
     }
   }
 
+  setCommentID (oldID, newID) {
+    let containerPos_ = this.container.getBoundingClientRect()
+    if (oldID && newID) {
+      this.bulletBtn.main.data.some(data => {
+        if(data.id === oldID) {
+          data.id = newID
+          return true
+        } else {
+          return false
+        }
+      })
+      this.bulletBtn.main.queue.some(item => {
+        if(item.id === oldID) {
+          item.id = newID
+          item.pauseMove(containerPos_)
+          item.startMove(containerPos_)
+          return true
+        } else {
+          return false
+        }
+      })
+    }
+  }
+
   setCommentDuration (id, duration) {
     let containerPos_ = this.container.getBoundingClientRect()
     if (id && duration) {
