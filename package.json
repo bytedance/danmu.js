@@ -1,6 +1,6 @@
 {
   "name": "danmu.js",
-  "version": "0.0.1-beta.7",
+  "version": "0.0.1-beta.8",
   "description": "HTML5 danmu (danmaku) plugin for any DOM element",
   "main": "./dist/index.js",
   "scripts": {
@@ -40,6 +40,10 @@
     "postcss-loader": "^2.1.5",
     "sass-loader": "^7.0.3",
     "style-loader": "^0.21.0"
+  },
+  "repository": {
+      "type": "git",
+      "url": "git+https://github.com/bytedance/danmu.js"
   },
   "author": "zhangxin.frontend@bytedance.com",
   "license": "MIT"
