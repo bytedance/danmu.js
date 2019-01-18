@@ -33,12 +33,7 @@ class DanmuJs {
         self.container.style[key] = style[key]
       })
     }
-    if(this.config.player) {
-      this.player = this.config.player
-    } else {
-      this.emit('error', 'player can\'t be empty')
-      return false
-    }
+    this.player = this.config.player
     util.addClass(this.container, 'danmu')
     this.bulletBtn = new Control(this);
     ['touchend', 'click', 'dblclick'].forEach(item => {
@@ -154,7 +149,7 @@ class DanmuJs {
     if(this.hideArr.indexOf(mode) < 0) {
       this.hideArr.push(mode)
     }
-    let arr = this.bulletBtn.main.queue.filter(item => mode === item.mode)
+    let arr = this.bulletBtn.main.queue.filter(item => mode === item.mode || (mode === 'color' && item.color))
     arr.forEach(item => item.remove())
   }
 

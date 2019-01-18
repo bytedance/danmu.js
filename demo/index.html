@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>danmu.js</title>
+    <style>
+      html {
+       width: 100%;
+       height: 100%;
+      }
+      body {
+       width: 100%;
+       height: 100%;
+      }
+      #vs {
+        position: absolute;
+        left: 0;
+        width: 100%;
+        height: 50%;
+        z-index: 9999
+      }
+      #mse {
+        position: absolute;
+        left: 0;
+        width: 100%;
+        height: 100%;
+      }
+      #btnwrap {
+        position: absolute;
+        left: 0;
+        bottom: 20%;
+      }
+    </style>
+</head>
+<body>
+    <div id="vs"></div>
+    <video id="mse" autoplay=true muted playsinline controls="controls">
+      <source src="//s1.pstatp.com/cdn/expire-1-M/byted-player-videos/1.0.0/xgplayer-demo.mp4" type="video/mp4">
+      your browser does not support the video tag
+    </video>
+    <div id="btnwrap">
+      <div>
+        <button onclick="start()">弹幕开始</button>
+        <button onclick="pause()">弹幕暂停</button>
+        <button onclick="play()">弹幕播放</button>
+        <button onclick="stop()">弹幕结束</button>
+      </div>
+      <div>
+        <input type="text" id="comment" placeholder="输入弹幕内容"/>
+        <button onclick="sendComment()">发送弹幕</button>
+      </div>
+      <div>
+        <input type="text" id="hidetype" placeholder="输入要屏蔽的弹幕类型"/>
+        <button onclick="hide()">隐藏</button>
+        <button onclick="show()">显示</button>
+      </div>
+      <!-- <div>
+        <input type="text" id="commentid" placeholder="输入弹幕id"/>
+        <input type="text" id="duration" placeholder="输入弹幕duration"/>
+        <input type="text" id="commentnewid" placeholder="输入弹幕新id"/>
+        <button onclick="setCommentDuration()">设置某个弹幕duration</button>
+        <button onclick="setAllDuration()">设置所有弹幕duration</button>
+        <button onclick="setCommentID()">设置某个弹幕id</button>
+      </div> -->
+
+      <button onclick="toggleFullscreen()">切换全屏状态</button>
+    </div>
+    <script src="../browser/index.js" charset="utf-8"></script>
+    <script type="text/javascript">
+        let el = document.createElement('div')
+        el.textContent = 'options.txt'
+        let player = document.getElementById('mse')
+        let danmu = new window.DanmuJs({
+          container: document.getElementById('vs'),
+          containerStyle: {
+            zIndex: 100
+          },
+          player,
+          comments: [
+            {
+              duration: 20000,
+              id: '1',
+              start: 2000,
+              // prior: true,
+              color: true,
+              txt: '长弹幕长弹幕长弹幕长弹幕长弹幕长弹幕长弹幕长弹幕长弹幕长弹幕',
+              style: {
+                color: '#ff9500',
+                fontSize: '20px',
+                border: 'solid 1px #ff9500',
+                borderRadius: '50px',
+                padding: '2px 11px',
+                backgroundColor: 'rgba(255, 255, 255, 0.1)'
+              },
+              mode: 'top'
+            },
+            {
+              duration: 20000,
+              id: '2',
+              start: 2000,
+              prior: true,
+              color: true,
+              txt: '长弹幕长弹幕长弹幕长',
+              style: {
+                color: '#ff9500',
+                fontSize: '20px',
+                border: 'solid 1px #ff9500',
+                borderRadius: '50px',
+                padding: '2px 11px',
+                backgroundColor: 'rgba(255, 255, 255, 0.1)'
+              },
+              mode: 'bottom'
+            },
+            {
+              duration: 20000,
+              id: '3',
+              start: 2000,
+              prior: true,
+              color: true,
+              txt: '长弹幕长',
+              style: {
+                color: '#ff9500',
+                fontSize: '20px',
+                border: 'solid 1px #ff9500',
+                borderRadius: '50px',
+                padding: '2px 11px',
+                backgroundColor: 'rgba(255, 255, 255, 0.1)'
+              },
+            },
+            {
+              duration: 20000,
+              id: '4',
+              start: 2000,
+              prior: true,
+              // color: true,
+              txt: '长弹幕长弹幕长弹幕长弹幕长弹幕弹幕长弹幕长弹幕',
+              style: {
+                color: '#000',
+                fontSize: '20px',
+                borderRadius: '50px',
+                padding: '2px 11px',
+                backgroundColor: 'rgba(255, 255, 255, 0.1)'
+              }
+            }
+          ],
+          area: {
+            start: 0,
+            end: 1
+          }
+        })
+        let id = 5
+        function start () {
+          danmu.start()
+        }
+
+        function play () {
+          danmu.play()
+        }
+
+        function pause () {
+          danmu.pause()
+        }
+
+        function stop () {
+          danmu.stop()
+        }
+
+        function sendComment() {
+          id++;
+          let comment = document.getElementById('comment').value
+          danmu.sendComment({
+            duration: 5000,
+            id: id + '',
+            prior: true,
+            txt: comment,
+            style: {
+              color: '#ff9500',
+              fontSize: '20px',
+              border: 'solid 1px #ff9500',
+              borderRadius: '50px',
+              padding: '5px 11px',
+              backgroundColor: 'rgba(255, 255, 255, 0.1)'
+            },
+            mode: document.getElementById('hidetype').value
+          })
+        }
+
+        function setCommentDuration() {
+          let id = document.getElementById('commentid').value
+          let duration = document.getElementById('duration').value
+          danmu.setCommentDuration (id, duration)
+        }
+
+        function setAllDuration() {
+          let duration = document.getElementById('duration').value
+          danmu.setAllDuration ('scroll', duration)
+        }
+
+        function hide() {
+          let type = document.getElementById('hidetype').value
+          danmu.hide (type)
+        }
+
+        function show() {
+          let type = document.getElementById('hidetype').value
+          danmu.show (type)
+        }
+
+        function setCommentID () {
+          let id = document.getElementById('commentid').value
+          let newid = document.getElementById('commentnewid').value
+          danmu.setCommentID (id, newid)
+        }
+
+        let getFullscreen = function (el) {
+          if (el.requestFullscreen) {
+            el.requestFullscreen()
+          } else if (el.mozRequestFullScreen) {
+            el.mozRequestFullScreen()
+          } else if (el.webkitRequestFullscreen) {
+            el.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT)
+          } else if (player.webkitSupportsFullscreen) {
+            player.webkitEnterFullscreen()
+          } else if (el.msRequestFullscreen) {
+            el.msRequestFullscreen()
+          }
+        }
+        let exitFullscreen = function () {
+          if (document.exitFullscreen) {
+            document.exitFullscreen()
+          } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen()
+          } else if (document.mozCancelFullScreen) {
+            document.mozCancelFullScreen()
+          } else if (document.msExitFullscreen) {
+            document.msExitFullscreen()
+          }
+        }
+
+        let isFullscreen = false
+        function toggleFullscreen () {
+          if(isFullscreen) {
+            exitFullscreen()
+          } else {
+            getFullscreen(document.body)
+          }
+          isFullscreen = !isFullscreen
+        }
+    </script>
+</body>
+</html>

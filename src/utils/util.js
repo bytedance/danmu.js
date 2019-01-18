@@ -73,43 +73,6 @@ util.findDom = function (el = document, sel) {
   return dom
 }
 
-util.padStart = function (str, length, pad) {
-  let charstr = String(pad)
-  let len = length >> 0
-  let maxlen = Math.ceil(len / charstr.length)
-  let chars = []
-  let r = String(str)
-  while (maxlen--) {
-    chars.push(charstr)
-  }
-  return chars.join('').substring(0, len - r.length) + r
-}
-
-util.format = function (time) {
-  if (window.isNaN(time)) {
-    return ''
-  }
-  let hour = util.padStart(Math.floor(time / 3600), 2, 0)
-  let minute = util.padStart(Math.floor((time - hour * 3600) / 60), 2, 0)
-  let second = util.padStart(Math.floor((time - hour * 3600 - minute * 60)), 2, 0)
-  return (hour === '00' ? [minute, second] : [hour, minute, second]).join(':')
-}
-
-util.event = function (e) {
-  if (e.touches) {
-    let touch = e.touches[0] || e.changedTouches[0]
-    e.clientX = touch.clientX || 0
-    e.clientY = touch.clientY || 0
-    e.offsetX = touch.pageX - touch.target.offsetLeft
-    e.offsetY = touch.pageY - touch.target.offsetTop
-  }
-  e._target = e.target || e.srcElement
-}
-
-util.typeOf = function (obj) {
-  return Object.prototype.toString.call(obj).match(/([^\s.*]+)(?=]$)/g)[0]
-}
-
 util.deepCopy = function (dst, src) {
   if (util.typeOf(src) === 'Object' && util.typeOf(dst) === 'Object') {
     Object.keys(src).forEach(key => {
@@ -128,15 +91,9 @@ util.deepCopy = function (dst, src) {
     return dst
   }
 }
-util.getBgImage = function (el) {
-  //fix: return current page url when url is none
-  let url = (el.currentStyle || window.getComputedStyle(el, null)).backgroundImage
-  if(!url || url == 'none') {
-    return '';
-  }
-  let a = document.createElement('a')
-  a.href = url.replace(/url\("|"\)/g, '')
-  return a.href
+
+util.typeOf = function (obj) {
+  return Object.prototype.toString.call(obj).match(/([^\s.*]+)(?=]$)/g)[0]
 }
 
 util.copyDom = function (dom) {
@@ -151,63 +108,6 @@ util.copyDom = function (dom) {
     return back
   } else {
     return ''
-  }
-}
-
-util.setInterval = function (context, eventName, intervalFunc, frequency) {
-  if (!context._interval[eventName]) {
-    context._interval[eventName] = setInterval(intervalFunc.bind(context), frequency)
-  }
-}
-
-util.clearInterval = function (context, eventName) {
-  clearInterval(context._interval[eventName])
-  context._interval[eventName] = null
-}
-
-util.createImgBtn = function (name, imgUrl, width, height) {
-  let btn = util.createDom(`xg-${name}`, '', {}, `xgplayer-${name}-img`)
-  btn.style.backgroundImage = `url("${imgUrl}")`
-  if (width && height) {
-    let w, h, unit
-    ['px', 'rem', 'em', 'pt', 'dp', 'vw', 'vh', 'vm', '%'].every((item) => {
-      if (width.indexOf(item) > -1 && height.indexOf(item) > -1) {
-        w = parseFloat(width.slice(0, width.indexOf(item)).trim())
-        h = parseFloat(height.slice(0, height.indexOf(item)).trim())
-        unit = item
-        return false
-      } else {
-        return true
-      }
-    })
-    btn.style.width = `${w}${unit}`
-    btn.style.height = `${h}${unit}`
-    btn.style.backgroundSize = `${w}${unit} ${h}${unit}`
-    if (name === 'start') {
-      btn.style.margin = `-${h / 2}${unit} auto auto -${w / 2}${unit}`
-    } else {
-      btn.style.margin = 'auto 5px auto 5px'
-    }
-  }
-  return btn
-}
-
-util.Hex2RGBA = function (hex, alpha) {
-  let rgb = [] // 定义rgb数组
-  if (/^\#[0-9A-F]{3}$/i.test(hex)) {
-    let sixHex = '#'
-    hex.replace(/[0-9A-F]/ig, function (kw) {
-      sixHex += kw + kw
-    })
-    hex = sixHex
-  }
-  if (/^#[0-9A-F]{6}$/i.test(hex)) {
-    hex.replace(/[0-9A-F]{2}/ig, function (kw) {
-      rgb.push(eval('0x' + kw))
-    })
-    return `rgba(${rgb.join(',')}, ${alpha})`
-  } else {
-    return 'rgba(255, 255, 255, 0.1)'
   }
 }
 

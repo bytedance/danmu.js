@@ -12,6 +12,7 @@ class Bullet {
     this.container = danmu.container
     this.start = options.start
     this.prior = options.prior
+    this.color = options.color
     this.bookChannelId = options.bookChannelId
 
     let el
