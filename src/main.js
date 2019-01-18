@@ -111,14 +111,28 @@ class Main {
     }
   }
   readData () {
-    let self = this, danmu = this.danmu, currentTime = util.formatTime(danmu.player.currentTime)
+    let self = this, danmu = this.danmu
+    let currentTime = 0
+    if(danmu.player && danmu.player.currentTime) {
+      currentTime = util.formatTime(danmu.player.currentTime)
+    }
     let bullet, interval = self.interval, channel = self.channel, result
-    let list = self.data.filter(item => {
-      if(!item.start && self.danmu.hideArr.indexOf(item.mode) < 0) {
-        item.start = currentTime
-      }
-      return self.danmu.hideArr.indexOf(item.mode) < 0 && item.start - interval <= currentTime && currentTime <= item.start + interval
-    })
+    let list
+    if(danmu.player) {
+      list = self.data.filter(item => {
+        if (!item.start && self.danmu.hideArr.indexOf(item.mode) < 0) {
+          if (!item.color || self.danmu.hideArr.indexOf('color') < 0) {
+            item.start = currentTime
+          }
+        }
+        return self.danmu.hideArr.indexOf(item.mode) < 0 && (!item.color || self.danmu.hideArr.indexOf('color') < 0) && item.start - interval <= currentTime && currentTime <= item.start + interval
+      })
+    } else {
+      list = self.data.filter(item => {
+        return self.danmu.hideArr.indexOf(item.mode) < 0 && (!item.color || self.danmu.hideArr.indexOf('color') < 0)
+      })
+    }
+
     if (list.length > 0) {
       list.forEach(item => {
         bullet = new Bullet(danmu, item)
