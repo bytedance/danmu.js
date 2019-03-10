@@ -14,7 +14,11 @@ class Bullet {
     this.prior = options.prior
     this.color = options.color
     this.bookChannelId = options.bookChannelId
-
+    this.direction = danmu.direction
+    let self = this
+    this.danmu.on('changeDirection', direction => {
+      self.direction = direction
+    })
     let el
     if(options.el && options.el.nodeType === 1) {
       el = util.copyDom(options.el)
@@ -43,8 +47,14 @@ class Bullet {
   attach () {
     this.container.appendChild(this.el)
     this.elPos = this.el.getBoundingClientRect()
-    this.width = this.elPos.width
-    this.height = this.elPos.height
+
+    if(this.direction === 'b2t') {
+      this.width = this.elPos.height
+      this.height = this.elPos.width
+    } else {
+      this.width = this.elPos.width
+      this.height = this.elPos.height
+    }
   }
   detach () {
     if(this.container && this.el) {
@@ -53,7 +63,14 @@ class Bullet {
     this.el = null
   }
   topInit () {
-    this.el.style.top = `${this.top}px`
+    if(this.direction === 'b2t') {
+      let containerPos = this.container.getBoundingClientRect()
+      this.el.style.transformOrigin = 'left top'
+      this.el.style.transform = `translateX(-${this.top}px) translateY(${containerPos.height}px) translateZ(0px) rotate(90deg)`;
+      this.el.style.transition = `transform 0s linear 0s`
+    } else {
+      this.el.style.top = `${this.top}px`
+    }
   }
   pauseMove (containerPos, isFullscreen = false) {
     // console.log('pauseMove')
@@ -75,18 +92,36 @@ class Bullet {
         // console.log('self.moveMoreS: ' + self.moveMoreS)
         // console.log('pastS: ' + pastS)
         if(self.moveMoreS - pastS >= 0) {
-          ratio = (self.moveMoreS - pastS) / self.moveContainerWidth
-          nowS = ratio * containerPos.width
+          if(this.direction === 'b2t') {
+            ratio = (self.moveMoreS - pastS) / self.moveContainerHeight
+            nowS = ratio * containerPos.height
+          } else {
+            ratio = (self.moveMoreS - pastS) / self.moveContainerWidth
+            nowS = ratio * containerPos.width
+          }
         } else {
           nowS = self.moveMoreS - pastS
         }
         // console.log('nowS: ' + nowS)
-        this.el.style.left = `${nowS}px`
+        if(this.direction === 'b2t') {
+          this.el.style.transform = `translateX(-${this.top}px) translateY(${nowS}px) translateZ(0px) rotate(90deg)`
+        } else {
+          this.el.style.left = `${nowS}px`
+        }
       } else {
-        this.el.style.left = `${this.el.getBoundingClientRect().left - containerPos.left}px`
+        if(this.direction === 'b2t') {
+          this.el.style.transform = `translateX(-${this.top}px) translateY(${this.el.getBoundingClientRect().top - containerPos.top}px) translateZ(0px) rotate(90deg)`
+        } else {
+          this.el.style.left = `${this.el.getBoundingClientRect().left - containerPos.left}px`
+        }
       }
-      this.el.style.transform = 'translateX(0px) translateY(0px) translateZ(0px)'
-      this.el.style.transition = 'transform 0s linear 0s'
+      if(this.direction === 'b2t') {
+        // this.el.style.transform = `translateX(-${this.top}px) translateY(${nowS}px) translateZ(0px) rotate(90deg)`
+        this.el.style.transition = 'transform 0s linear 0s'
+      } else {
+        this.el.style.transform = 'translateX(0px) translateY(0px) translateZ(0px)'
+        this.el.style.transition = 'transform 0s linear 0s'
+      }
     } else {
       if(!this.pastDuration || !this.startTime) {
         this.pastDuration = 1
@@ -110,12 +145,22 @@ class Bullet {
         if(self.mode === 'scroll') {
           let containerPos_ = self.danmu.container.getBoundingClientRect()
           let bulletPos = self.el.getBoundingClientRect()
-          if (bulletPos && bulletPos.right <= containerPos_.left + 100) {
-            self.status = 'end'
-            self.remove()
+          if(self.direction === 'b2t') {
+            if (bulletPos && bulletPos.bottom <= containerPos_.top + 100) {
+              self.status = 'end'
+              self.remove()
+            } else {
+              self.pauseMove(containerPos_)
+              self.startMove(containerPos_)
+            }
           } else {
-            self.pauseMove(containerPos_)
-            self.startMove(containerPos_)
+            if (bulletPos && bulletPos.right <= containerPos_.left + 100) {
+              self.status = 'end'
+              self.remove()
+            } else {
+              self.pauseMove(containerPos_)
+              self.startMove(containerPos_)
+            }
           }
         } else {
           self.status = 'end'
@@ -124,18 +169,33 @@ class Bullet {
       }
     }
     if(this.mode === 'scroll') {
-      this.moveV = (containerPos.width + this.width) / this.duration * 1000
-      let leftDuration = (self.el.getBoundingClientRect().right - containerPos.left) / this.moveV
-      this.el.style.transition = `transform ${leftDuration}s linear 0s`
-      setTimeout(function () {
-        if (self.el) {
-          self.el.style.transform = `translateX(-${self.el.getBoundingClientRect().right - containerPos.left}px) translateY(0px) translateZ(0px)`
-          self.moveTime = new Date().getTime()
-          self.moveMoreS = self.el.getBoundingClientRect().left - containerPos.left
-          self.moveContainerWidth = containerPos.width
-          self.removeTimer = setTimeout(func, leftDuration * 1000)
-        }
-      }, 20)
+      if(this.direction === 'b2t') {
+        this.moveV = (containerPos.height + this.height) / this.duration * 1000
+        let leftDuration = (self.el.getBoundingClientRect().bottom - containerPos.top) / this.moveV
+        this.el.style.transition = `transform ${leftDuration}s linear 0s`
+        setTimeout(function () {
+          if (self.el) {
+            self.el.style.transform = `translateX(-${self.top}px) translateY(-${self.height}px) translateZ(0px) rotate(90deg)`
+            self.moveTime = new Date().getTime()
+            self.moveMoreS = self.el.getBoundingClientRect().top - containerPos.top
+            self.moveContainerHeight = containerPos.height
+            self.removeTimer = setTimeout(func, leftDuration * 1000)
+          }
+        }, 20)
+      } else {
+        this.moveV = (containerPos.width + this.width) / this.duration * 1000
+        let leftDuration = (self.el.getBoundingClientRect().right - containerPos.left) / this.moveV
+        this.el.style.transition = `transform ${leftDuration}s linear 0s`
+        setTimeout(function () {
+          if (self.el) {
+            self.el.style.transform = `translateX(-${self.el.getBoundingClientRect().right - containerPos.left}px) translateY(0px) translateZ(0px)`
+            self.moveTime = new Date().getTime()
+            self.moveMoreS = self.el.getBoundingClientRect().left - containerPos.left
+            self.moveContainerWidth = containerPos.width
+            self.removeTimer = setTimeout(func, leftDuration * 1000)
+          }
+        }, 20)
+      }
     } else {
       // this.el.style.width = `${this.width}px`
       // this.el.style.height = `${this.height}px`
