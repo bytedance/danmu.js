@@ -10,7 +10,8 @@ class DanmuJs {
         start: 0,
         end: 1
       },
-      comments: []
+      comments: [],
+      direction: 'r2l'
     }, options)
     this.hideArr = []
     EventEmitter(this)
@@ -34,12 +35,20 @@ class DanmuJs {
       })
     }
     this.player = this.config.player
+    this.direction = this.config.direction
     util.addClass(this.container, 'danmu')
     this.bulletBtn = new Control(this);
     ['touchend', 'click', 'dblclick'].forEach(item => {
-      this.container.addEventListener(item, function () {
+      this.container.addEventListener(item, function (e) {
+        e.preventDefault()
+        e.stopPropagation()
         if(self.player) {
-          self.player.focus()
+          // self.player.focus()
+          // if (util.hasClass(root, 'xgplayer-inactive')) {
+          //   self.player.emit('focus')
+          // } else {
+          //   self.player.emit('blur')
+          // }
           let clk
           if (document.createEvent) {
             clk = document.createEvent('Event')
@@ -158,6 +167,10 @@ class DanmuJs {
     if(index > -1) {
       this.hideArr.splice(index, 1)
     }
+  }
+
+  setDirection (direction = 'r2l') {
+    this.emit('changeDirection', direction)
   }
 }
 

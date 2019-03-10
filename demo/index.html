@@ -15,15 +15,15 @@
       #vs {
         position: absolute;
         left: 0;
-        width: 100%;
-        height: 50%;
+        width: 600px;
+        height: 337px;
         z-index: 9999
       }
       #mse {
         position: absolute;
         left: 0;
-        width: 100%;
-        height: 100%;
+        width: 600px;
+        height: 337px;
       }
       #btnwrap {
         position: absolute;
@@ -64,18 +64,20 @@
       </div> -->
 
       <button onclick="toggleFullscreen()">切换全屏状态</button>
+      <button onclick="toggleDirection()">切换弹幕方向</button>
     </div>
     <script src="../browser/index.js" charset="utf-8"></script>
     <script type="text/javascript">
-        let el = document.createElement('div')
-        el.textContent = 'options.txt'
+        let el = createDom('xg-el', '弹幕弹幕弹幕<img src="./grinning-face.png" />弹幕弹幕', {}, 'xgplayer-el')
         let player = document.getElementById('mse')
+        let direction = 'b2t'
         let danmu = new window.DanmuJs({
           container: document.getElementById('vs'),
           containerStyle: {
             zIndex: 100
           },
           player,
+          direction,
           comments: [
             {
               duration: 20000,
@@ -83,7 +85,7 @@
               start: 2000,
               // prior: true,
               color: true,
-              txt: '长弹幕长弹幕长弹幕长弹幕长弹幕长弹幕长弹幕长弹幕长弹幕长弹幕',
+              txt: '长弹幕长弹幕',
               style: {
                 color: '#ff9500',
                 fontSize: '20px',
@@ -92,7 +94,7 @@
                 padding: '2px 11px',
                 backgroundColor: 'rgba(255, 255, 255, 0.1)'
               },
-              mode: 'top'
+              // mode: 'top'
             },
             {
               duration: 20000,
@@ -100,7 +102,7 @@
               start: 2000,
               prior: true,
               color: true,
-              txt: '长弹幕长弹幕长弹幕长',
+              txt: '长弹幕',
               style: {
                 color: '#ff9500',
                 fontSize: '20px',
@@ -109,7 +111,7 @@
                 padding: '2px 11px',
                 backgroundColor: 'rgba(255, 255, 255, 0.1)'
               },
-              mode: 'bottom'
+              // mode: 'bottom'
             },
             {
               duration: 20000,
@@ -126,6 +128,7 @@
                 padding: '2px 11px',
                 backgroundColor: 'rgba(255, 255, 255, 0.1)'
               },
+              el: el
             },
             {
               duration: 20000,
@@ -133,7 +136,7 @@
               start: 2000,
               prior: true,
               // color: true,
-              txt: '长弹幕长弹幕长弹幕长弹幕长弹幕弹幕长弹幕长弹幕',
+              txt: '长弹幕长弹幕长弹幕长弹幕',
               style: {
                 color: '#000',
                 fontSize: '20px',
@@ -245,6 +248,36 @@
             getFullscreen(document.body)
           }
           isFullscreen = !isFullscreen
+        }
+
+        function toggleDirection () {
+          danmu.stop()
+          if(direction === 'r2l') {
+            danmu.setDirection('b2t')
+            direction = 'b2t'
+          } else {
+            danmu.setDirection('r2l')
+            direction = 'r2l'
+          }
+          danmu.start()
+        }
+
+        function createDom (el = 'div', tpl = '', attrs = {}, cname = '') {
+          let dom = document.createElement(el)
+          dom.className = cname
+          dom.innerHTML = tpl
+          Object.keys(attrs).forEach(item => {
+            let key = item
+            let value = attrs[item]
+            if (el === 'video' || el === 'audio') {
+              if (value) {
+                dom.setAttribute(key, value)
+              }
+            } else {
+              dom.setAttribute(key, value)
+            }
+          })
+          return dom
         }
     </script>
 </body>

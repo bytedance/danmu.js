@@ -18,6 +18,10 @@ class Main {
     this.interval = 2000// 弹幕队列缓存间隔
     this.status = 'idle'// 当前弹幕正在闲置
     danmu.on('bullet_remove', this.updateQueue.bind(this))
+    let self = this
+    this.danmu.on('changeDirection', direction => {
+      self.danmu.direction = direction
+    })
   }
   // 在渲染队列中移除已经展示完的弹幕对象
   updateQueue (rdata) {

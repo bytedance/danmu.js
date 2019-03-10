@@ -10,6 +10,10 @@ class Channel {
     this.danmu.on('bullet_remove', function (r) {
       self.removeBullet(r.bullet)
     })
+    this.direction = danmu.direction
+    this.danmu.on('changeDirection', direction => {
+      self.direction = direction
+    })
     this.containerPos = this.danmu.container.getBoundingClientRect()
     this.containerWidth = this.containerPos.width
     this.containerHeight = this.containerPos.height
@@ -59,12 +63,22 @@ class Channel {
       let size = container.getBoundingClientRect()
       self.width = size.width
       self.height = size.height
+
       if (self.danmu.config.area && self.danmu.config.area.start >= 0 && self.danmu.config.area.end >= self.danmu.config.area.start) {
-        self.height = self.height * (self.danmu.config.area.end - self.danmu.config.area.start)
+        if(self.direction === 'b2t') {
+          self.width = self.width * (self.danmu.config.area.end - self.danmu.config.area.start)
+        } else {
+          self.height = self.height * (self.danmu.config.area.end - self.danmu.config.area.start)
+        }
       }
       self.container = container
       let fontSize = /mobile/ig.test(navigator.userAgent) ? 10 : 12
-      let channelSize = Math.floor(self.height / fontSize)
+      let channelSize
+      if(self.direction === 'b2t') {
+        channelSize = Math.floor(self.width / fontSize)
+      } else {
+        channelSize = Math.floor(self.height / fontSize)
+      }
       let channels = []
       for (let i = 0; i < channelSize; i++) {
         channels[i] = {
@@ -139,7 +153,11 @@ class Channel {
           })
         }
         self.channels = channels
-        self.channelHeight = fontSize
+        if(self.direction === 'b2t') {
+          self.channelWidth = fontSize
+        } else {
+          self.channelHeight = fontSize
+        }
       } else if (self.channels && self.channels.length > channels.length) {
         for (let i = 0; i < channels.length; i++) {
           channels[i] = {
@@ -205,7 +223,11 @@ class Channel {
           })
         }
         self.channels = channels
-        self.channelHeight = fontSize
+        if(self.direction === 'b2t') {
+          self.channelWidth = fontSize
+        } else {
+          self.channelHeight = fontSize
+        }
       }
     }, 10)
   }
@@ -216,8 +238,14 @@ class Channel {
     let self = this
     let danmu = this.danmu
     let channels = this.channels
-    let channelHeight = this.channelHeight
-    let occupy = Math.ceil(bullet.height / channelHeight)
+    let channelHeight, channelWidth, occupy
+    if(self.direction === 'b2t') {
+      channelWidth = this.channelWidth
+      occupy = Math.ceil(bullet.width / channelWidth)
+    } else {
+      channelHeight = this.channelHeight
+      occupy = Math.ceil(bullet.height / channelHeight)
+    }
     if (occupy > channels.length) {
       return {
         result: false,
@@ -250,23 +278,42 @@ class Channel {
             let curBullet = channel.queue.scroll[0]
             if (curBullet) {
               let curBulletPos = curBullet.el.getBoundingClientRect()
-              if (curBulletPos.right > self.containerPos.right) {
-                flag = false
-                channel.operating.scroll = false
-                break
+              if(self.direction === 'b2t') {
+                if (curBulletPos.bottom > self.containerPos.bottom) {
+                  flag = false
+                  channel.operating.scroll = false
+                  break
+                }
+              } else {
+                if (curBulletPos.right > self.containerPos.right) {
+                  flag = false
+                  channel.operating.scroll = false
+                  break
+                }
               }
 
               // Vcur * t + Scur已走 - Widthcur = Vnew * t
               // t = (Scur已走 - Widthcur) / (Vnew - Vcur)
               // Vnew * t < Widthplayer
-              let curS = curBulletPos.left - self.containerPos.left + curBulletPos.width
-              let curV = (self.containerPos.width + curBulletPos.width) / curBullet.duration
-              let curT = curS / curV
+              let curS, curV, curT, newS, newV, newT
+              if(self.direction === 'b2t') {
+                curS = curBulletPos.top - self.containerPos.top + curBulletPos.height
 
-              let newS = self.containerPos.width
-              let newV = (self.containerPos.width + bullet.width) / bullet.duration
-              let newT = newS / newV
+                curV = (self.containerPos.height + curBulletPos.height) / curBullet.duration
+                curT = curS / curV
 
+                newS = self.containerPos.height
+                newV = (self.containerPos.height + bullet.height) / bullet.duration
+              } else {
+                curS = curBulletPos.left - self.containerPos.left + curBulletPos.width
+
+                curV = (self.containerPos.width + curBulletPos.width) / curBullet.duration
+                curT = curS / curV
+
+                newS = self.containerPos.width
+                newV = (self.containerPos.width + bullet.width) / bullet.duration
+              }
+              newT = newS / newV
               if (!danmu.config.bOffset) {
                 danmu.config.bOffset = 0
               }
@@ -370,9 +417,17 @@ class Channel {
           })
         }
         bullet.channel_id = [pos, occupy]
-        bullet.top = pos * channelHeight
-        if (self.danmu.config.area && self.danmu.config.area.start) {
-          bullet.top += self.containerHeight * self.danmu.config.area.start
+
+        if(self.direction === 'b2t') {
+          bullet.top = pos * channelWidth
+          if (self.danmu.config.area && self.danmu.config.area.start) {
+            bullet.top += self.containerWidth * self.danmu.config.area.start
+          }
+        } else {
+          bullet.top = pos * channelHeight
+          if (self.danmu.config.area && self.danmu.config.area.start) {
+            bullet.top += self.containerHeight * self.danmu.config.area.start
+          }
         }
         return {
           result: bullet,
@@ -479,11 +534,21 @@ class Channel {
       self.width = size.width
       self.height = size.height
       if (self.danmu.config.area && self.danmu.config.area.start >= 0 && self.danmu.config.area.end >= self.danmu.config.area.start) {
-        self.height = self.height * (self.danmu.config.area.end - self.danmu.config.area.start)
+        if(self.direction === 'b2t') {
+          self.width = self.width * (self.danmu.config.area.end - self.danmu.config.area.start)
+        } else {
+          self.height = self.height * (self.danmu.config.area.end - self.danmu.config.area.start)
+        }
       }
       self.container = container
       let fontSize = /mobile/ig.test(navigator.userAgent) ? 10 : 12
-      let channelSize = Math.floor(self.height / fontSize)
+      let channelSize
+      if(self.direction === 'b2t') {
+        channelSize = Math.floor(self.width / fontSize)
+      } else {
+        channelSize = Math.floor(self.height / fontSize)
+      }
+
       let channels = []
       for (let i = 0; i < channelSize; i++) {
         channels[i] = {
@@ -502,7 +567,11 @@ class Channel {
         }
       }
       self.channels = channels
-      self.channelHeight = fontSize
+      if(self.direction === 'b2t') {
+        self.channelWidth = fontSize
+      } else {
+        self.channelHeight = fontSize
+      }
     }, 200)
   }
   resetWithCb (cb, main) {
@@ -522,11 +591,20 @@ class Channel {
     self.width = size.width
     self.height = size.height
     if (self.danmu.config.area && self.danmu.config.area.start >= 0 && self.danmu.config.area.end >= self.danmu.config.area.start) {
-      self.height = self.height * (self.danmu.config.area.end - self.danmu.config.area.start)
+      if(self.direction === 'b2t') {
+        self.width = self.width * (self.danmu.config.area.end - self.danmu.config.area.start)
+      } else {
+        self.height = self.height * (self.danmu.config.area.end - self.danmu.config.area.start)
+      }
     }
     self.container = container
     let fontSize = /mobile/ig.test(navigator.userAgent) ? 10 : 12
-    let channelSize = Math.floor(self.height / fontSize)
+    let channelSize
+    if(self.direction === 'b2t') {
+      channelSize = Math.floor(self.width / fontSize)
+    } else {
+      channelSize = Math.floor(self.height / fontSize)
+    }
     let channels = []
     for (let i = 0; i < channelSize; i++) {
       channels[i] = {
