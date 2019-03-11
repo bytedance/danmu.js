@@ -87,6 +87,7 @@ class Bullet {
     if (!this.el) {
       return
     }
+    this.el.style.willChange = 'auto'
     if(this.mode === 'scroll') {
       if(isFullscreen) {
         let pastDuration = (new Date().getTime() - self.moveTime) / 1000
@@ -144,6 +145,7 @@ class Bullet {
       return
     }
     this.status = 'start'
+    this.el.style.willChange = 'transform'
     function func () {
       if (self.el) {
         if(self.mode === 'scroll') {
@@ -220,6 +222,7 @@ class Bullet {
       clearTimeout(this.removeTimer)
     }
     if (self.el && self.el.parentNode) {
+      self.el.style.willChange = 'auto'
       this.danmu.off('changeDirection', direction => {
         self.direction = direction
       })
