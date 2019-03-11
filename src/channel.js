@@ -516,6 +516,180 @@ class Channel {
       }
     }
   }
+  resetArea () {
+    let container = this.danmu.container
+    let self = this
+    let size = container.getBoundingClientRect()
+    self.width = size.width
+    self.height = size.height
+    if (self.danmu.config.area && self.danmu.config.area.start >= 0 && self.danmu.config.area.end >= self.danmu.config.area.start) {
+      if(self.direction === 'b2t') {
+        self.width = self.width * (self.danmu.config.area.end - self.danmu.config.area.start)
+      } else {
+        self.height = self.height * (self.danmu.config.area.end - self.danmu.config.area.start)
+      }
+    }
+    self.container = container
+    let fontSize = /mobile/ig.test(navigator.userAgent) ? 10 : 12
+    let channelSize
+    if(self.direction === 'b2t') {
+      channelSize = Math.floor(self.width / fontSize)
+    } else {
+      channelSize = Math.floor(self.height / fontSize)
+    }
+
+    let channels = []
+    for (let i = 0; i < channelSize; i++) {
+      channels[i] = {
+        id: i,
+        queue: {
+          scroll: [],
+          top: [],
+          bottom: []
+        },
+        operating: {
+          scroll: false,
+          top: false,
+          bottom: false
+        },
+        bookId: {}
+      }
+    }
+
+    if (self.channels && self.channels.length <= channels.length) {
+      for (let i = 0; i < self.channels.length; i++) {
+        channels[i] = {
+          id: i,
+          queue: {
+            scroll: [],
+            top: [],
+            bottom: []
+          },
+          operating: {
+            scroll: false,
+            top: false,
+            bottom: false
+          },
+          bookId: {}
+        };
+        ['scroll', 'top'].forEach(key => {
+          self.channels[i].queue[key].forEach(item => {
+            if (item.el) {
+              channels[i].queue[key].push(item)
+              if(!item.resized) {
+                item.pauseMove(self.containerPos, false)
+                item.startMove(self.containerPos)
+                item.resized = true
+              }
+            }
+          })
+        })
+        self.channels[i].queue['bottom'].forEach(item => {
+          if (item.el) {
+            channels[i + channels.length - self.channels.length].queue['bottom'].push(item)
+            if(item.channel_id[0] + item.channel_id[1] - 1 === i) {
+              let channel_id = [].concat(item.channel_id)
+              item.channel_id = [channel_id[0] - self.channels.length + channels.length, channel_id[1]]
+              item.top = item.channel_id[0] * fontSize
+              if (self.danmu.config.area && self.danmu.config.area.start) {
+                item.top += self.containerHeight * self.danmu.config.area.start
+              }
+              item.topInit()
+            }
+            if(!item.resized) {
+              item.pauseMove(self.containerPos, false)
+              item.startMove(self.containerPos)
+              item.resized = true
+            }
+          }
+        })
+      }
+      for (let i = 0; i < channels.length; i++) {
+        ['scroll', 'top', 'bottom'].forEach(key => {
+          channels[i].queue[key].forEach(item => {
+            // console.log('resized 重置:' + item)
+            item.resized = false
+          })
+        })
+      }
+      self.channels = channels
+      if(self.direction === 'b2t') {
+        self.channelWidth = fontSize
+      } else {
+        self.channelHeight = fontSize
+      }
+    } else if (self.channels && self.channels.length > channels.length) {
+      for (let i = 0; i < channels.length; i++) {
+        channels[i] = {
+          id: i,
+          queue: {
+            scroll: [],
+            top: [],
+            bottom: []
+          },
+          operating: {
+            scroll: false,
+            top: false,
+            bottom: false
+          },
+          bookId: {}
+        };
+        ['scroll', 'top', 'bottom'].forEach(key => {
+          if (key === 'top' && i > Math.floor(channels.length / 2)) {
+
+          } else if (key === 'bottom' && i <= Math.floor(channels.length / 2)) {
+
+          } else {
+            let num = key === 'bottom' ? i - channels.length + self.channels.length : i
+            self.channels[num].queue[key].forEach((item, index) => {
+              if (item.el) {
+                channels[i].queue[key].push(item)
+                if(key === 'bottom') {
+                  if(item.channel_id[0] + item.channel_id[1] - 1 === num) {
+                    let channel_id = [].concat(item.channel_id)
+                    item.channel_id = [channel_id[0] - self.channels.length + channels.length, channel_id[1]]
+                    item.top = item.channel_id[0] * fontSize
+                    if (self.danmu.config.area && self.danmu.config.area.start) {
+                      item.top += self.containerHeight * self.danmu.config.area.start
+                    }
+                    item.topInit()
+                  }
+                }
+                if(!item.resized) {
+                  item.pauseMove(self.containerPos, false)
+                  item.startMove(self.containerPos)
+                  item.resized = true
+                }
+              }
+              self.channels[num].queue[key].splice(index, 1)
+            })
+          }
+        })
+      }
+      // for (let i = channels.length; i < self.channels.length; i++) {
+      //   ['scroll', 'top', 'bottom'].forEach(key => {
+      //     self.channels[i].queue[key].forEach(item => {
+      //       item.pauseMove(self.containerPos)
+      //       item.remove()
+      //     })
+      //   })
+      // }
+      for (let i = 0; i < channels.length; i++) {
+        ['scroll', 'top', 'bottom'].forEach(key => {
+          channels[i].queue[key].forEach(item => {
+            // console.log('resized 重置:' + item)
+            item.resized = false
+          })
+        })
+      }
+      self.channels = channels
+      if(self.direction === 'b2t') {
+        self.channelWidth = fontSize
+      } else {
+        self.channelHeight = fontSize
+      }
+    }
+  }
   reset () {
     let container = this.danmu.container
     let self = this

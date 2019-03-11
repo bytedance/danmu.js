@@ -10,6 +10,7 @@ class DanmuJs {
         start: 0,
         end: 1
       },
+      live: false,
       comments: [],
       direction: 'r2l'
     }, options)
@@ -34,6 +35,7 @@ class DanmuJs {
         self.container.style[key] = style[key]
       })
     }
+    this.live = this.config.live
     this.player = this.config.player
     this.direction = this.config.direction
     util.addClass(this.container, 'danmu')
