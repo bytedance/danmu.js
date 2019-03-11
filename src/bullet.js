@@ -60,6 +60,10 @@ class Bullet {
     if(this.container && this.el) {
       this.container.removeChild(this.el)
     }
+    let self = this
+    this.danmu.off('changeDirection', direction => {
+      self.direction = direction
+    })
     this.el = null
   }
   topInit () {
@@ -216,6 +220,9 @@ class Bullet {
       clearTimeout(this.removeTimer)
     }
     if (self.el && self.el.parentNode) {
+      this.danmu.off('changeDirection', direction => {
+        self.direction = direction
+      })
       let parent = self.el.parentNode
       parent.removeChild(self.el)
       self.el = null

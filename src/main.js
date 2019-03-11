@@ -131,6 +131,14 @@ class Main {
         }
         return self.danmu.hideArr.indexOf(item.mode) < 0 && (!item.color || self.danmu.hideArr.indexOf('color') < 0) && item.start - interval <= currentTime && currentTime <= item.start + interval
       })
+      if(danmu.live) {
+        self.data = self.data.filter(item => {
+          if (!item.start) {
+            item.start = currentTime
+          }
+          return item.start > currentTime - 3 * interval
+        })
+      }
     } else {
       list = self.data.filter(item => {
         return self.danmu.hideArr.indexOf(item.mode) < 0 && (!item.color || self.danmu.hideArr.indexOf('color') < 0)

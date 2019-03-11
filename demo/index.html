@@ -65,6 +65,7 @@
 
       <button onclick="toggleFullscreen()">切换全屏状态</button>
       <button onclick="toggleDirection()">切换弹幕方向</button>
+      <button onclick="toggleArea()">切换弹幕区域</button>
     </div>
     <script src="../browser/index.js" charset="utf-8"></script>
     <script type="text/javascript">
@@ -76,11 +77,12 @@
           containerStyle: {
             zIndex: 100
           },
+          live: true,
           player,
           direction,
           comments: [
             {
-              duration: 20000,
+              duration: 6000,
               id: '1',
               start: 2000,
               // prior: true,
@@ -97,7 +99,7 @@
               // mode: 'top'
             },
             {
-              duration: 20000,
+              duration: 6000,
               id: '2',
               start: 2000,
               prior: true,
@@ -114,7 +116,7 @@
               // mode: 'bottom'
             },
             {
-              duration: 20000,
+              duration: 6000,
               id: '3',
               start: 2000,
               prior: true,
@@ -131,7 +133,7 @@
               el: el
             },
             {
-              duration: 20000,
+              duration: 6000,
               id: '4',
               start: 2000,
               prior: true,
@@ -151,9 +153,29 @@
             end: 1
           }
         })
+        setTimeout(function () {
+          document.getElementById('mse').currentTime = 0
+        }, 15000)
         let id = 5
         function start () {
           danmu.start()
+
+          let id = 1
+
+        setInterval(function() {
+          id++
+          // let el = Player.util.createDom('div', '<span>张鑫:&nbsp;</span><img src="https://s1.pstatp.com/ee/annual-meeting-live/static/images/stickers/2.png" alt="2" />', {}, 'showed-sticker-danmu')
+
+          danmu.sendComment({  //发送弹幕
+              duration: 6000,
+              id: id+'',
+              txt: id+'', //弹幕文字内容
+              style: {  //弹幕自定义样式
+                // color: fontcolor,
+                // fontSize: fontsize,
+              },
+          })
+        }, 50)
         }
 
         function play () {
@@ -260,6 +282,21 @@
             direction = 'r2l'
           }
           danmu.start()
+        }
+
+        let area = 1
+        function toggleArea () {
+          if(area === 1) {
+            area = 2
+          } else if(area === 2) {
+            area = 3
+          } else if(area === 3) {
+            area = 4
+          } else if(area === 4) {
+            area = 1
+          }
+          danmu.config.area.end = (5 - area) / 4
+          danmu.bulletBtn.main.channel.resetArea()
         }
 
         function createDom (el = 'div', tpl = '', attrs = {}, cname = '') {
