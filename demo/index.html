@@ -84,8 +84,8 @@
             {
               duration: 6000,
               id: '1',
-              start: 2000,
-              // prior: true,
+              start: 1000,
+              prior: true,
               color: true,
               txt: '长弹幕长弹幕',
               style: {
@@ -118,7 +118,7 @@
             {
               duration: 6000,
               id: '3',
-              start: 2000,
+              start: 3000,
               prior: true,
               color: true,
               txt: '长弹幕长',
@@ -135,7 +135,7 @@
             {
               duration: 6000,
               id: '4',
-              start: 2000,
+              start: 4000,
               prior: true,
               // color: true,
               txt: '长弹幕长弹幕长弹幕长弹幕',
@@ -145,7 +145,8 @@
                 borderRadius: '50px',
                 padding: '2px 11px',
                 backgroundColor: 'rgba(255, 255, 255, 0.1)'
-              }
+              },
+              // mode: 'bottom'
             }
           ],
           area: {
@@ -224,6 +225,7 @@
         function hide() {
           let type = document.getElementById('hidetype').value
           danmu.hide (type)
+          console.log(type)
         }
 
         function show() {
