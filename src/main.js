@@ -149,7 +149,7 @@ class Main {
       list.forEach(item => {
         bullet = new Bullet(danmu, item)
         bullet.attach()
-
+        // console.log(list.length)
         result = channel.addBullet(bullet)
         if (result.result) {
           self.queue.push(bullet)
