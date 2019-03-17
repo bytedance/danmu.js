@@ -20,10 +20,14 @@ class Bullet {
       self.direction = direction
     })
     let el
+    this.domObj = util.domObj
     if(options.el && options.el.nodeType === 1) {
-      el = util.copyDom(options.el)
+      el = this.domObj.use()
+      el.appendChild(util.copyDom(options.el))
+      // el = util.copyDom(options.el)
     } else {
-      el = document.createElement('div')
+      el = this.domObj.use()
+      // el = document.createElement('div')
       el.textContent = options.txt
       if(options.style) {
         let style = options.style
@@ -38,7 +42,6 @@ class Bullet {
     } else {
       this.mode = 'scroll'
     }
-
     this.el = el
     this.status = 'waiting'// waiting,start,end
     let containerPos = this.container.getBoundingClientRect()
@@ -47,7 +50,6 @@ class Bullet {
   attach () {
     this.container.appendChild(this.el)
     this.elPos = this.el.getBoundingClientRect()
-
     if(this.direction === 'b2t') {
       this.width = this.elPos.height
       this.height = this.elPos.width
@@ -58,6 +60,7 @@ class Bullet {
   }
   detach () {
     if(this.container && this.el) {
+      this.domObj.unuse(this.el)
       this.container.removeChild(this.el)
     }
     let self = this
@@ -226,6 +229,7 @@ class Bullet {
       this.danmu.off('changeDirection', direction => {
         self.direction = direction
       })
+      this.domObj.unuse(self.el)
       let parent = self.el.parentNode
       parent.removeChild(self.el)
       self.el = null
