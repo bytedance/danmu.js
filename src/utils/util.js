@@ -1,4 +1,8 @@
+import RecyclableDomList from '../domrecycle.js'
+
 let util = {}
+
+util.domObj = new RecyclableDomList()
 
 util.createDom = function (el = 'div', tpl = '', attrs = {}, cname = '') {
   let dom = document.createElement(el)
