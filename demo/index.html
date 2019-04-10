@@ -12,18 +12,24 @@
        width: 100%;
        height: 100%;
       }
-      #vs {
+      #wrap {
         position: absolute;
         left: 0;
         width: 600px;
         height: 337px;
+      }
+      #vs {
+        position: absolute;
+        left: 0;
+        width: 100%;
+        height: 50%;
         z-index: 9999
       }
       #mse {
         position: absolute;
         left: 0;
-        width: 600px;
-        height: 337px;
+        width: 100%;
+        height: 100%;
       }
       #btnwrap {
         position: absolute;
@@ -33,11 +39,13 @@
     </style>
 </head>
 <body>
-    <div id="vs"></div>
-    <video id="mse" autoplay=true muted playsinline controls="controls">
-      <source src="//s1.pstatp.com/cdn/expire-1-M/byted-player-videos/1.0.0/xgplayer-demo.mp4" type="video/mp4">
-      your browser does not support the video tag
-    </video>
+    <div id="wrap">
+      <div id="vs"></div>
+      <video id="mse" autoplay=true muted playsinline controls="controls">
+        <source src="//s1.pstatp.com/cdn/expire-1-M/byted-player-videos/1.0.0/xgplayer-demo.mp4" type="video/mp4">
+        your browser does not support the video tag
+      </video>
+    </div>
     <div id="btnwrap">
       <div>
         <button onclick="start()">弹幕开始</button>
@@ -70,6 +78,7 @@
     <script src="../browser/index.js" charset="utf-8"></script>
     <script type="text/javascript">
         let el = createDom('xg-el', '弹幕弹幕弹幕<img src="./grinning-face.png" />弹幕弹幕', {}, 'xgplayer-el')
+        let wrap = document.getElementById('wrap')
         let player = document.getElementById('mse')
         let direction = 'r2l'
         let danmu = new window.DanmuJs({
@@ -269,7 +278,7 @@
           if(isFullscreen) {
             exitFullscreen()
           } else {
-            getFullscreen(document.body)
+            getFullscreen(wrap)
           }
           isFullscreen = !isFullscreen
         }
