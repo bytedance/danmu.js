@@ -39,29 +39,7 @@ class DanmuJs {
     this.player = this.config.player
     this.direction = this.config.direction
     util.addClass(this.container, 'danmu')
-    this.bulletBtn = new Control(this);
-    ['touchend', 'click', 'dblclick'].forEach(item => {
-      this.container.addEventListener(item, function (e) {
-        e.preventDefault()
-        e.stopPropagation()
-        if(self.player) {
-          // self.player.focus()
-          // if (util.hasClass(root, 'xgplayer-inactive')) {
-          //   self.player.emit('focus')
-          // } else {
-          //   self.player.emit('blur')
-          // }
-          let clk
-          if (document.createEvent) {
-            clk = document.createEvent('Event')
-            clk.initEvent(item, true, true)
-          } else {
-            clk = new Event(item)
-          }
-          self.player.dispatchEvent(clk)
-        }
-      }, false)
-    })
+    this.bulletBtn = new Control(this)
     this.emit('ready')
   }
 
