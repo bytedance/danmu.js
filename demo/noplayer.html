@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>danmu.js</title>
+    <style>
+      html {
+       width: 100%;
+       height: 100%;
+      }
+      body {
+       width: 100%;
+       height: 100%;
+      }
+      #wrap {
+        position: absolute;
+        left: 0;
+        width: 600px;
+        height: 337px;
+      }
+      #vs {
+        position: absolute;
+        left: 0;
+        width: 100%;
+        height: 50%;
+        z-index: 9999;
+        background: red;
+      }
+      #btnwrap {
+        position: absolute;
+        left: 0;
+        bottom: 20%;
+      }
+    </style>
+</head>
+<body>
+    <div id="wrap">
+      <div id="vs"></div>
+    </div>
+    <div id="btnwrap">
+      <div>
+        <button onclick="start()">弹幕开始</button>
+      </div>
+    </div>
+    <script src="../browser/index.js" charset="utf-8"></script>
+    <script type="text/javascript">
+        // let el = createDom('xg-el', '弹幕弹幕弹幕<img src="./grinning-face.png" />弹幕弹幕', {}, 'xgplayer-el')
+        let wrap = document.getElementById('wrap')
+        let direction = 'r2l'
+        let danmu = new window.DanmuJs({
+          container: document.getElementById('vs'),
+          containerStyle: {
+            zIndex: 100
+          },
+          live: true,
+          bOffset: 0,
+          // player,
+          direction,
+          comments: [],
+          area: {
+            start: 0,
+            end: 0.2
+          }
+        })
+
+        function start () {
+          danmu.start()
+
+          let id = 1
+
+          setInterval(function() {
+              id++
+              danmu.sendComment({  //发送弹幕
+                  duration: 6000,
+                  moveV: 100,
+                  id: id+'',
+                  txt: id+'11111', //弹幕文字内容
+              })
+          }, 600)
+        }
+    </script>
+</body>
+</html>

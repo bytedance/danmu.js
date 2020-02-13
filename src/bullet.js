@@ -8,6 +8,7 @@ class Bullet {
   constructor (danmu, options) {
     this.danmu = danmu
     this.duration = options.duration
+    this.moveV = options.moveV
     this.id = options.id
     this.container = danmu.container
     this.start = options.start
@@ -56,6 +57,10 @@ class Bullet {
     } else {
       this.width = this.elPos.width
       this.height = this.elPos.height
+    }
+    if(this.moveV) {
+      let containerPos = this.container.getBoundingClientRect()
+      this.duration = (containerPos.width + this.width) / this.moveV * 1000
     }
   }
   detach () {

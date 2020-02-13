@@ -143,6 +143,7 @@ class Main {
       list = self.data.filter(item => {
         return self.danmu.hideArr.indexOf(item.mode) < 0 && (!item.color || self.danmu.hideArr.indexOf('color') < 0)
       })
+      self.data = []
     }
 
     if (list.length > 0) {
