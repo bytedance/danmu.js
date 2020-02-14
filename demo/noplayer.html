@@ -41,6 +41,10 @@
       <div>
         <button onclick="start()">弹幕开始</button>
       </div>
+      <div>
+        <input type="text" id="comment" placeholder="输入弹幕内容"/>
+        <button onclick="sendComment()">发送弹幕</button>
+      </div>
     </div>
     <script src="../browser/index.js" charset="utf-8"></script>
     <script type="text/javascript">
@@ -56,27 +60,71 @@
           bOffset: 0,
           // player,
           direction,
-          comments: [],
+          // comments: [],
           area: {
             start: 0,
             end: 0.2
           }
         })
-
+        let id = 1
         function start () {
           danmu.start()
 
-          let id = 1
 
-          setInterval(function() {
-              id++
-              danmu.sendComment({  //发送弹幕
-                  duration: 6000,
-                  moveV: 100,
-                  id: id+'',
-                  txt: id+'11111', //弹幕文字内容
-              })
-          }, 600)
+
+          // setInterval(function() {
+          //     id++
+          //     danmu.sendComment({  //发送弹幕
+          //         // duration: 6000,
+          //         moveV: 50,
+          //         id: id+'',
+          //         txt: id+'11111', //弹幕文字内容
+          //         noDiscard: true,
+          //     })
+          // }, 2000)
+
+          setTimeout(function() {
+            danmu.sendComment({
+                moveV: 50,
+                id: '999',
+                txt: '1234567',
+                // loop: true,
+                noDiscard: true,
+            })
+          }, 2000)
+        }
+        // danmu.sendComment({
+        //     moveV: 100,
+        //     id: '1',
+        //     txt: '11111',
+        // })
+        // setTimeout(function() {
+        //     danmu.sendComment({
+        //         moveV: 100,
+        //         id: '2',
+        //         txt: '2222',
+        //     })
+        // }, 200)
+        function sendComment() {
+          id++;
+          let comment = document.getElementById('comment').value
+          danmu.sendComment({
+            duration: 5000,
+            moveV: 50,
+            id: id + '',
+            prior: true,
+            txt: comment,
+            noDiscard: true,
+            // style: {
+            //   color: '#ff9500',
+            //   fontSize: '20px',
+            //   border: 'solid 1px #ff9500',
+            //   borderRadius: '50px',
+            //   padding: '5px 11px',
+            //   backgroundColor: 'rgba(255, 255, 255, 0.1)'
+            // },
+            // mode: document.getElementById('hidetype').value
+          })
         }
     </script>
 </body>

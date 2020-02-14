@@ -60,9 +60,16 @@ class DanmuJs {
   }
 
   sendComment (comment) {
+    if(!comment.duration) {
+      comment.duration = 15000
+    }
     if (comment && comment.id && comment.duration && (comment.el || comment.txt)) {
       comment.duration = comment.duration < 5000 ? 5000 : comment.duration
-      this.bulletBtn.main.data.push(comment)
+      if(comment.prior) {
+        this.bulletBtn.main.data.unshift(comment)
+      } else {
+        this.bulletBtn.main.data.push(comment)
+      }
     }
   }
 
