@@ -7,6 +7,7 @@ import util from './utils/util'
 class Bullet {
   constructor (danmu, options) {
     this.danmu = danmu
+    this.options = options
     this.duration = options.duration
     this.moveV = options.moveV
     this.id = options.id

@@ -12,6 +12,7 @@ class Main {
     this.container = danmu.container
     this.channel = new Channel(danmu)// 弹幕轨道实例
     this.data = [].concat(danmu.config.comments)
+    this.playedData = []
     this.queue = []// 等待播放的弹幕队列
     this.timer = null// 弹幕动画定时器句柄
     this.retryTimer = null// 弹幕更新重试定时器句柄
@@ -140,10 +141,9 @@ class Main {
         })
       }
     } else {
-      list = self.data.filter(item => {
-        return self.danmu.hideArr.indexOf(item.mode) < 0 && (!item.color || self.danmu.hideArr.indexOf('color') < 0)
-      })
-      self.data = []
+      list = self.data.splice(0, 1)
+      // self.data = []
+      if(list.length === 0) list = self.playedData.splice(0, 1)
     }
 
     if (list.length > 0) {
@@ -157,6 +157,13 @@ class Main {
           bullet.topInit()
         } else {
           bullet.detach()
+          if(item.noDiscard) {
+            if(item.prior) {
+              self.data.unshift(item)
+            } else {
+              self.data.push(item)
+            }
+          }
         }
       })
     }

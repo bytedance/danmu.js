@@ -406,15 +406,17 @@ class Channel {
         if (bullet.prior) {
           // console.log(bullet.id + '号优先弹幕运行完毕')
           delete bullet['bookChannelId']
-          let dataList = danmu.bulletBtn.main.data
-          dataList.some(function (item) {
-            if (item.id === bullet.id) {
-              delete item['bookChannelId']
-              return true
-            } else {
-              return false
-            }
-          })
+          if(danmu.player) {
+            let dataList = danmu.bulletBtn.main.data
+            dataList.some(function (item) {
+              if (item.id === bullet.id) {
+                delete item['bookChannelId']
+                return true
+              } else {
+                return false
+              }
+            })
+          }
         }
         bullet.channel_id = [pos, occupy]
 
@@ -456,32 +458,36 @@ class Channel {
                 // console.log(j + '号轨道被' + bullet.id + '号优先弹幕预定')
               }
               let nextAddTime = 2
+              if(danmu.player) {
+                let dataList = danmu.bulletBtn.main.data
+                dataList.some(function (item) {
+                  if (item.id === bullet.id) {
+                    // console.log(bullet.id + '号优先弹幕将于' + nextAddTime + '秒后再次请求注册')
+                    item.start += nextAddTime * 1000
+                    item.bookChannelId = [pos, occupy]
+                    // console.log(bullet.id + '号优先弹幕预定了' + pos + '~' + pos + occupy - 1 + '号轨道')
+                    // console.log(`${bullet.id}号优先弹幕预定了${pos}~${pos + occupy - 1}号轨道`)
+                    return true
+                  } else {
+                    return false
+                  }
+                })
+              }
+            }
+          } else {
+            let nextAddTime = 2
+            if(danmu.player) {
               let dataList = danmu.bulletBtn.main.data
               dataList.some(function (item) {
                 if (item.id === bullet.id) {
                   // console.log(bullet.id + '号优先弹幕将于' + nextAddTime + '秒后再次请求注册')
                   item.start += nextAddTime * 1000
-                  item.bookChannelId = [pos, occupy]
-                  // console.log(bullet.id + '号优先弹幕预定了' + pos + '~' + pos + occupy - 1 + '号轨道')
-                  // console.log(`${bullet.id}号优先弹幕预定了${pos}~${pos + occupy - 1}号轨道`)
                   return true
                 } else {
                   return false
                 }
               })
             }
-          } else {
-            let nextAddTime = 2
-            let dataList = danmu.bulletBtn.main.data
-            dataList.some(function (item) {
-              if (item.id === bullet.id) {
-                // console.log(bullet.id + '号优先弹幕将于' + nextAddTime + '秒后再次请求注册')
-                item.start += nextAddTime * 1000
-                return true
-              } else {
-                return false
-              }
-            })
           }
         }
         return {
@@ -514,6 +520,9 @@ class Channel {
         }
         channel.operating[bullet.mode] = false
       }
+    }
+    if(bullet.options.loop) {
+      this.danmu.bulletBtn.main.playedData.push(bullet.options)
     }
   }
   resetArea () {
