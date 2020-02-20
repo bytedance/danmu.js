@@ -51,6 +51,7 @@ class Channel {
     let container = this.danmu.container
     let self = this
     setTimeout(function () {
+      let isDanmuPause = self.danmu.bulletBtn.main.status === 'paused'
       if (self.danmu.bulletBtn.main.data) {
         self.danmu.bulletBtn.main.data.forEach(item => {
           if (item.bookChannelId) {
@@ -118,7 +119,7 @@ class Channel {
                 channels[i].queue[key].push(item)
                 if(!item.resized) {
                   item.pauseMove(self.containerPos, isFullscreen)
-                  item.startMove(self.containerPos)
+                  !isDanmuPause && item.startMove(self.containerPos)
                   item.resized = true
                 }
               }
@@ -138,7 +139,7 @@ class Channel {
               }
               if(!item.resized) {
                 item.pauseMove(self.containerPos, isFullscreen)
-                item.startMove(self.containerPos)
+                !isDanmuPause && item.startMove(self.containerPos)
                 item.resized = true
               }
             }
@@ -197,7 +198,7 @@ class Channel {
                   }
                   if(!item.resized) {
                     item.pauseMove(self.containerPos, isFullscreen)
-                    item.startMove(self.containerPos)
+                    !isDanmuPause && item.startMove(self.containerPos)
                     item.resized = true
                   }
                 }
