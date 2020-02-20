@@ -88,7 +88,7 @@ class DanmuJs {
         if(item.id === oldID) {
           item.id = newID
           item.pauseMove(containerPos_)
-          item.startMove(containerPos_)
+          this.bulletBtn.main.status !== 'paused' && item.startMove(containerPos_)
           return true
         } else {
           return false
@@ -113,7 +113,7 @@ class DanmuJs {
         if(item.id === id) {
           item.duration = duration
           item.pauseMove(containerPos_)
-          item.startMove(containerPos_)
+          this.bulletBtn.main.status !== 'paused' && item.startMove(containerPos_)
           return true
         } else {
           return false
@@ -135,7 +135,7 @@ class DanmuJs {
         if(mode === item.mode) {
           item.duration = duration
           item.pauseMove(containerPos_)
-          item.startMove(containerPos_)
+          this.bulletBtn.main.status !== 'paused' && item.startMove(containerPos_)
         }
       })
     }
