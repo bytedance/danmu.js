@@ -23,7 +23,7 @@ const umd = {
           loader: 'css-loader',
           options: {
             importLoaders: 1,
-            minimize: true
+            minimize: false
           }
         },
         'postcss-loader',
@@ -32,7 +32,7 @@ const umd = {
     }]
   },
   optimization: {
-    minimize: true
+    minimize: false
   }
 }
 
@@ -58,7 +58,7 @@ const client = {
           loader: 'css-loader',
           options: {
             importLoaders: 1,
-            minimize: true
+            minimize: false
           }
         },
         'postcss-loader',
@@ -68,7 +68,7 @@ const client = {
   },
   mode: 'production',
   optimization: {
-    minimize: true
+    minimize: false
   }
 }
 

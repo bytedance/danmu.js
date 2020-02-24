@@ -54,6 +54,14 @@
         <button onclick="stop()">弹幕结束</button>
       </div>
       <div>
+        <input type="text" id="opacity" placeholder="透明度"/>
+        <button onclick="setOpacity()">改变透明度</button>
+      </div>
+      <div>
+        <input type="text" id="size" placeholder="改变大小"/>
+        <button onclick="setFontSize()">改变大小</button>
+      </div>
+      <div>
         <input type="text" id="comment" placeholder="输入弹幕内容"/>
         <button onclick="sendComment()">发送弹幕</button>
       </div>
@@ -62,18 +70,20 @@
         <button onclick="hide()">隐藏</button>
         <button onclick="show()">显示</button>
       </div>
-      <!-- <div>
+      <div>
         <input type="text" id="commentid" placeholder="输入弹幕id"/>
-        <input type="text" id="duration" placeholder="输入弹幕duration"/>
+        <button onclick="setCommentLike()">设置某个弹幕点赞text</button>
+        <!-- <input type="text" id="duration" placeholder="输入弹幕duration"/>
         <input type="text" id="commentnewid" placeholder="输入弹幕新id"/>
         <button onclick="setCommentDuration()">设置某个弹幕duration</button>
+        
         <button onclick="setAllDuration()">设置所有弹幕duration</button>
-        <button onclick="setCommentID()">设置某个弹幕id</button>
-      </div> -->
+        <button onclick="setCommentID()">设置某个弹幕id</button> -->
+      </div>
 
-      <button onclick="toggleFullscreen()">切换全屏状态</button>
+      <!-- <button onclick="toggleFullscreen()">切换全屏状态</button>
       <button onclick="toggleDirection()">切换弹幕方向</button>
-      <button onclick="toggleArea()">切换弹幕区域</button>
+      <button onclick="toggleArea()">切换弹幕区域</button> -->
     </div>
     <script src="../browser/index.js" charset="utf-8"></script>
     <script type="text/javascript">
@@ -81,6 +91,10 @@
         let wrap = document.getElementById('wrap')
         let player = document.getElementById('mse')
         let direction = 'r2l'
+
+        let like = document.createElement('span')
+        like.innerText = '10w+'
+
         let danmu = new window.DanmuJs({
           container: document.getElementById('vs'),
           containerStyle: {
@@ -89,103 +103,54 @@
           live: true,
           player,
           direction,
-          comments: [
-            {
-              duration: 6000,
-              id: '1',
-              start: 1000,
-              prior: true,
-              color: true,
-              txt: '长弹幕长弹幕',
-              style: {
-                color: '#ff9500',
-                fontSize: '20px',
-                border: 'solid 1px #ff9500',
-                borderRadius: '50px',
-                padding: '2px 11px',
-                backgroundColor: 'rgba(255, 255, 255, 0.1)'
-              },
-              // mode: 'top'
-            },
-            {
-              duration: 6000,
-              id: '2',
-              start: 2000,
-              prior: true,
-              color: true,
-              txt: '长弹幕',
-              style: {
-                color: '#ff9500',
-                fontSize: '20px',
-                border: 'solid 1px #ff9500',
-                borderRadius: '50px',
-                padding: '2px 11px',
-                backgroundColor: 'rgba(255, 255, 255, 0.1)'
-              },
-              // mode: 'bottom'
-            },
-            {
-              duration: 6000,
-              id: '3',
-              start: 3000,
-              prior: true,
-              color: true,
-              txt: '长弹幕长',
-              style: {
-                color: '#ff9500',
-                fontSize: '20px',
-                border: 'solid 1px #ff9500',
-                borderRadius: '50px',
-                padding: '2px 11px',
-                backgroundColor: 'rgba(255, 255, 255, 0.1)'
-              },
-              el: el
-            },
-            {
-              duration: 6000,
-              id: '4',
-              start: 4000,
-              prior: true,
-              // color: true,
-              txt: '长弹幕长弹幕长弹幕长弹幕',
-              style: {
-                color: '#000',
-                fontSize: '20px',
-                borderRadius: '50px',
-                padding: '2px 11px',
-                backgroundColor: 'rgba(255, 255, 255, 0.1)'
-              },
-              // mode: 'bottom'
-            }
-          ],
+          comments: [],
           area: {
             start: 0,
             end: 1
           }
         })
-        setTimeout(function () {
-          document.getElementById('mse').currentTime = 0
-        }, 15000)
-        let id = 5
+        danmu.on('bullet_pause', function (data) {
+          console.log(211212)
+          setTimeout(function () {
+            danmu.setCommentLike(data.bullet.id, {
+              el: like,
+              style: {
+                paddingLeft: '10px',
+                color: '#ff0000'
+              }
+            })
+            console.log('setCommentLike')
+            // setTimeout(function () {
+            //   danmu.startCommentMove(data.bullet.id)
+            // }, 4000)
+          }, 4000)
+        })
+
+        // setTimeout(function () {
+        //   document.getElementById('mse').currentTime = 0
+        // }, 15000)
+        
+        
+
         function start () {
           danmu.start()
-
           let id = 1
-
-        setInterval(function() {
-          id++
-          // let el = Player.util.createDom('div', '<span>张鑫:&nbsp;</span><img src="https://s1.pstatp.com/ee/annual-meeting-live/static/images/stickers/2.png" alt="2" />', {}, 'showed-sticker-danmu')
-
-          danmu.sendComment({  //发送弹幕
-              duration: 6000,
+          setInterval(function() {
+            id++;
+            danmu.sendComment({  //发送弹幕
+              duration: 5000,
               id: id+'',
               txt: id+'', //弹幕文字内容
-              style: {  //弹幕自定义样式
-                // color: fontcolor,
-                // fontSize: fontsize,
+              like: {
+                el: like,
+                style: {
+                  color: '#000',
+                  paddingLeft: '10px'
+                }
               },
-          })
-        }, 50)
+              style: {},
+            })
+          }, 50)
         }
 
         function play () {
@@ -200,26 +165,52 @@
           danmu.stop()
         }
 
-        function sendComment() {
-          id++;
-          let comment = document.getElementById('comment').value
-          danmu.sendComment({
-            duration: 5000,
-            id: id + '',
-            prior: true,
-            txt: comment,
-            style: {
-              color: '#ff9500',
-              fontSize: '20px',
-              border: 'solid 1px #ff9500',
-              borderRadius: '50px',
-              padding: '5px 11px',
-              backgroundColor: 'rgba(255, 255, 255, 0.1)'
-            },
-            mode: document.getElementById('hidetype').value
-          })
+        let id = 5
+        // function sendComment() {
+        //   id++;
+        //   let comment = document.getElementById('comment').value
+        //   let like = document.createElement('span')
+        //   like.innerText = '10w+'
+        //   danmu.sendComment({
+        //     duration: 5000,
+        //     id: id + '',
+        //     prior: true,
+        //     txt: comment,
+        //     style: {
+        //       color: '#000',
+        //       fontSize: '20px',
+        //       padding: '5px 12px',
+        //     },
+        //     like: {
+        //       el: like,
+        //       style: {
+        //         color: '#ff0000'
+        //       }
+        //     },
+        //     mode: document.getElementById('hidetype').value
+        //   })
+        // }
+
+        function setOpacity () {
+          let opacity = document.getElementById('opacity').value
+          danmu.setOpacity(opacity)
+        }
+        function setFontSize () {
+          let size = document.getElementById('size').value
+          danmu.setFontSize(size)
         }
 
+        function setCommentLike () {
+          let id = document.getElementById('commentid').value
+          danmu.setCommentLike(id, {
+            el: like,
+            style: {
+              paddingLeft: '10px',
+              color: '#ff0000'
+            }
+          })
+        }
+        
         function setCommentDuration() {
           let id = document.getElementById('commentid').value
           let duration = document.getElementById('duration').value
