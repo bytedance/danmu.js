@@ -23,6 +23,9 @@ class Main {
     this.danmu.on('changeDirection', direction => {
       self.danmu.direction = direction
     })
+    this.danmu.on('bullet_pause', bullet => {
+      console.log(bullet)
+    })
   }
   // 在渲染队列中移除已经展示完的弹幕对象
   updateQueue (rdata) {
@@ -150,7 +153,6 @@ class Main {
       list.forEach(item => {
         bullet = new Bullet(danmu, item)
         bullet.attach()
-        // console.log(list.length)
         result = channel.addBullet(bullet)
         if (result.result) {
           self.queue.push(bullet)
