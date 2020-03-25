@@ -42,7 +42,7 @@ class DanmuJs {
     self.bulletBtn = new Control(self)
     self.emit('ready')
   }
-
+  
   start () {
     this.bulletBtn.main.start()
   }
@@ -65,11 +65,12 @@ class DanmuJs {
     }
     if (comment && comment.id && comment.duration && (comment.el || comment.txt)) {
       comment.duration = comment.duration < 5000 ? 5000 : comment.duration
+      // console.log(comment.style)
       if (comment.style) {
-        if (this.opacity !== comment.style.opacity) {
+        if (this.opacity && this.opacity !== comment.style.opacity) {
           comment.style.opacity = this.opacity
         }
-        if (this.fontSize !== comment.style.fontSize) {
+        if (this.fontSize && this.fontSize !== comment.style.fontSize) {
           comment.style.fontSize = this.fontSize
         }
         if (this.like) {
@@ -158,18 +159,55 @@ class DanmuJs {
     }
   }
 
-  startCommentMove (id) {
-    let containerPos_ = this.container.getBoundingClientRect()
+  restartComment (id) {
+    this.mouseControl = false
+    let pos = this.container.getBoundingClientRect()
     if (id) {
       this.bulletBtn.main.queue.some(item => {
         if(item.id === id) {
-          item.startMove(containerPos_)
+          if (item.danmu.bulletBtn.main.status !== 'paused') {
+            item.startMove(pos, true)
+          }
+          else {
+            item.status = 'paused'
+          }
           return true
         } else {
           return false
         }
       })
     }
+  }
+
+  freezeComment (id) {
+    this.mouseControl = true
+    let pos = this.container.getBoundingClientRect()
+    if (id) {
+      this.bulletBtn.main.queue.some(item => {
+        if(item.id === id) {
+          item.status = 'forcedPause'
+          item.pauseMove(pos)
+          if (item.el && item.el.style) {
+            item.el.style.zIndex = 10
+          }
+          return true
+        } else {
+          return false
+        }
+      })
+    }
+  }
+
+  removeComment (id) {
+    if (!id) return
+    this.bulletBtn.main.queue.some(item => {
+      if(item.id === id) {
+        item.remove()
+        return true
+      } else {
+        return false
+      }
+    })
   }
 
   setAllDuration (mode = 'scroll', duration) {
@@ -185,30 +223,19 @@ class DanmuJs {
         if(mode === item.mode) {
           item.duration = duration
           item.pauseMove(containerPos_)
-          item.startMove(containerPos_)
+          if (item.danmu.bulletBtn.main.status !== 'paused') {
+            item.startMove(containerPos_)
+          }
         }
       })
     }
   }
 
   setOpacity (opacity) {
-    let pos = this.container.getBoundingClientRect()
-    this.opacity = opacity
-    if (opacity) {
-      this.bulletBtn.main.data.forEach(data => {
-        if (data.style) {
-          data.style.opacity = opacity
-        }
-      })
-      this.bulletBtn.main.queue.forEach(item => {
-        item.pauseMove(pos)
-        item.setOpacity(opacity)
-        item.startMove(pos)
-      })
-    }
+    this.container.style.opacity = opacity
   }
   
-  setFontSize (size) {
+  setFontSize (size, fontSize) {
     this.fontSize = `${size}px`
     if (size) {
       this.bulletBtn.main.data.forEach(data => {
@@ -216,7 +243,23 @@ class DanmuJs {
           data.style.fontSize = this.fontSize
         }
       })
+      this.bulletBtn.main.queue.forEach(item => {
+        if (!item.options.style) {
+          item.options.style = {}
+        }
+        item.options.style.fontSize = this.fontSize
+        item.setFontSize(this.fontSize)
+      })
     }
+    if (fontSize) {
+      this.config.fontSize = fontSize
+      this.bulletBtn.main.channel.resize(true)
+    }
+  }
+  
+  setArea (area) {
+    this.config.area = area
+    this.bulletBtn.main.channel.resize(true)
   }
 
   hide (mode = 'scroll') {

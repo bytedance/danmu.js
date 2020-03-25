@@ -16,16 +16,14 @@ class Main {
     this.queue = []// 等待播放的弹幕队列
     this.timer = null// 弹幕动画定时器句柄
     this.retryTimer = null// 弹幕更新重试定时器句柄
-    this.interval = 2000// 弹幕队列缓存间隔
+    this.interval = danmu.config.interval || 2000// 弹幕队列缓存间隔
     this.status = 'idle'// 当前弹幕正在闲置
     danmu.on('bullet_remove', this.updateQueue.bind(this))
     let self = this
     this.danmu.on('changeDirection', direction => {
       self.danmu.direction = direction
     })
-    this.danmu.on('bullet_pause', bullet => {
-      console.log(bullet)
-    })
+    this.nums = 0
   }
   // 在渲染队列中移除已经展示完的弹幕对象
   updateQueue (rdata) {
@@ -152,10 +150,14 @@ class Main {
     if (list.length > 0) {
       list.forEach(item => {
         bullet = new Bullet(danmu, item)
-        bullet.attach()
+        if (!item.hasAttached) {
+          bullet.attach()
+          item.hasAttach = true
+        }
         result = channel.addBullet(bullet)
         if (result.result) {
           self.queue.push(bullet)
+          self.nums++;
           bullet.topInit()
         } else {
           bullet.detach()
