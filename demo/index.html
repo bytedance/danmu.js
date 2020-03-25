@@ -22,7 +22,7 @@
         position: absolute;
         left: 0;
         width: 100%;
-        height: 50%;
+        height: 100%;
         z-index: 9999
       }
       #mse {
@@ -33,8 +33,8 @@
       }
       #btnwrap {
         position: absolute;
-        left: 0;
-        bottom: 20%;
+        right: 20px;
+        top: 20px;
       }
     </style>
 </head>
@@ -61,22 +61,29 @@
         <input type="text" id="size" placeholder="改变大小"/>
         <button onclick="setFontSize()">改变大小</button>
       </div>
+
       <div>
+        <input type="text" id="duration" placeholder="改变duration"/>
+        <button onclick="setAllDuration()">改变大小</button>
+      </div>
+      <!-- <div>
+        <button onclick="setArea()">改变弹幕区域</button>
+      </div> -->
+      <!-- <div>
         <input type="text" id="comment" placeholder="输入弹幕内容"/>
         <button onclick="sendComment()">发送弹幕</button>
-      </div>
+      </div> -->
       <div>
-        <input type="text" id="hidetype" placeholder="输入要屏蔽的弹幕类型"/>
+        <!-- <input type="text" id="hidetype" placeholder="输入要屏蔽的弹幕类型"/>
         <button onclick="hide()">隐藏</button>
-        <button onclick="show()">显示</button>
+        <button onclick="show()">显示</button> -->
       </div>
       <div>
-        <input type="text" id="commentid" placeholder="输入弹幕id"/>
-        <button onclick="setCommentLike()">设置某个弹幕点赞text</button>
+        <!-- <input type="text" id="commentid" placeholder="输入弹幕id"/>
+        <button onclick="setCommentLike()">设置某个弹幕点赞text</button> -->
         <!-- <input type="text" id="duration" placeholder="输入弹幕duration"/>
         <input type="text" id="commentnewid" placeholder="输入弹幕新id"/>
         <button onclick="setCommentDuration()">设置某个弹幕duration</button>
-        
         <button onclick="setAllDuration()">设置所有弹幕duration</button>
         <button onclick="setCommentID()">设置某个弹幕id</button> -->
       </div>
@@ -96,6 +103,9 @@
         like.innerText = '10w+'
 
         let danmu = new window.DanmuJs({
+          // interval: 1000,
+          mouseControl: true,
+          mouseControlPause: false,
           container: document.getElementById('vs'),
           containerStyle: {
             zIndex: 100
@@ -103,54 +113,64 @@
           live: true,
           player,
           direction,
-          comments: [],
+          comments: [
+            {
+              duration: 5000,
+              start: 0,
+              id: 1 + '',
+              txt: 1 + '', //弹幕文字内容
+              style: {
+                  fontSize: '25px',
+                  lineHeight: 1.125
+              }
+            }
+          ],
+          fontSize: 14,
           area: {
             start: 0,
-            end: 1
+            end: 0.5
           }
         })
         danmu.on('bullet_pause', function (data) {
-          console.log(211212)
-          setTimeout(function () {
-            danmu.setCommentLike(data.bullet.id, {
-              el: like,
-              style: {
-                paddingLeft: '10px',
-                color: '#ff0000'
-              }
-            })
-            console.log('setCommentLike')
-            // setTimeout(function () {
-            //   danmu.startCommentMove(data.bullet.id)
-            // }, 4000)
-          }, 4000)
+          console.log(data)
         })
 
-        // setTimeout(function () {
-        //   document.getElementById('mse').currentTime = 0
-        // }, 15000)
-        
-        
-
+        danmu.on('bullet_hover', function (data) {
+          console.log(data.event)
+          // danmu.freezeComment(data.bullet.id)
+          // setTimeout(function () {
+          //   danmu.restartComment(data.bullet.id)
+          // }, 4000)
+        })
         function start () {
           danmu.start()
           let id = 1
           setInterval(function() {
             id++;
+            let like = document.createElement('span')
+            like.innerText = '10w+'
+            console.log(document.getElementById('duration').value || 5000)
             danmu.sendComment({  //发送弹幕
-              duration: 5000,
+              duration: document.getElementById('duration').value || 5000,
               id: id+'',
               txt: id+'', //弹幕文字内容
+              style: {
+                fontSize: '25px',
+                lineHeight: 1.125,
+                color: '#fff'
+              },
+              originData: {
+                x: '2121'
+              },
               like: {
                 el: like,
                 style: {
-                  color: '#000',
-                  paddingLeft: '10px'
+                  paddingLeft: '10px',
+                  color: '#ff0000'
                 }
-              },
-              style: {},
+              }
             })
-          }, 50)
+          }, 100)
         }
 
         function play () {
@@ -166,30 +186,31 @@
         }
 
         let id = 5
-        // function sendComment() {
-        //   id++;
-        //   let comment = document.getElementById('comment').value
-        //   let like = document.createElement('span')
-        //   like.innerText = '10w+'
-        //   danmu.sendComment({
-        //     duration: 5000,
-        //     id: id + '',
-        //     prior: true,
-        //     txt: comment,
-        //     style: {
-        //       color: '#000',
-        //       fontSize: '20px',
-        //       padding: '5px 12px',
-        //     },
-        //     like: {
-        //       el: like,
-        //       style: {
-        //         color: '#ff0000'
-        //       }
-        //     },
-        //     mode: document.getElementById('hidetype').value
-        //   })
-        // }
+        function sendComment() {
+          id++;
+          let comment = document.getElementById('comment').value
+          let like = document.createElement('span')
+          like.innerText = '10w+'
+          danmu.sendComment({
+            duration: document.getElementById('duration').value || 5000,
+            id: id + '',
+            prior: true,
+            txt: comment,
+            style: {
+              color: '#000',
+              fontSize: '25px',
+              padding: '5px 12px',
+              fontSize: '25px',
+              lineHeight: 1.125
+            },
+            like: {
+              el: like,
+              style: {
+                color: '#ff0000'
+              }
+            }
+          })
+        }
 
         function setOpacity () {
           let opacity = document.getElementById('opacity').value
@@ -198,6 +219,18 @@
         function setFontSize () {
           let size = document.getElementById('size').value
           danmu.setFontSize(size)
+        }
+
+        function setAllDuration () {
+          let duration = document.getElementById('duration').value
+          danmu.setAllDuration(duration)
+        }
+
+        function setArea () {
+          danmu.setArea({
+            start: 0,
+            end: 0.5
+          })
         }
 
         function setCommentLike () {

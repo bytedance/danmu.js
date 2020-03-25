@@ -1,0 +1,38 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    
+    video {
+      width: 400px;
+      height: 300px;
+      background-color: #000;
+      -webkit-mask-repeat: no-repeat;
+      -webkit-mask-origin: content-box;
+      -webkit-mask-size: 100%;
+      -webkit-mask-image: linear-gradient(45deg, black, #000);
+    }
+    
+    #v1 {
+      -webkit-mask-position-x: left;
+      -webkit-mask-position-y: top;
+      -webkit-mask-size: 75%;
+      position: absolute;
+      left: 0;
+    }
+    #v2 {
+      -webkit-mask-position-x: right;
+      -webkit-mask-position-y: top;
+      -webkit-mask-size: 25%;
+      position: absolute;
+      left: 0;
+    }
+  </style>
+</head>
+<body>
+  <video id="v1" controls src="//s1.pstatp.com/cdn/expire-1-M/byted-player-videos/1.0.0/xgplayer-demo.mp4"></video>
+  <video id="v2" controls src="//s1.pstatp.com/cdn/expire-1-M/byted-player-videos/1.0.0/xgplayer-demo.mp4"></video>
+</body>
+</html>

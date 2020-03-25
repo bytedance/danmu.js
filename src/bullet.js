@@ -49,7 +49,8 @@ class Bullet {
     }
     this.status = 'waiting'// waiting,start,end
     let containerPos = this.container.getBoundingClientRect()
-    this.el.style.left = `${containerPos.width}px`
+    var random = Math.floor(Math.random() * ((containerPos.width / 10) > 100 ? 100 : containerPos.width / 10));
+    this.el.style.left = containerPos.width + random + 'px';
   }
   attach () {
     let self = this
@@ -66,28 +67,28 @@ class Bullet {
       let containerPos = self.container.getBoundingClientRect()
       self.duration = (containerPos.width + self.width) / self.moveV * 1000
     }
-    self.el.addEventListener('mouseover', self.mouseoverFun.bind(self))
+    if (self.danmu.config.mouseControl) {
+      self.el.addEventListener('mouseover', self.mouseoverFun.bind(self))
+    } 
   }
-  mouseoverFun () {
+  mouseoverFun (event) {
     let self = this
-    let containerPos_ = self.danmu.container.getBoundingClientRect()
-    self.pauseMove(containerPos_)
-    self.status = 'farcePaused'
-    self.danmu.emit('bullet_pause', {
-      bullet: self
+    if ((self.danmu.mouseControl && self.danmu.config.mouseControlPause) || self.status === 'waiting' || self.status === 'end') {
+      return
+    } 
+    self.danmu.emit('bullet_hover', {
+      bullet: self,
+      event: event
     })
   }
   detach () {
     let self = this
-    self.el && self.el.removeEventListener('mouseover', self.mouseoverFun.bind(self))
     if(self.container && self.el) {
       self.domObj.unuse(self.el)
-      self.container.removeChild(self.el)
     }
     self.danmu.off('changeDirection', direction => {
       self.direction = direction
     })
-    self.el = null
   }
   topInit () {
     if(this.direction === 'b2t') {
@@ -105,7 +106,9 @@ class Bullet {
     if(this.status === 'paused') {
       return
     }
-    this.status = 'paused'
+    if (self.status !== 'forcedPause') {
+      this.status = 'paused'
+    }
     clearTimeout(self.removeTimer)
     if (!this.el) {
       return
@@ -158,9 +161,15 @@ class Bullet {
       }
     }
   }
-  startMove (containerPos) {
-    console.log('startMove')
+  startMove (containerPos, force) {
     let self = this
+    if (!self.hasMove) {
+      self.danmu.emit('bullet_start', self)
+      self.hasMove = true
+    }
+    if (self.status === 'forcedPause' && !force) {
+      return
+    }
     if (!this.el) return
     if(this.status === 'start') return
     this.status = 'start'
@@ -176,7 +185,9 @@ class Bullet {
               self.remove()
             } else {
               self.pauseMove(containerPos_)
-              self.startMove(containerPos_)
+              if (self.danmu.bulletBtn.main.status !== 'paused') {
+                self.startMove(containerPos_)
+              }
             }
           } else {
             if (bulletPos && bulletPos.right <= containerPos_.left + 100) {
@@ -184,7 +195,9 @@ class Bullet {
               self.remove()
             } else {
               self.pauseMove(containerPos_)
-              self.startMove(containerPos_)
+              if (self.danmu.bulletBtn.main.status !== 'paused') {
+                self.startMove(containerPos_)
+              }
             }
           }
         } else {
@@ -245,6 +258,7 @@ class Bullet {
       this.danmu.off('changeDirection', direction => {
         self.direction = direction
       })
+      // self.el.removeEventListener('mouseover', self.mouseoverFun.bind(self))
       this.domObj.unuse(self.el)
       let parent = self.el.parentNode
       parent.removeChild(self.el)
@@ -254,14 +268,9 @@ class Bullet {
       })
     }
   }
-  setOpacity (opacity) {
-    if (this.el) {
-      this.el.style[ 'opacity' ] = opacity
-    }
-  }
   setFontSize (size) {
     if (this.el) {
-      this.el.style[ 'fontSize' ] = `${size}px`
+      this.el.style[ 'fontSize' ] = size
     }
   }
   setLikeDom (el, style) {
