@@ -42,6 +42,7 @@ class Channel {
     }
     self.resizeing = true
     setTimeout(function () {
+      let isDanmuPause = self.danmu.bulletBtn.main.status === 'paused'
       if (self.danmu.bulletBtn.main.data) {
         self.danmu.bulletBtn.main.data.forEach(item => {
           if (item.bookChannelId) {
