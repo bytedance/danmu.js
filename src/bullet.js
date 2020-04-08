@@ -49,7 +49,10 @@ class Bullet {
     }
     this.status = 'waiting'// waiting,start,end
     let containerPos = this.container.getBoundingClientRect()
-    var random = Math.floor(Math.random() * ((containerPos.width / 10) > 100 ? 100 : containerPos.width / 10));
+    var random = Math.floor(Math.random() * ((containerPos.width / 10) > 100 ? 200 : containerPos.width / 10));
+    if (options.realTime) {
+      random = 0
+    }
     this.el.style.left = containerPos.width + random + 'px';
   }
   attach () {
