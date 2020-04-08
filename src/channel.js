@@ -64,7 +64,7 @@ class Channel {
         }
       }
       self.container = container
-      let fontSize = self.danmu.config.fontSize || (/mobile/ig.test(navigator.userAgent) ? 10 : 12)
+      let fontSize = self.danmu.config.channelSize || (/mobile/ig.test(navigator.userAgent) ? 10 : 12)
       let channelSize
       if(self.direction === 'b2t') {
         channelSize = Math.floor(self.width / fontSize)
@@ -538,7 +538,7 @@ class Channel {
       }
     }
     self.container = container
-    let fontSize =self.danmu.config.fontSize || (/mobile/ig.test(navigator.userAgent) ? 10 : 12)
+    let fontSize =self.danmu.config.channelSize || (/mobile/ig.test(navigator.userAgent) ? 10 : 12)
     let channelSize
     if(self.direction === 'b2t') {
       channelSize = Math.floor(self.width / fontSize)
@@ -723,7 +723,7 @@ class Channel {
         }
       }
       self.container = container
-      let fontSize =self.danmu.config.fontSize || (/mobile/ig.test(navigator.userAgent) ? 10 : 12)
+      let fontSize = self.danmu.config.channelSize || (/mobile/ig.test(navigator.userAgent) ? 10 : 12)
       let channelSize
       if(self.direction === 'b2t') {
         channelSize = Math.floor(self.width / fontSize)
@@ -780,7 +780,7 @@ class Channel {
       }
     }
     self.container = container
-    let fontSize = self.danmu.config.fontSize || (/mobile/ig.test(navigator.userAgent) ? 10 : 12)
+    let fontSize = self.danmu.config.channelSize || (/mobile/ig.test(navigator.userAgent) ? 10 : 12)
     let channelSize
     if(self.direction === 'b2t') {
       channelSize = Math.floor(self.width / fontSize)
