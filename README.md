@@ -48,6 +48,13 @@
             padding: '2px 11px',
           },
           mode: 'top' //显示模式，top顶部居中，bottom底部居中，scroll滚动，默认为scroll
+          like: { // 点赞相关参数
+            el: likeDOM, // el 仅支持传入 dom 
+            style: { // el 绑定样式
+              paddingLeft: '10px',
+              color: '#ff0000'
+            }
+          }
           // el: DOM //直接传入一个自定义的DOM元素作为弹幕，使用该项的话会忽略所提供的txt和style
         }
       ],
@@ -55,6 +62,9 @@
         start: 0, //区域顶部到播放器顶部所占播放器高度的比例
         end: 1 //区域底部到播放器顶部所占播放器高度的比例
       },
+      channelSize: 40, // 轨道大小
+      mouseControl: true, // 打开鼠标控制, 打开后可监听到 bullet_hover 事件。danmu.on('bullet_hover', function (data) {})
+      mouseControlPause: false, // 鼠标触摸暂停。mouseControl: true 生效
       //bOffset: 1000, //可调节弹幕横向间隔（毫秒）
       defaultOff: true //开启此项后弹幕不会初始化，默认初始化弹幕
     })
@@ -83,20 +93,6 @@ player.danmu.sendComment({  //发送弹幕
         borderRadius: '50px',
         padding: '5px 11px',
         backgroundColor: 'rgba(255, 255, 255, 0.1)'
-    },
-    channelSize: 40, // 轨道大小
-    area: {
-      start: 0,
-      end: 0.5
-    }, // 显示区域
-    mouseControl: true, // 打开鼠标控制, 打开后可监听到 bullet_hover 事件。danmu.on('bullet_hover', function (data) {})
-    mouseControlPause: false, // 鼠标触摸暂停。mouseControl: true 生效
-    like: {
-      el: likeDOM, // el 仅支持传入 dom 
-      style: { // el 绑定样式
-        paddingLeft: '10px',
-        color: '#ff0000'
-      }
     }
 })
 player.danmu.setCommentDuration(id, duration) //按照id改变某一个弹幕的持续显示时间
