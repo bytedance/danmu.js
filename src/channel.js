@@ -14,23 +14,18 @@ class Channel {
     this.danmu.on('changeDirection', direction => {
       self.direction = direction
     })
+
     this.containerPos = this.danmu.container.getBoundingClientRect()
     this.containerWidth = this.containerPos.width
     this.containerHeight = this.containerPos.height
     this.containerLeft = this.containerPos.left
     this.containerRight = this.containerPos.right
-    // this.player.on('timeupdate', function () {
     this.danmu.bulletResizeTimer = setInterval(function () {
       self.containerPos = self.danmu.container.getBoundingClientRect()
+      if (self.resizeing) {
+        return
+      }
       if (Math.abs(self.containerPos.width - self.containerWidth) >= 2 || Math.abs(self.containerPos.height - self.containerHeight) >= 2 || Math.abs(self.containerPos.left - self.containerLeft) >= 2 || Math.abs(self.containerPos.right - self.containerRight) >= 2) {
-        // console.log('新播放器宽度：' + self.containerPos.width)
-        // console.log('旧播放器宽度：' + self.playerWidth)
-        // console.log('新播放器高度：' + self.containerPos.height)
-        // console.log('旧播放器高度：' + self.playerHeight)
-        // console.log('新播放器左：' + self.containerPos.left)
-        // console.log('旧播放器左：' + self.playerLeft)
-        // console.log('新播放器右：' + self.containerPos.right)
-        // console.log('旧播放器右：' + self.playerRight)
         self.containerWidth = self.containerPos.width
         self.containerHeight = self.containerPos.height
         self.containerLeft = self.containerPos.left
@@ -38,18 +33,14 @@ class Channel {
         self.resize(true)
       }
     }, 50)
-    // ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'].forEach(item => {
-    //   document.addEventListener(item, function () {
-    //     console.log(item)
-    //     setTimeout(function () {
-    //       self.resize(true)
-    //     }, 20)
-    //   })
-    // })
   }
   resize (isFullscreen = false) {
     let container = this.danmu.container
     let self = this
+    if (self.resizeing) {
+      return
+    }
+    self.resizeing = true
     setTimeout(function () {
       let isDanmuPause = self.danmu.bulletBtn.main.status === 'paused'
       if (self.danmu.bulletBtn.main.data) {
@@ -64,7 +55,7 @@ class Channel {
       let size = container.getBoundingClientRect()
       self.width = size.width
       self.height = size.height
-
+  
       if (self.danmu.config.area && self.danmu.config.area.start >= 0 && self.danmu.config.area.end >= self.danmu.config.area.start) {
         if(self.direction === 'b2t') {
           self.width = self.width * (self.danmu.config.area.end - self.danmu.config.area.start)
@@ -73,7 +64,7 @@ class Channel {
         }
       }
       self.container = container
-      let fontSize = /mobile/ig.test(navigator.userAgent) ? 10 : 12
+      let fontSize = self.danmu.config.channelSize || (/mobile/ig.test(navigator.userAgent) ? 10 : 12)
       let channelSize
       if(self.direction === 'b2t') {
         channelSize = Math.floor(self.width / fontSize)
@@ -119,7 +110,9 @@ class Channel {
                 channels[i].queue[key].push(item)
                 if(!item.resized) {
                   item.pauseMove(self.containerPos, isFullscreen)
-                  !isDanmuPause && item.startMove(self.containerPos)
+                  if (item.danmu.bulletBtn.main.status !== 'paused') {
+                    item.startMove(self.containerPos)
+                  }
                   item.resized = true
                 }
               }
@@ -139,7 +132,9 @@ class Channel {
               }
               if(!item.resized) {
                 item.pauseMove(self.containerPos, isFullscreen)
-                !isDanmuPause && item.startMove(self.containerPos)
+                if (item.danmu.bulletBtn.main.status !== 'paused') {
+                  item.startMove(self.containerPos)
+                }
                 item.resized = true
               }
             }
@@ -177,9 +172,9 @@ class Channel {
           };
           ['scroll', 'top', 'bottom'].forEach(key => {
             if (key === 'top' && i > Math.floor(channels.length / 2)) {
-
+  
             } else if (key === 'bottom' && i <= Math.floor(channels.length / 2)) {
-
+  
             } else {
               let num = key === 'bottom' ? i - channels.length + self.channels.length : i
               self.channels[num].queue[key].forEach((item, index) => {
@@ -196,9 +191,11 @@ class Channel {
                       item.topInit()
                     }
                   }
+                  item.pauseMove(self.containerPos, isFullscreen)
+                  if (item.danmu.bulletBtn.main.status !== 'paused') {
+                    item.startMove(self.containerPos)
+                  }
                   if(!item.resized) {
-                    item.pauseMove(self.containerPos, isFullscreen)
-                    !isDanmuPause && item.startMove(self.containerPos)
                     item.resized = true
                   }
                 }
@@ -230,6 +227,7 @@ class Channel {
           self.channelHeight = fontSize
         }
       }
+      self.resizeing = false
     }, 10)
   }
   addBullet (bullet) {
@@ -540,7 +538,7 @@ class Channel {
       }
     }
     self.container = container
-    let fontSize = /mobile/ig.test(navigator.userAgent) ? 10 : 12
+    let fontSize =self.danmu.config.channelSize || (/mobile/ig.test(navigator.userAgent) ? 10 : 12)
     let channelSize
     if(self.direction === 'b2t') {
       channelSize = Math.floor(self.width / fontSize)
@@ -725,7 +723,7 @@ class Channel {
         }
       }
       self.container = container
-      let fontSize = /mobile/ig.test(navigator.userAgent) ? 10 : 12
+      let fontSize = self.danmu.config.channelSize || (/mobile/ig.test(navigator.userAgent) ? 10 : 12)
       let channelSize
       if(self.direction === 'b2t') {
         channelSize = Math.floor(self.width / fontSize)
@@ -782,7 +780,7 @@ class Channel {
       }
     }
     self.container = container
-    let fontSize = /mobile/ig.test(navigator.userAgent) ? 10 : 12
+    let fontSize = self.danmu.config.channelSize || (/mobile/ig.test(navigator.userAgent) ? 10 : 12)
     let channelSize
     if(self.direction === 'b2t') {
       channelSize = Math.floor(self.width / fontSize)

@@ -15,14 +15,14 @@
       #wrap {
         position: absolute;
         left: 0;
-        width: 600px;
+        width: 1280px;
         height: 337px;
       }
       #vs {
         position: absolute;
         left: 0;
         width: 100%;
-        height: 50%;
+        height: 100%;
         z-index: 9999
       }
       #mse {
@@ -33,8 +33,8 @@
       }
       #btnwrap {
         position: absolute;
-        left: 0;
-        bottom: 20%;
+        right: 20px;
+        top: 400px;
       }
     </style>
 </head>
@@ -54,26 +54,43 @@
         <button onclick="stop()">弹幕结束</button>
       </div>
       <div>
+        <input type="text" id="opacity" placeholder="透明度"/>
+        <button onclick="setOpacity()">改变透明度</button>
+      </div>
+      <div>
+        <input type="text" id="size" placeholder="改变大小"/>
+        <button onclick="setFontSize()">改变大小</button>
+      </div>
+
+      <div>
+        <input type="text" id="duration" placeholder="改变duration"/>
+        <button onclick="setAllDuration()">改变duration</button>
+      </div>
+      <!-- <div>
+        <button onclick="setArea()">改变弹幕区域</button>
+      </div> -->
+      <div>
         <input type="text" id="comment" placeholder="输入弹幕内容"/>
         <button onclick="sendComment()">发送弹幕</button>
       </div>
       <div>
-        <input type="text" id="hidetype" placeholder="输入要屏蔽的弹幕类型"/>
+        <!-- <input type="text" id="hidetype" placeholder="输入要屏蔽的弹幕类型"/>
         <button onclick="hide()">隐藏</button>
-        <button onclick="show()">显示</button>
+        <button onclick="show()">显示</button> -->
       </div>
-      <!-- <div>
-        <input type="text" id="commentid" placeholder="输入弹幕id"/>
-        <input type="text" id="duration" placeholder="输入弹幕duration"/>
+      <div>
+        <!-- <input type="text" id="commentid" placeholder="输入弹幕id"/>
+        <button onclick="setCommentLike()">设置某个弹幕点赞text</button> -->
+        <!-- <input type="text" id="duration" placeholder="输入弹幕duration"/>
         <input type="text" id="commentnewid" placeholder="输入弹幕新id"/>
         <button onclick="setCommentDuration()">设置某个弹幕duration</button>
         <button onclick="setAllDuration()">设置所有弹幕duration</button>
-        <button onclick="setCommentID()">设置某个弹幕id</button>
-      </div> -->
+        <button onclick="setCommentID()">设置某个弹幕id</button> -->
+      </div>
 
-      <button onclick="toggleFullscreen()">切换全屏状态</button>
+      <!-- <button onclick="toggleFullscreen()">切换全屏状态</button>
       <button onclick="toggleDirection()">切换弹幕方向</button>
-      <button onclick="toggleArea()">切换弹幕区域</button>
+      <button onclick="toggleArea()">切换弹幕区域</button> -->
     </div>
     <!-- <script src="//cdn.jsdelivr.net/npm/danmu.js@0.2.5/browser/index.js" charset="utf-8"></script> -->
     <script src="../browser/index.js" charset="utf-8"></script>
@@ -82,7 +99,14 @@
         let wrap = document.getElementById('wrap')
         let player = document.getElementById('mse')
         let direction = 'r2l'
+
+        let like = document.createElement('span')
+        like.innerText = '10w+'
+
         let danmu = new window.DanmuJs({
+          interval: 1500,
+          mouseControl: true,
+          mouseControlPause: false,
           container: document.getElementById('vs'),
           containerStyle: {
             zIndex: 100
@@ -92,101 +116,61 @@
           direction,
           comments: [
             {
-              duration: 6000,
-              id: '1',
-              start: 1000,
-              prior: true,
-              color: true,
-              txt: '长弹幕长弹幕',
+              duration: 5000,
+              start: 0,
+              id: 1 + '',
+              txt: 1 + '', //弹幕文字内容
               style: {
-                color: '#ff9500',
-                fontSize: '20px',
-                border: 'solid 1px #ff9500',
-                borderRadius: '50px',
-                padding: '2px 11px',
-                backgroundColor: 'rgba(255, 255, 255, 0.1)'
-              },
-              // mode: 'top'
-            },
-            {
-              duration: 6000,
-              id: '2',
-              start: 2000,
-              prior: true,
-              color: true,
-              txt: '长弹幕',
-              style: {
-                color: '#ff9500',
-                fontSize: '20px',
-                border: 'solid 1px #ff9500',
-                borderRadius: '50px',
-                padding: '2px 11px',
-                backgroundColor: 'rgba(255, 255, 255, 0.1)'
-              },
-              // mode: 'bottom'
-            },
-            {
-              duration: 6000,
-              id: '3',
-              start: 3000,
-              prior: true,
-              color: true,
-              txt: '长弹幕长',
-              style: {
-                color: '#ff9500',
-                fontSize: '20px',
-                border: 'solid 1px #ff9500',
-                borderRadius: '50px',
-                padding: '2px 11px',
-                backgroundColor: 'rgba(255, 255, 255, 0.1)'
-              },
-              el: el
-            },
-            {
-              duration: 6000,
-              id: '4',
-              start: 4000,
-              prior: true,
-              // color: true,
-              txt: '长弹幕长弹幕长弹幕长弹幕',
-              style: {
-                color: '#000',
-                fontSize: '20px',
-                borderRadius: '50px',
-                padding: '2px 11px',
-                backgroundColor: 'rgba(255, 255, 255, 0.1)'
-              },
-              // mode: 'bottom'
+                  fontSize: '20px'
+              }
             }
           ],
+          fontSize: 32.8,
           area: {
             start: 0,
-            end: 1
+            end: 0.5
           }
         })
-        setTimeout(function () {
-          document.getElementById('mse').currentTime = 0
-        }, 15000)
-        let id = 5
+        danmu.on('bullet_pause', function (data) {
+          console.log(data)
+        })
+
+        danmu.on('bullet_hover', function (data) {
+          // console.log(data.event)
+          // danmu.freezeComment(data.bullet.id)
+          // setTimeout(function () {
+          //   danmu.restartComment(data.bullet.id)
+          // }, 4000)
+        })
         function start () {
           danmu.start()
-
           let id = 1
-
-        setInterval(function() {
-          id++
-          // let el = Player.util.createDom('div', '<span>张鑫:&nbsp;</span><img src="https://s1.pstatp.com/ee/annual-meeting-live/static/images/stickers/2.png" alt="2" />', {}, 'showed-sticker-danmu')
-
-          danmu.sendComment({  //发送弹幕
-              duration: 6000,
+          setInterval(function() {
+            id++;
+            let like = document.createElement('span')
+            like.innerText = '10w+'
+            // console.log(document.getElementById('duration').value || 5000)
+            danmu.sendComment({  //发送弹幕
+              duration: document.getElementById('duration').value || 5000,
               id: id+'',
               txt: id+'', //弹幕文字内容
-              style: {  //弹幕自定义样式
-                // color: fontcolor,
-                // fontSize: fontsize,
+              style: {
+                fontSize: '25px',
+                lineHeight: 1.125,
+                color: '#000'
               },
-          })
-        }, 50)
+              originData: {
+                x: '2121'
+              },
+              like: {
+                el: like,
+                style: {
+                  paddingLeft: '10px',
+                  color: '#ff0000'
+                }
+              }
+            })
+          }, 100)
         }
 
         function play () {
@@ -202,25 +186,61 @@
         }
 
         function sendComment() {
-          id++;
           let comment = document.getElementById('comment').value
           danmu.sendComment({
-            duration: 5000,
-            id: id + '',
+            duration: document.getElementById('duration').value || 5000,
+            id: 10000000,
             prior: true,
+            realTime: true,
             txt: comment,
             style: {
-              color: '#ff9500',
-              fontSize: '20px',
-              border: 'solid 1px #ff9500',
-              borderRadius: '50px',
-              padding: '5px 11px',
-              backgroundColor: 'rgba(255, 255, 255, 0.1)'
+              color: '#000',
+              fontSize: '25px',
+              padding: '5px 12px',
+              fontSize: '25px',
+              lineHeight: 1.125
             },
-            mode: document.getElementById('hidetype').value
+            like: {
+              el: like,
+              style: {
+                color: '#ff0000'
+              }
+            }
           })
         }
 
+        function setOpacity () {
+          let opacity = document.getElementById('opacity').value
+          danmu.setOpacity(opacity)
+        }
+        function setFontSize () {
+          let size = document.getElementById('size').value
+          danmu.setFontSize(size, (size * 41) / 25)
+        }
+
+        function setAllDuration () {
+          let duration = document.getElementById('duration').value
+          danmu.setAllDuration(duration)
+        }
+
+        function setArea () {
+          danmu.setArea({
+            start: 0,
+            end: 0.5
+          })
+        }
+
+        function setCommentLike () {
+          let id = document.getElementById('commentid').value
+          danmu.setCommentLike(id, {
+            el: like,
+            style: {
+              paddingLeft: '10px',
+              color: '#ff0000'
+            }
+          })
+        }
+        
         function setCommentDuration() {
           let id = document.getElementById('commentid').value
           let duration = document.getElementById('duration').value

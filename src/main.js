@@ -16,13 +16,15 @@ class Main {
     this.queue = []// 等待播放的弹幕队列
     this.timer = null// 弹幕动画定时器句柄
     this.retryTimer = null// 弹幕更新重试定时器句柄
-    this.interval = 2000// 弹幕队列缓存间隔
+    this.retryStatus = 'normal'
+    this.interval = danmu.config.interval || 2000// 弹幕队列缓存间隔
     this.status = 'idle'// 当前弹幕正在闲置
     danmu.on('bullet_remove', this.updateQueue.bind(this))
     let self = this
     this.danmu.on('changeDirection', direction => {
       self.danmu.direction = direction
     })
+    this.nums = 0
   }
   // 在渲染队列中移除已经展示完的弹幕对象
   updateQueue (rdata) {
@@ -40,12 +42,19 @@ class Main {
     if (!self) {
       self = this
     }
+    self.retryStatus = 'normal'
     self.data.sort((a, b) => a.start - b.start)
+    let dataHandle = function () {
+      self.readData()
+      self.dataHandle()
+      if (self.retryStatus !== 'stop') {
+        setTimeout(function () {
+          dataHandle()
+        }, self.interval - 1000)
+      }
+    }
     if (!self.retryTimer) {
-      self.retryTimer = setInterval(function () {
-        self.readData()
-        self.dataHandle()
-      }, self.interval - 1000)
+      dataHandle()
     }
   }
   // 启动弹幕渲染主进程
@@ -59,8 +68,8 @@ class Main {
   stop () {
     let self = this
     this.status = 'closed'
-    clearInterval(self.retryTimer)
     self.retryTimer = null
+    self.retryStatus = 'stop'
     self.channel.reset()
     this.queue = []
     self.container.innerHTML = ''
@@ -92,12 +101,15 @@ class Main {
     let channels = this.channel.channels
     let containerPos = this.danmu.container.getBoundingClientRect()
     if (channels && channels.length > 0) {
-      ['scroll', 'top', 'bottom'].forEach( key => {
-        for (let i = 0; i < channels.length; i++) {
-          channels[i].queue[key].forEach(item => {
-            item.pauseMove(containerPos)
-          })
-        }
+      // ['scroll', 'top', 'bottom'].forEach( key => {
+      //   for (let i = 0; i < channels.length; i++) {
+      //     channels[i].queue[key].forEach(item => {
+      //       item.pauseMove(containerPos)
+      //     })
+      //   }
+      // })
+      this.queue.forEach(item => {
+        item.pauseMove(containerPos)
       })
     }
   }
@@ -148,12 +160,18 @@ class Main {
 
     if (list.length > 0) {
       list.forEach(item => {
+        if (self.forceDuration && self.forceDuration != item.duration) {
+          item.duration = self.forceDuration;
+        }
         bullet = new Bullet(danmu, item)
-        bullet.attach()
-        // console.log(list.length)
+        if (!item.hasAttached) {
+          bullet.attach()
+          item.hasAttach = true
+        }
         result = channel.addBullet(bullet)
         if (result.result) {
           self.queue.push(bullet)
+          self.nums++;
           bullet.topInit()
         } else {
           bullet.detach()
