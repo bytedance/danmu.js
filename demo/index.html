@@ -15,7 +15,7 @@
       #wrap {
         position: absolute;
         left: 0;
-        width: 600px;
+        width: 1280px;
         height: 337px;
       }
       #vs {
@@ -34,7 +34,7 @@
       #btnwrap {
         position: absolute;
         right: 20px;
-        top: 20px;
+        top: 400px;
       }
     </style>
 </head>
@@ -64,15 +64,15 @@
 
       <div>
         <input type="text" id="duration" placeholder="改变duration"/>
-        <button onclick="setAllDuration()">改变大小</button>
+        <button onclick="setAllDuration()">改变duration</button>
       </div>
       <!-- <div>
         <button onclick="setArea()">改变弹幕区域</button>
       </div> -->
-      <!-- <div>
+      <div>
         <input type="text" id="comment" placeholder="输入弹幕内容"/>
         <button onclick="sendComment()">发送弹幕</button>
-      </div> -->
+      </div>
       <div>
         <!-- <input type="text" id="hidetype" placeholder="输入要屏蔽的弹幕类型"/>
         <button onclick="hide()">隐藏</button>
@@ -104,7 +104,7 @@
         like.innerText = '10w+'
 
         let danmu = new window.DanmuJs({
-          // interval: 1000,
+          interval: 1500,
           mouseControl: true,
           mouseControlPause: false,
           container: document.getElementById('vs'),
@@ -121,12 +121,11 @@
               id: 1 + '',
               txt: 1 + '', //弹幕文字内容
               style: {
-                  fontSize: '25px',
-                  lineHeight: 1.125
+                  fontSize: '20px'
               }
             }
           ],
-          fontSize: 14,
+          fontSize: 32.8,
           area: {
             start: 0,
             end: 0.5
@@ -137,7 +136,7 @@
         })
 
         danmu.on('bullet_hover', function (data) {
-          console.log(data.event)
+          // console.log(data.event)
           // danmu.freezeComment(data.bullet.id)
           // setTimeout(function () {
           //   danmu.restartComment(data.bullet.id)
@@ -150,7 +149,7 @@
             id++;
             let like = document.createElement('span')
             like.innerText = '10w+'
-            console.log(document.getElementById('duration').value || 5000)
+            // console.log(document.getElementById('duration').value || 5000)
             danmu.sendComment({  //发送弹幕
               duration: document.getElementById('duration').value || 5000,
               id: id+'',
@@ -158,7 +157,7 @@
               style: {
                 fontSize: '25px',
                 lineHeight: 1.125,
-                color: '#fff'
+                color: '#000'
               },
               originData: {
                 x: '2121'
@@ -186,16 +185,13 @@
           danmu.stop()
         }
 
-        let id = 5
         function sendComment() {
-          id++;
           let comment = document.getElementById('comment').value
-          let like = document.createElement('span')
-          like.innerText = '10w+'
           danmu.sendComment({
             duration: document.getElementById('duration').value || 5000,
-            id: id + '',
+            id: 10000000,
             prior: true,
+            realTime: true,
             txt: comment,
             style: {
               color: '#000',
@@ -219,7 +215,7 @@
         }
         function setFontSize () {
           let size = document.getElementById('size').value
-          danmu.setFontSize(size)
+          danmu.setFontSize(size, (size * 41) / 25)
         }
 
         function setAllDuration () {

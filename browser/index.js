@@ -337,7 +337,7 @@ var DanmuJs = function () {
     self.hideArr = [];
     (0, _eventEmitter2.default)(self);
     self.config.comments.forEach(function (comment) {
-      comment.duration = comment.duration < 5000 ? 5000 : comment.duration;
+      comment.duration = comment.duration ? comment.duration : 5000;
       if (!comment.mode) {
         comment.mode = 'scroll';
       }
@@ -389,7 +389,7 @@ var DanmuJs = function () {
         comment.duration = 15000;
       }
       if (comment && comment.id && comment.duration && (comment.el || comment.txt)) {
-        comment.duration = comment.duration < 5000 ? 5000 : comment.duration;
+        comment.duration = comment.duration ? comment.duration : 5000;
         // console.log(comment.style)
         if (comment.style) {
           if (this.opacity && this.opacity !== comment.style.opacity) {
@@ -402,8 +402,12 @@ var DanmuJs = function () {
             comment.like = comment.like ? comment.like : this.like;
           }
         }
-        if (comment.prior) {
+        if (comment.prior || comment.realTime) {
           this.bulletBtn.main.data.unshift(comment);
+          if (comment.realTime) {
+            this.bulletBtn.main.readData();
+            this.bulletBtn.main.dataHandle();
+          }
         } else {
           this.bulletBtn.main.data.push(comment);
         }
@@ -443,7 +447,7 @@ var DanmuJs = function () {
 
       var containerPos_ = this.container.getBoundingClientRect();
       if (id && duration) {
-        duration = duration < 5000 ? 5000 : duration;
+        duration = duration ? duration : 5000;
         this.bulletBtn.main.data.some(function (data) {
           if (data.id === id) {
             data.duration = duration;
@@ -482,7 +486,9 @@ var DanmuJs = function () {
           if (item.id === id) {
             item.pauseMove(containerPos_);
             item.setLikeDom(like.el, like.style);
-            item.startMove(containerPos_);
+            if (item.danmu.bulletBtn.main.status !== 'paused') {
+              item.startMove(containerPos_);
+            }
             return true;
           } else {
             return false;
@@ -548,10 +554,14 @@ var DanmuJs = function () {
     value: function setAllDuration() {
       var mode = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'scroll';
       var duration = arguments[1];
+      var force = arguments[2];
 
       var containerPos_ = this.container.getBoundingClientRect();
       if (duration) {
-        duration = duration < 5000 ? 5000 : duration;
+        duration = duration ? duration : 5000;
+        if (force) {
+          this.bulletBtn.main.forceDuration = duration;
+        }
         this.bulletBtn.main.data.forEach(function (data) {
           if (mode === data.mode) {
             data.duration = duration;
@@ -589,8 +599,13 @@ var DanmuJs = function () {
           if (!item.options.style) {
             item.options.style = {};
           }
+
           item.options.style.fontSize = _this3.fontSize;
           item.setFontSize(_this3.fontSize);
+          if (fontSize) {
+            item.top = item.channel_id[0] * fontSize;
+            item.topInit();
+          }
         });
       }
       if (fontSize) {
@@ -1308,6 +1323,7 @@ var Main = function () {
     this.queue = []; // 等待播放的弹幕队列
     this.timer = null; // 弹幕动画定时器句柄
     this.retryTimer = null; // 弹幕更新重试定时器句柄
+    this.retryStatus = 'normal';
     this.interval = danmu.config.interval || 2000; // 弹幕队列缓存间隔
     this.status = 'idle'; // 当前弹幕正在闲置
     danmu.on('bullet_remove', this.updateQueue.bind(this));
@@ -1339,14 +1355,21 @@ var Main = function () {
       if (!self) {
         self = this;
       }
+      self.retryStatus = 'normal';
       self.data.sort(function (a, b) {
         return a.start - b.start;
       });
+      var dataHandle = function dataHandle() {
+        self.readData();
+        self.dataHandle();
+        if (self.retryStatus !== 'stop') {
+          setTimeout(function () {
+            dataHandle();
+          }, self.interval - 1000);
+        }
+      };
       if (!self.retryTimer) {
-        self.retryTimer = setInterval(function () {
-          self.readData();
-          self.dataHandle();
-        }, self.interval - 1000);
+        dataHandle();
       }
     }
     // 启动弹幕渲染主进程
@@ -1365,8 +1388,8 @@ var Main = function () {
     value: function stop() {
       var self = this;
       this.status = 'closed';
-      clearInterval(self.retryTimer);
       self.retryTimer = null;
+      self.retryStatus = 'stop';
       self.channel.reset();
       this.queue = [];
       self.container.innerHTML = '';
@@ -1402,12 +1425,15 @@ var Main = function () {
       var channels = this.channel.channels;
       var containerPos = this.danmu.container.getBoundingClientRect();
       if (channels && channels.length > 0) {
-        ['scroll', 'top', 'bottom'].forEach(function (key) {
-          for (var i = 0; i < channels.length; i++) {
-            channels[i].queue[key].forEach(function (item) {
-              item.pauseMove(containerPos);
-            });
-          }
+        // ['scroll', 'top', 'bottom'].forEach( key => {
+        //   for (let i = 0; i < channels.length; i++) {
+        //     channels[i].queue[key].forEach(item => {
+        //       item.pauseMove(containerPos)
+        //     })
+        //   }
+        // })
+        this.queue.forEach(function (item) {
+          item.pauseMove(containerPos);
         });
       }
     }
@@ -1466,6 +1492,9 @@ var Main = function () {
 
       if (list.length > 0) {
         list.forEach(function (item) {
+          if (self.forceDuration && self.forceDuration != item.duration) {
+            item.duration = self.forceDuration;
+          }
           bullet = new _bullet2.default(danmu, item);
           if (!item.hasAttached) {
             bullet.attach();
@@ -1823,8 +1852,8 @@ var Channel = function () {
               }
               channel.operating.scroll = true;
               var curBullet = channel.queue.scroll[0];
-              if (curBullet) {
-                var curBulletPos = curBullet.el.getBoundingClientRect();
+              if (curBullet && (curBullet.elPos || curBullet.el)) {
+                var curBulletPos = curBullet.el ? curBullet.el.getBoundingClientRect() : curBullet.elPos;
                 if (self.direction === 'b2t') {
                   if (curBulletPos.bottom > self.containerPos.bottom) {
                     flag = false;
@@ -2080,196 +2109,6 @@ var Channel = function () {
       }
     }
   }, {
-    key: 'resetArea',
-    value: function resetArea() {
-      var container = this.danmu.container;
-      var self = this;
-      var size = container.getBoundingClientRect();
-      self.width = size.width;
-      self.height = size.height;
-      if (self.danmu.config.area && self.danmu.config.area.start >= 0 && self.danmu.config.area.end >= self.danmu.config.area.start) {
-        if (self.direction === 'b2t') {
-          self.width = self.width * (self.danmu.config.area.end - self.danmu.config.area.start);
-        } else {
-          self.height = self.height * (self.danmu.config.area.end - self.danmu.config.area.start);
-        }
-      }
-      self.container = container;
-      var fontSize = self.danmu.config.fontSize || (/mobile/ig.test(navigator.userAgent) ? 10 : 12);
-      var channelSize = void 0;
-      if (self.direction === 'b2t') {
-        channelSize = Math.floor(self.width / fontSize);
-      } else {
-        channelSize = Math.floor(self.height / fontSize);
-      }
-
-      var channels = [];
-      for (var i = 0; i < channelSize; i++) {
-        channels[i] = {
-          id: i,
-          queue: {
-            scroll: [],
-            top: [],
-            bottom: []
-          },
-          operating: {
-            scroll: false,
-            top: false,
-            bottom: false
-          },
-          bookId: {}
-        };
-      }
-
-      if (self.channels && self.channels.length <= channels.length) {
-        var _loop6 = function _loop6(_i12) {
-          channels[_i12] = {
-            id: _i12,
-            queue: {
-              scroll: [],
-              top: [],
-              bottom: []
-            },
-            operating: {
-              scroll: false,
-              top: false,
-              bottom: false
-            },
-            bookId: {}
-          };
-          ['scroll', 'top'].forEach(function (key) {
-            self.channels[_i12].queue[key].forEach(function (item) {
-              if (item.el) {
-                channels[_i12].queue[key].push(item);
-                if (!item.resized) {
-                  item.pauseMove(self.containerPos, false);
-                  item.startMove(self.containerPos);
-                  item.resized = true;
-                }
-              }
-            });
-          });
-          self.channels[_i12].queue['bottom'].forEach(function (item) {
-            if (item.el) {
-              channels[_i12 + channels.length - self.channels.length].queue['bottom'].push(item);
-              if (item.channel_id[0] + item.channel_id[1] - 1 === _i12) {
-                var channel_id = [].concat(item.channel_id);
-                item.channel_id = [channel_id[0] - self.channels.length + channels.length, channel_id[1]];
-                item.top = item.channel_id[0] * fontSize;
-                if (self.danmu.config.area && self.danmu.config.area.start) {
-                  item.top += self.containerHeight * self.danmu.config.area.start;
-                }
-                item.topInit();
-              }
-              if (!item.resized) {
-                item.pauseMove(self.containerPos, false);
-                item.startMove(self.containerPos);
-                item.resized = true;
-              }
-            }
-          });
-        };
-
-        for (var _i12 = 0; _i12 < self.channels.length; _i12++) {
-          _loop6(_i12);
-        }
-
-        var _loop7 = function _loop7(_i13) {
-          ['scroll', 'top', 'bottom'].forEach(function (key) {
-            channels[_i13].queue[key].forEach(function (item) {
-              // console.log('resized 重置:' + item)
-              item.resized = false;
-            });
-          });
-        };
-
-        for (var _i13 = 0; _i13 < channels.length; _i13++) {
-          _loop7(_i13);
-        }
-        self.channels = channels;
-        if (self.direction === 'b2t') {
-          self.channelWidth = fontSize;
-        } else {
-          self.channelHeight = fontSize;
-        }
-      } else if (self.channels && self.channels.length > channels.length) {
-        var _loop8 = function _loop8(_i14) {
-          channels[_i14] = {
-            id: _i14,
-            queue: {
-              scroll: [],
-              top: [],
-              bottom: []
-            },
-            operating: {
-              scroll: false,
-              top: false,
-              bottom: false
-            },
-            bookId: {}
-          };
-          ['scroll', 'top', 'bottom'].forEach(function (key) {
-            if (key === 'top' && _i14 > Math.floor(channels.length / 2)) {} else if (key === 'bottom' && _i14 <= Math.floor(channels.length / 2)) {} else {
-              var num = key === 'bottom' ? _i14 - channels.length + self.channels.length : _i14;
-              self.channels[num].queue[key].forEach(function (item, index) {
-                if (item.el) {
-                  channels[_i14].queue[key].push(item);
-                  if (key === 'bottom') {
-                    if (item.channel_id[0] + item.channel_id[1] - 1 === num) {
-                      var channel_id = [].concat(item.channel_id);
-                      item.channel_id = [channel_id[0] - self.channels.length + channels.length, channel_id[1]];
-                      item.top = item.channel_id[0] * fontSize;
-                      if (self.danmu.config.area && self.danmu.config.area.start) {
-                        item.top += self.containerHeight * self.danmu.config.area.start;
-                      }
-                      item.topInit();
-                    }
-                  }
-                  if (!item.resized) {
-                    item.pauseMove(self.containerPos, false);
-                    item.startMove(self.containerPos);
-                    item.resized = true;
-                  }
-                }
-                self.channels[num].queue[key].splice(index, 1);
-              });
-            }
-          });
-        };
-
-        for (var _i14 = 0; _i14 < channels.length; _i14++) {
-          _loop8(_i14);
-        }
-        // for (let i = channels.length; i < self.channels.length; i++) {
-        //   ['scroll', 'top', 'bottom'].forEach(key => {
-        //     self.channels[i].queue[key].forEach(item => {
-        //       item.pauseMove(self.containerPos)
-        //       item.remove()
-        //     })
-        //   })
-        // }
-
-        var _loop9 = function _loop9(_i15) {
-          ['scroll', 'top', 'bottom'].forEach(function (key) {
-            channels[_i15].queue[key].forEach(function (item) {
-              // console.log('resized 重置:' + item)
-              item.resized = false;
-            });
-          });
-        };
-
-        for (var _i15 = 0; _i15 < channels.length; _i15++) {
-          _loop9(_i15);
-        }
-        self.channels = channels;
-        if (self.direction === 'b2t') {
-          self.channelWidth = fontSize;
-        } else {
-          self.channelHeight = fontSize;
-        }
-      }
-    }
-  }, {
     key: 'reset',
     value: function reset() {
       var container = this.danmu.container;
@@ -2465,7 +2304,10 @@ var Bullet = function () {
     }
     this.status = 'waiting'; // waiting,start,end
     var containerPos = this.container.getBoundingClientRect();
-    var random = Math.floor(Math.random() * (containerPos.width / 10 > 100 ? 100 : containerPos.width / 10));
+    var random = Math.floor(Math.random() * (containerPos.width / 10 > 100 ? 200 : containerPos.width / 10));
+    if (options.realTime) {
+      random = 0;
+    }
     this.el.style.left = containerPos.width + random + 'px';
   }
 

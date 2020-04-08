@@ -18,7 +18,7 @@ class DanmuJs {
     self.hideArr = []
     EventEmitter(self)
     self.config.comments.forEach(comment => {
-      comment.duration = comment.duration < 5000 ? 5000 : comment.duration
+      comment.duration = comment.duration ? comment.duration : 5000
       if(!comment.mode) {
         comment.mode = 'scroll'
       }
@@ -64,7 +64,7 @@ class DanmuJs {
       comment.duration = 15000
     }
     if (comment && comment.id && comment.duration && (comment.el || comment.txt)) {
-      comment.duration = comment.duration < 5000 ? 5000 : comment.duration
+      comment.duration = comment.duration ? comment.duration : 5000
       // console.log(comment.style)
       if (comment.style) {
         if (this.opacity && this.opacity !== comment.style.opacity) {
@@ -77,8 +77,12 @@ class DanmuJs {
           comment.like = comment.like ? comment.like : this.like
         }
       }
-      if(comment.prior) {
+      if(comment.prior || comment.realTime) {
         this.bulletBtn.main.data.unshift(comment)
+        if (comment.realTime) {
+          this.bulletBtn.main.readData()
+          this.bulletBtn.main.dataHandle()
+        }
       } else {
         this.bulletBtn.main.data.push(comment)
       }
@@ -112,7 +116,7 @@ class DanmuJs {
   setCommentDuration (id, duration) {
     let containerPos_ = this.container.getBoundingClientRect()
     if (id && duration) {
-      duration = duration < 5000 ? 5000 : duration
+      duration = duration ? duration : 5000
       this.bulletBtn.main.data.some(data => {
         if(data.id === id) {
           data.duration = duration
@@ -150,7 +154,9 @@ class DanmuJs {
         if(item.id === id) {
           item.pauseMove(containerPos_)
           item.setLikeDom(like.el, like.style)
-          item.startMove(containerPos_)
+          if (item.danmu.bulletBtn.main.status !== 'paused') {
+            item.startMove(containerPos_)
+          }
           return true
         } else {
           return false
@@ -210,10 +216,13 @@ class DanmuJs {
     })
   }
 
-  setAllDuration (mode = 'scroll', duration) {
+  setAllDuration (mode = 'scroll', duration, force) {
     let containerPos_ = this.container.getBoundingClientRect()
     if (duration) {
-      duration = duration < 5000 ? 5000 : duration
+      duration = duration ? duration : 5000
+      if (force) {
+        this.bulletBtn.main.forceDuration = duration
+      }
       this.bulletBtn.main.data.forEach(data => {
         if(mode === data.mode) {
           data.duration = duration
@@ -247,8 +256,13 @@ class DanmuJs {
         if (!item.options.style) {
           item.options.style = {}
         }
+        
         item.options.style.fontSize = this.fontSize
         item.setFontSize(this.fontSize)
+        if (fontSize) {
+          item.top = item.channel_id[0] * fontSize;
+          item.topInit()
+        }
       })
     }
     if (fontSize) {
