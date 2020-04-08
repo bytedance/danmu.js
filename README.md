@@ -84,7 +84,7 @@ player.danmu.sendComment({  //发送弹幕
         padding: '5px 11px',
         backgroundColor: 'rgba(255, 255, 255, 0.1)'
     },
-    fontSize: 40, // 泳道大小
+    channelSize: 40, // 轨道大小
     area: {
       start: 0,
       end: 0.5

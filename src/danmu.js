@@ -244,7 +244,7 @@ class DanmuJs {
     this.container.style.opacity = opacity
   }
   
-  setFontSize (size, fontSize) {
+  setFontSize (size, channelSize) {
     this.fontSize = `${size}px`
     if (size) {
       this.bulletBtn.main.data.forEach(data => {
@@ -259,14 +259,14 @@ class DanmuJs {
         
         item.options.style.fontSize = this.fontSize
         item.setFontSize(this.fontSize)
-        if (fontSize) {
-          item.top = item.channel_id[0] * fontSize;
+        if (channelSize) {
+          item.top = item.channel_id[0] * channelSize;
           item.topInit()
         }
       })
     }
-    if (fontSize) {
-      this.config.fontSize = fontSize
+    if (channelSize) {
+      this.config.channelSize = channelSize
       this.bulletBtn.main.channel.resize(true)
     }
   }
