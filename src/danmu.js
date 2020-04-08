@@ -216,7 +216,7 @@ class DanmuJs {
     })
   }
 
-  setAllDuration (mode = 'scroll', duration, force) {
+  setAllDuration (mode = 'scroll', duration, force = true) {
     let containerPos_ = this.container.getBoundingClientRect()
     if (duration) {
       duration = duration ? duration : 5000

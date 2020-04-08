@@ -83,13 +83,37 @@ player.danmu.sendComment({  //发送弹幕
         borderRadius: '50px',
         padding: '5px 11px',
         backgroundColor: 'rgba(255, 255, 255, 0.1)'
+    },
+    fontSize: 40, // 泳道大小
+    area: {
+      start: 0,
+      end: 0.5
+    }, // 显示区域
+    mouseControl: true, // 打开鼠标控制, 打开后可监听到 bullet_hover 事件。danmu.on('bullet_hover', function (data) {})
+    mouseControlPause: false, // 鼠标触摸暂停。mouseControl: true 生效
+    like: {
+      el: likeDOM, // el 仅支持传入 dom 
+      style: { // el 绑定样式
+        paddingLeft: '10px',
+        color: '#ff0000'
+      }
     }
 })
-player.danmu.setCommentDuration (id, duration) //按照id改变某一个弹幕的持续显示时间
-player.danmu.setAllDuration (mode, duration) //改变所有已加入队列弹幕的持续显示时间
-player.danmu.setCommentID (oldID, newID) //改变某一个弹幕的id
-player.danmu.hide (mode) //屏蔽某一类弹幕(参数可选值 scroll | top | bottom | color)
-player.danmu.show (mode) //显示某一类弹幕(参数可选值 scroll | top | bottom | color)
+player.danmu.setCommentDuration(id, duration) //按照id改变某一个弹幕的持续显示时间
+player.danmu.setAllDuration(mode, duration) //改变所有已加入队列弹幕的持续显示时间
+player.danmu.setCommentID(oldID, newID) //改变某一个弹幕的id
+player.danmu.hide(mode) //屏蔽某一类弹幕(参数可选值 scroll | top | bottom | color)
+player.danmu.show(mode) //显示某一类弹幕(参数可选值 scroll | top | bottom | color)
+player.danmu.setArea(area) // 修改弹幕显示区域
+player.danmu.setOpacity(opacity) // 设置透明度
+player.danmu.setFontSize(size, channelSize) // 设置样式 size 为字体大小 channelSize 如果不需要修改轨道大小则无需传入 channelSize
+danmu.setCommentLike(id, {
+    el: likeDOM,
+    style: {
+        paddingLeft: '10px',
+        color: '#ff0000'
+    }
+}) // 这是点赞样式，id 为 commentid
 ```
 
 ### Dev
