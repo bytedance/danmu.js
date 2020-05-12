@@ -33,7 +33,6 @@ class Channel {
     })
   }
   resize (isFullscreen = false) {
-    console.log('resize')
     let container = this.danmu.container
     let self = this
     if (self.resizeing) {
@@ -560,7 +559,7 @@ class Channel {
     }
   }
   resetArea () {
-    console.log('resetArea')
+    // console.log('resetArea')
     let container = this.danmu.container
     let self = this
     let size = container.getBoundingClientRect()
