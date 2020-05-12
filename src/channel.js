@@ -20,21 +20,20 @@ class Channel {
     this.containerHeight = this.containerPos.height
     this.containerLeft = this.containerPos.left
     this.containerRight = this.containerPos.right
-    this.danmu.bulletResizeTimer = setInterval(function () {
+    this.danmu.on('channel_resize', () => {
       self.containerPos = self.danmu.container.getBoundingClientRect()
       if (self.resizeing) {
         return
       }
-      if (Math.abs(self.containerPos.width - self.containerWidth) >= 2 || Math.abs(self.containerPos.height - self.containerHeight) >= 2 || Math.abs(self.containerPos.left - self.containerLeft) >= 2 || Math.abs(self.containerPos.right - self.containerRight) >= 2) {
-        self.containerWidth = self.containerPos.width
-        self.containerHeight = self.containerPos.height
-        self.containerLeft = self.containerPos.left
-        self.containerRight = self.containerPos.right
-        self.resize(true)
-      }
-    }, 50)
+      self.containerWidth = self.containerPos.width
+      self.containerHeight = self.containerPos.height
+      self.containerLeft = self.containerPos.left
+      self.containerRight = self.containerPos.right
+      self.resize(true)
+    })
   }
   resize (isFullscreen = false) {
+    console.log('resize')
     let container = this.danmu.container
     let self = this
     if (self.resizeing) {
@@ -231,13 +230,11 @@ class Channel {
     }, 10)
   }
   addBullet (bullet) {
-    // if (bullet.prior) {
-      // console.log(bullet.id + '号优先弹幕请求注册')
-    // }
     let self = this
     let danmu = this.danmu
     let channels = this.channels
     let channelHeight, channelWidth, occupy
+    
     if(self.direction === 'b2t') {
       channelWidth = this.channelWidth
       occupy = Math.ceil(bullet.width / channelWidth)
@@ -435,6 +432,43 @@ class Channel {
           message: 'success'
         }
       } else {
+        if (bullet.options.realTime) {
+          // 找到应该被删的 danmu
+          let start = 0
+          let deleteIndex = -1
+          let deleteItem = null
+          self.danmu.bulletBtn.main.queue.forEach((item, index) => {
+            if (item.el && item.el.getBoundingClientRect().right > self.containerPos.right && item.start >= start) {
+              start = item.start
+              deleteIndex = index
+              deleteItem = item
+            }
+          })  
+          if (deleteItem) {
+            deleteItem.remove()
+            self.removeBullet(deleteItem)
+            self.danmu.bulletBtn.main.queue.splice(deleteIndex, 1)
+            bullet.channel_id = deleteItem.channel_id
+            for (let i = deleteItem.channel_id[0], max = deleteItem.channel_id[0] + deleteItem.channel_id[1]; i < max; i++) {
+              channel = channels[i]
+              channel.operating[bullet.mode] = true
+              channel.queue[bullet.mode].unshift(bullet)
+              if (bullet.prior) {
+                delete channel.bookId[bullet.mode]
+              }
+              channel.operating[bullet.mode] = false
+            }
+            bullet.top = deleteItem.top
+            if (self.danmu.config.area && self.danmu.config.area.start) {
+              bullet.top += self.containerHeight * self.danmu.config.area.start
+            }
+            return {
+              result: bullet,
+              message: 'success'
+            }
+          }
+        }
+
         if (bullet.prior) {
           if (!bullet.bookChannelId) {
             pos = -1
@@ -488,7 +522,8 @@ class Channel {
               })
             }
           }
-        }
+        } 
+        
         return {
           result: false,
           message: 'no surplus will right'
@@ -525,6 +560,7 @@ class Channel {
     }
   }
   resetArea () {
+    console.log('resetArea')
     let container = this.danmu.container
     let self = this
     let size = container.getBoundingClientRect()
@@ -701,7 +737,13 @@ class Channel {
   reset () {
     let container = this.danmu.container
     let self = this
-    if (self.channels && self.channels.length > 0) {
+    if (self.danmu.bulletBtn && self.danmu.bulletBtn.main) {
+      self.danmu.bulletBtn.main.queue.forEach(item => {
+        item.pauseMove(self.containerPos)
+        item.remove()
+      })
+    }
+    else if (self.channels && self.channels.length > 0) {
       ['scroll', 'top', 'bottom'].forEach(key => {
         for (let i = 0; i < self.channels.length; i++) {
           self.channels[i].queue[key].forEach(item => {
@@ -711,6 +753,7 @@ class Channel {
         }
       })
     }
+    
     setTimeout(function () {
       let size = container.getBoundingClientRect()
       self.width = size.width

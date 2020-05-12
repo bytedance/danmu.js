@@ -45,9 +45,14 @@ class Main {
     self.retryStatus = 'normal'
     self.data.sort((a, b) => a.start - b.start)
     let dataHandle = function () {
-      self.readData()
-      self.dataHandle()
-      if (self.retryStatus !== 'stop') {
+      if (self.status === 'closed' && self.retryStatus === 'stop') {
+        return
+      }
+      if (self.status === 'playing') {
+        self.readData()
+        self.dataHandle()
+      }
+      if (self.retryStatus !== 'stop' || this.status === 'paused') {
         setTimeout(function () {
           dataHandle()
         }, self.interval - 1000)
@@ -80,14 +85,18 @@ class Main {
     let containerPos = this.danmu.container.getBoundingClientRect()
     if (channels && channels.length > 0) {
       ['scroll', 'top', 'bottom'].forEach( key => {
-        for (let i = 0; i < channels.length; i++) {
-          channels[i].queue[key].forEach(item => {
-            if(!item.resized) {
-              item.startMove(containerPos)
-              item.resized = true
-            }
-          })
-        }
+        // for (let i = 0; i < channels.length; i++) {
+        //   channels[i].queue[key].forEach(item => {
+        //     if(!item.resized) {
+        //       item.startMove(containerPos)
+        //       item.resized = true
+        //     }
+        //   })
+        // }
+        this.queue.forEach(item => {
+          item.startMove(containerPos)
+          item.resized = true
+        })
         for (let i = 0; i < channels.length; i++) {
           channels[i].queue[key].forEach(item => {
             item.resized = false
@@ -120,7 +129,7 @@ class Main {
     }
     if (self.queue.length) {
       self.queue.forEach(item => {
-        if (item.status === 'waiting' || item.status === 'paused') {
+        if (item.status === 'waiting') {
           // item.status = 'start'
           item.startMove(self.channel.containerPos)
         }

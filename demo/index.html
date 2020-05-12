@@ -125,7 +125,7 @@
               }
             }
           ],
-          fontSize: 32.8,
+          channelSize: 32.8,
           area: {
             start: 0,
             end: 0.5
@@ -142,16 +142,17 @@
           //   danmu.restartComment(data.bullet.id)
           // }, 4000)
         })
+
+        let id = 1
         function start () {
           danmu.start()
-          let id = 1
           setInterval(function() {
             id++;
             let like = document.createElement('span')
             like.innerText = '10w+'
             // console.log(document.getElementById('duration').value || 5000)
             danmu.sendComment({  //发送弹幕
-              duration: document.getElementById('duration').value || 5000,
+              duration: 5000,
               id: id+'',
               txt: id+'', //弹幕文字内容
               style: {
@@ -188,10 +189,11 @@
         function sendComment() {
           let comment = document.getElementById('comment').value
           danmu.sendComment({
-            duration: document.getElementById('duration').value || 5000,
-            id: 10000000,
+            duration: 5000,
+            id: id++,
             prior: true,
             realTime: true,
+            noDiscard: true,
             txt: comment,
             style: {
               color: '#000',
