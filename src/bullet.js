@@ -54,6 +54,7 @@ class Bullet {
       random = 0
     }
     this.el.style.left = containerPos.width + random + 'px';
+    this.containerPos = containerPos
   }
   attach () {
     let self = this
@@ -67,7 +68,7 @@ class Bullet {
       self.height = self.elPos.height
     }
     if(self.moveV) {
-      let containerPos = self.container.getBoundingClientRect()
+      let containerPos = self.containerPos
       self.duration = (containerPos.width + self.width) / self.moveV * 1000
     }
     if (self.danmu.config.mouseControl) {
@@ -95,7 +96,7 @@ class Bullet {
   }
   topInit () {
     if(this.direction === 'b2t') {
-      let containerPos = this.container.getBoundingClientRect()
+      let containerPos = this.containerPos
       this.el.style.transformOrigin = 'left top'
       this.el.style.transform = `translateX(-${this.top}px) translateY(${containerPos.height}px) translateZ(0px) rotate(90deg)`;
       this.el.style.transition = `transform 0s linear 0s`
@@ -180,7 +181,7 @@ class Bullet {
     function func () {
       if (self.el) {
         if(self.mode === 'scroll') {
-          let containerPos_ = self.danmu.container.getBoundingClientRect()
+          let containerPos_ = self.containerPos
           let bulletPos = self.el.getBoundingClientRect()
           if(self.direction === 'b2t') {
             if (bulletPos && bulletPos.bottom <= containerPos_.top + 100) {

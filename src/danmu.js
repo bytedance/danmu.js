@@ -294,6 +294,10 @@ class DanmuJs {
   setDirection (direction = 'r2l') {
     this.emit('changeDirection', direction)
   }
+
+  resize () {
+    this.emit('channel_resize')
+  }
 }
 
 export default DanmuJs

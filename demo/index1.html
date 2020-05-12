@@ -21,7 +21,7 @@
     <div>
       <button onclick="start()">弹幕开始</button>
       <button onclick="pause()">弹幕暂停</button>
-      <button onclick="play()">弹幕播放</button>
+      <button onclick="stop()">弹幕关闭</button>
       <button onclick="setArea()">setArea</button>
       
     </div>
@@ -92,12 +92,6 @@
     });
     function start () {
       player.danmu.start()
-
-      player.danmu.on('bullet_hover', function (data) {
-        if (!data.bullet.el) {
-          console.log(5342534523)
-        }
-      })
       let id = 1
       setInterval(function() {
         id++;
@@ -124,7 +118,7 @@
     }
 
     function stop () {
-      player.width = 100
+      player.danmu.stop()
     }
 
     function setAllDuration () {
