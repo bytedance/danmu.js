@@ -444,9 +444,9 @@ class Channel {
             }
           })  
           if (deleteItem) {
-            deleteItem.remove()
-            self.removeBullet(deleteItem)
-            self.danmu.bulletBtn.main.queue.splice(deleteIndex, 1)
+            // deleteItem.remove()
+            // self.removeBullet(deleteItem)
+            // self.danmu.bulletBtn.main.queue.splice(deleteIndex, 1)
             bullet.channel_id = deleteItem.channel_id
             for (let i = deleteItem.channel_id[0], max = deleteItem.channel_id[0] + deleteItem.channel_id[1]; i < max; i++) {
               channel = channels[i]

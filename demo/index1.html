@@ -20,10 +20,12 @@
     </div>
     <div>
       <button onclick="start()">弹幕开始</button>
+      <button onclick="play()">弹幕播放</button>
       <button onclick="pause()">弹幕暂停</button>
       <button onclick="stop()">弹幕关闭</button>
       <button onclick="setArea()">setArea</button>
       <button onclick="removeComment()">删除弹幕</button>
+      <button onclick="sendComment()">发送弹幕</button>
       
     </div>
     <!-- <script src="//cdn.jsdelivr.net/npm/xgplayer@1.3.5/browser/index.js" type="text/javascript"></script> -->
@@ -82,33 +84,36 @@
             },
           }
         ],
-        area: {  //弹幕显示区域
-          start: 0, //区域顶部到播放器顶部所占播放器高度的比例
-          end: 1 //区域底部到播放器顶部所占播放器高度的比例
-        },
+        // area: {  //弹幕显示区域
+        //   start: 0, //区域顶部到播放器顶部所占播放器高度的比例
+        //   end: 1 //区域底部到播放器顶部所占播放器高度的比例
+        // },
         
         closeDefaultBtn: true, //开启此项后不使用默认提供的弹幕开关，默认使用西瓜播放器提供的开关
-        defaultOff: true //开启此项后弹幕不会初始化，默认初始化弹幕
+        defaultOff: true, //开启此项后弹幕不会初始化，默认初始化弹幕
+
+        area: {start: 0.01, end: 0.75},
+        channelSize: 41,
       }
     });
     function start () {
       player.danmu.start()
       let id = 1
-      // setInterval(function() {
-      //   id++;
-      //   player.danmu.sendComment({  //发送弹幕
-      //     duration: 5000,
-      //     id: id+'',
-      //     originData: {
-      //     x: '2121'
-      //   },
-      //     txt: id+'', //弹幕文字内容
-      //     style: {
-      //       fontSize: '25px',
-      //       lineHeight: 1.125
-      //     },
-      //   })
-      // }, 50)
+      setInterval(function() {
+        id++;
+        player.danmu.sendComment({  //发送弹幕
+          duration: 5000,
+          id: id+'',
+          // originData: {
+          //   x: '2121'
+          // },
+          txt: id+'哈哈啊哈哈哈哈哈哈哈', //弹幕文字内容
+          style: {
+            fontSize: '25px',
+            lineHeight: 1.125
+          },
+        })
+      }, 50)
       player.danmu.resize()
     }
     function play () {
@@ -121,6 +126,7 @@
 
     function stop () {
       player.danmu.stop()
+      player.danmu.config.comments = []
     }
 
     function removeComment () {
@@ -135,6 +141,21 @@
       player.danmu.setArea({
         start: 0,
         end: 0.4
+      })
+    }
+
+    function sendComment() {
+      player.danmu.sendComment({  //发送弹幕
+        duration: 5000,
+        id: '999999',
+        txt: '哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈', //弹幕文字内容
+        style: {
+          fontSize: '25px',
+          lineHeight: 1.125,
+          border: 'solid 1px #fff'
+        },
+        prior: true,
+        realTime: true,
       })
     }
 

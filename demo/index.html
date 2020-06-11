@@ -87,6 +87,7 @@
         <button onclick="setAllDuration()">设置所有弹幕duration</button>
         <button onclick="setCommentID()">设置某个弹幕id</button> -->
       </div>
+      <button onclick="sendPriorComment()">发送弹幕</button>
 
       <!-- <button onclick="toggleFullscreen()">切换全屏状态</button>
       <button onclick="toggleDirection()">切换弹幕方向</button>
@@ -115,15 +116,15 @@
           player,
           direction,
           comments: [
-            {
-              duration: 5000,
-              start: 0,
-              id: 1 + '',
-              txt: 1 + '', //弹幕文字内容
-              style: {
-                  fontSize: '20px'
-              }
-            }
+            // {
+            //   duration: 5000,
+            //   start: 0,
+            //   id: 1 + '',
+            //   txt: 1 + '', //弹幕文字内容
+            //   style: {
+            //       fontSize: '20px'
+            //   }
+            // }
           ],
           channelSize: 32.8,
           area: {
@@ -154,7 +155,7 @@
             danmu.sendComment({  //发送弹幕
               duration: 5000,
               id: id+'',
-              txt: id+'', //弹幕文字内容
+              txt: id+'奥利给奥利给奥利给奥利给奥利给', //弹幕文字内容
               style: {
                 fontSize: '25px',
                 lineHeight: 1.125,
@@ -163,13 +164,13 @@
               originData: {
                 x: '2121'
               },
-              like: {
-                el: like,
-                style: {
-                  paddingLeft: '10px',
-                  color: '#ff0000'
-                }
-              }
+              // like: {
+              //   el: like,
+              //   style: {
+              //     paddingLeft: '10px',
+              //     color: '#ff0000'
+              //   }
+              // }
             })
           }, 100)
         }
@@ -202,12 +203,27 @@
               fontSize: '25px',
               lineHeight: 1.125
             },
-            like: {
-              el: like,
-              style: {
-                color: '#ff0000'
-              }
-            }
+            // like: {
+            //   el: like,
+            //   style: {
+            //     color: '#ff0000'
+            //   }
+            // }
+          })
+        }
+
+        function sendPriorComment() {
+          danmu.sendComment({  //发送弹幕
+            duration: 5000,
+            id: '999999',
+            txt: '哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈', //弹幕文字内容
+            style: {
+              fontSize: '25px',
+              lineHeight: 1.125,
+              border: 'solid 1px #fff'
+            },
+            prior: true,
+            realTime: true,
           })
         }
 
