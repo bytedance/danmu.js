@@ -214,6 +214,9 @@ class DanmuJs {
         return false
       }
     })
+    this.bulletBtn.main.data = this.bulletBtn.main.data.filter(item => {
+      return item.id !== id
+    })
   }
 
   setAllDuration (mode = 'scroll', duration, force = true) {
