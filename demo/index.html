@@ -66,9 +66,9 @@
         <input type="text" id="duration" placeholder="改变duration"/>
         <button onclick="setAllDuration()">改变duration</button>
       </div>
-      <!-- <div>
+      <div>
         <button onclick="setArea()">改变弹幕区域</button>
-      </div> -->
+      </div>
       <div>
         <input type="text" id="comment" placeholder="输入弹幕内容"/>
         <button onclick="sendComment()">发送弹幕</button>
@@ -129,7 +129,7 @@
           channelSize: 32.8,
           area: {
             start: 0,
-            end: 0.5
+            end: 0.8
           }
         })
         danmu.on('bullet_pause', function (data) {
