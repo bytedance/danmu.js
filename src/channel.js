@@ -22,7 +22,7 @@ class Channel {
     this.containerRight = this.containerPos.right
     this.danmu.on('channel_resize', () => {
       self.containerPos = self.danmu.container.getBoundingClientRect()
-      if (self.resizeing) {
+      if (self.resizing) {
         return
       }
       self.containerWidth = self.containerPos.width
@@ -35,10 +35,10 @@ class Channel {
   resize (isFullscreen = false) {
     let container = this.danmu.container
     let self = this
-    if (self.resizeing) {
+    if (self.resizing) {
       return
     }
-    self.resizeing = true
+    self.resizing = true
     setTimeout(function () {
       let isDanmuPause = self.danmu.bulletBtn.main.status === 'paused'
       if (self.danmu.bulletBtn.main.data) {
@@ -202,14 +202,14 @@ class Channel {
             }
           })
         }
-        for (let i = channels.length; i < self.channels.length; i++) {
-          ['scroll', 'top', 'bottom'].forEach(key => {
-            self.channels[i].queue[key].forEach(item => {
-              item.pauseMove(self.containerPos)
-              item.remove()
-            })
-          })
-        }
+        // for (let i = channels.length; i < self.channels.length; i++) {
+        //   ['scroll', 'top', 'bottom'].forEach(key => {
+        //     self.channels[i].queue[key].forEach(item => {
+        //       item.pauseMove(self.containerPos)
+        //       item.remove()
+        //     })
+        //   })
+        // }
         for (let i = 0; i < channels.length; i++) {
           ['scroll', 'top', 'bottom'].forEach(key => {
             channels[i].queue[key].forEach(item => {
@@ -225,7 +225,7 @@ class Channel {
           self.channelHeight = fontSize
         }
       }
-      self.resizeing = false
+      self.resizing = false
     }, 10)
   }
   addBullet (bullet) {
@@ -444,9 +444,9 @@ class Channel {
             }
           })  
           if (deleteItem) {
-            deleteItem.remove()
-            self.removeBullet(deleteItem)
-            self.danmu.bulletBtn.main.queue.splice(deleteIndex, 1)
+            // deleteItem.remove()
+            // self.removeBullet(deleteItem)
+            // self.danmu.bulletBtn.main.queue.splice(deleteIndex, 1)
             bullet.channel_id = deleteItem.channel_id
             for (let i = deleteItem.channel_id[0], max = deleteItem.channel_id[0] + deleteItem.channel_id[1]; i < max; i++) {
               channel = channels[i]
