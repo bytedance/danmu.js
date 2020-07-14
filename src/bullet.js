@@ -23,7 +23,7 @@ class Bullet {
     }
     this.danmu.on('changeDirection', this.onChangeDirection)
     let el
-    this.domObj = util.domObj
+    this.domObj = danmu.domObj
     if(options.el && options.el.nodeType === 1) {
       el = this.domObj.use()
       el.appendChild(util.copyDom(options.el))
