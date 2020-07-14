@@ -1,5 +1,6 @@
 import EventEmitter from 'event-emitter'
 import Control from './control'
+import RecyclableDomList from './domrecycle.js'
 import util from './utils/util'
 
 class DanmuJs {
@@ -16,6 +17,7 @@ class DanmuJs {
       direction: 'r2l'
     }, options)
     self.hideArr = []
+    util.domObj = new RecyclableDomList()
     EventEmitter(self)
     self.config.comments.forEach(comment => {
       comment.duration = comment.duration ? comment.duration : 5000
@@ -57,6 +59,16 @@ class DanmuJs {
 
   stop () {
     this.bulletBtn.main.stop()
+  }
+
+  destroy () {
+    this.stop()
+    this.bulletBtn.destroy()
+    for (let k in this) {
+      delete this[k]
+    }
+    util.domObj.destroy()
+    this.emit('destroy')
   }
 
   sendComment (comment) {

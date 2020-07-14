@@ -45,53 +45,69 @@
         <input type="text" id="comment" placeholder="输入弹幕内容"/>
         <button onclick="sendComment()">发送弹幕</button>
       </div>
+      <div>
+        <button onclick="stop()">弹幕终止</button>
+        <button onclick="destroy()">弹幕销毁</button>
+      </div>
     </div>
     <script src="../browser/index.js" charset="utf-8"></script>
     <script type="text/javascript">
         // let el = createDom('xg-el', '弹幕弹幕弹幕<img src="./grinning-face.png" />弹幕弹幕', {}, 'xgplayer-el')
         let wrap = document.getElementById('wrap')
         let direction = 'r2l'
-        let danmu = new window.DanmuJs({
-          container: document.getElementById('vs'),
-          containerStyle: {
-            zIndex: 100
-          },
-          live: true,
-          bOffset: 0,
-          // player,
-          direction,
-          // comments: [],
-          area: {
-            start: 0,
-            end: 0.2
-          }
-        })
+        let danmu
+        let timer
         let id = 1
+        let flag = true
         function start () {
+          danmu = new window.DanmuJs({
+            container: document.getElementById('vs'),
+            containerStyle: {
+              zIndex: 100
+            },
+            // live: true,
+            bOffset: 0,
+            // player,
+            direction,
+            // comments: [],
+            area: {
+              start: 0,
+              end: 1
+            }
+          })
+
           danmu.start()
+          flag = true
 
 
-
-          // setInterval(function() {
-          //     id++
-          //     danmu.sendComment({  //发送弹幕
-          //         // duration: 6000,
-          //         moveV: 50,
-          //         id: id+'',
-          //         txt: id+'11111', //弹幕文字内容
-          //         noDiscard: true,
-          //     })
-          // }, 2000)
-
-          setTimeout(function() {
-            danmu.sendComment({
-                moveV: 50,
-                id: '999',
-                txt: '1234567',
-                // loop: true,
-                noDiscard: true,
-            })
-          }, 2000)
+          timer = setInterval(function() {
+              id++
+              flag && danmu.sendComment({  //发送弹幕
+                  duration: 5000,
+                  // moveV: 50,
+                  id: id+'',
+                  txt: id, //弹幕文字内容
+                  // noDiscard: true,
+              })
+          }, 200)
+          danmu.resize()
+          // setTimeout(function() {
+          //   danmu.sendComment({
+          //       duration: 5000,
+          //       id: '999',
+          //       txt: '1234567',
+          //   })
+          //   danmu.sendComment({
+          //       duration: 6000,
+          //       id: '111999',
+          //       txt: '123124567',
+          //   })
+          //   danmu.sendComment({
+          //       duration: 7000,
+          //       id: '222999',
+          //       txt: '1243434567',
+          //   })
+          // }, 200)
         }
         // danmu.sendComment({
         //     moveV: 100,
@@ -125,6 +141,16 @@
             // },
             // mode: document.getElementById('hidetype').value
           })
+        }
+
+        function stop() {
+          danmu.stop()
+        }
+        function destroy() {
+          clearInterval(timer)
+          timer = null
+          flag = false
+          danmu.destroy()
         }
     </script>
 </body>

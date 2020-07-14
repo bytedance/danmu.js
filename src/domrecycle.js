@@ -42,4 +42,20 @@ export default class RecyclableDOMList {
       this.idleList.push(this.options.initDOM(this._id++))
     }
   }
+
+  destroy() {
+    for (let i = 0; i < this.idleList.length; i++) {
+      this.idleList[i].innerHTML = ''
+      this.idleList[i].textcontent = ''
+      this.idleList[i].style = ''
+    }
+    for (let i = 0; i < this.usingList.length; i++) {
+      this.usingList[i].innerHTML = ''
+      this.usingList[i].textcontent = ''
+      this.usingList[i].style = ''
+    }
+    for (let k in this) {
+      delete this[k]
+    }
+  }
 }
