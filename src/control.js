@@ -14,6 +14,13 @@ class Control {
     this.switchBtn = util.createDom('dk-switch', '<span class="txt">弹</span>', {}, `danmu-switch ${state ? 'danmu-switch-active' : ''}`)
     return this.switchBtn
   }
+
+  destroy () {
+    this.main.destroy()
+    for (let k in this) {
+      delete this[k]
+    }
+  }
 }
 
 export default Control

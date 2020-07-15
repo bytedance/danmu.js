@@ -1,8 +1,4 @@
-import RecyclableDomList from '../domrecycle.js'
-
 let util = {}
-
-util.domObj = new RecyclableDomList()
 
 util.createDom = function (el = 'div', tpl = '', attrs = {}, cname = '') {
   let dom = document.createElement(el)
@@ -119,6 +115,27 @@ util.formatTime = function (time) {
   let s = Math.floor(time)
   let ms = time - s
   return s * 1000 + ms
+}
+
+util.offInDestroy = (object, event, fn, offEvent) => {
+  function onDestroy () {
+    object.off(event, fn)
+    object.off(offEvent, onDestroy)
+  }
+  object.once(offEvent, onDestroy)
+}
+
+util.on = (object, event, fn, offEvent) => {
+  if (offEvent) {
+    object.on(event, fn)
+    util.offInDestroy(object, event, fn, offEvent)
+  } else {
+    let _fn = data => {
+      fn(data)
+      object.off(event, _fn)
+    }
+    object.on(event, _fn)
+  }
 }
 
 export default util

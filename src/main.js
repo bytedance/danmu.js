@@ -19,12 +19,20 @@ class Main {
     this.retryStatus = 'normal'
     this.interval = danmu.config.interval || 2000// 弹幕队列缓存间隔
     this.status = 'idle'// 当前弹幕正在闲置
-    danmu.on('bullet_remove', this.updateQueue.bind(this))
+    util.on(danmu, 'bullet_remove', this.updateQueue.bind(this), 'destroy')
     let self = this
-    this.danmu.on('changeDirection', direction => {
+    util.on(this.danmu, 'changeDirection', direction => {
       self.danmu.direction = direction
-    })
+    }, 'destroy')
     this.nums = 0
+  }
+  destroy () {
+    clearTimeout(this.dataHandleTimer)
+    this.channel.destroy()
+    this.data = []
+    for (let k in this) {
+      delete this[k]
+    }
   }
   // 在渲染队列中移除已经展示完的弹幕对象
   updateQueue (rdata) {
@@ -53,7 +61,7 @@ class Main {
         self.dataHandle()
       }
       if (self.retryStatus !== 'stop' || this.status === 'paused') {
-        setTimeout(function () {
+        self.dataHandleTimer = setTimeout(function () {
           dataHandle()
         }, self.interval - 1000)
       }

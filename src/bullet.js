@@ -18,11 +18,12 @@ class Bullet {
     this.bookChannelId = options.bookChannelId
     this.direction = danmu.direction
     let self = this
-    this.danmu.on('changeDirection', direction => {
+    this.onChangeDirection = direction => {
       self.direction = direction
-    })
+    }
+    this.danmu.on('changeDirection', this.onChangeDirection)
     let el
-    this.domObj = util.domObj
+    this.domObj = danmu.domObj
     if(options.el && options.el.nodeType === 1) {
       el = this.domObj.use()
       el.appendChild(util.copyDom(options.el))
@@ -90,9 +91,7 @@ class Bullet {
     if(self.container && self.el) {
       self.domObj.unuse(self.el)
     }
-    self.danmu.off('changeDirection', direction => {
-      self.direction = direction
-    })
+    this.danmu.off('changeDirection', this.onChangeDirection)
   }
   topInit () {
     if(this.direction === 'b2t') {
@@ -215,7 +214,7 @@ class Bullet {
         this.moveV = (containerPos.height + this.height) / this.duration * 1000
         let leftDuration = (self.el.getBoundingClientRect().bottom - containerPos.top) / this.moveV
         this.el.style.transition = `transform ${leftDuration}s linear 0s`
-        setTimeout(function () {
+        this.startMoveTimer = setTimeout(function () {
           if (self.el) {
             self.el.style.transform = `translateX(-${self.top}px) translateY(-${self.height}px) translateZ(0px) rotate(90deg)`
             self.moveTime = new Date().getTime()
@@ -228,7 +227,7 @@ class Bullet {
         this.moveV = (containerPos.width + this.width) / this.duration * 1000
         let leftDuration = (self.el.getBoundingClientRect().right - containerPos.left) / this.moveV
         this.el.style.transition = `transform ${leftDuration}s linear 0s`
-        setTimeout(function () {
+        this.startMoveTimer = setTimeout(function () {
           if (self.el) {
             self.el.style.transform = `translateX(-${self.el.getBoundingClientRect().right - containerPos.left}px) translateY(0px) translateZ(0px)`
             self.moveTime = new Date().getTime()
@@ -257,11 +256,12 @@ class Bullet {
     if (this.removeTimer) {
       clearTimeout(this.removeTimer)
     }
+    if (this.startMoveTimer) {
+      clearTimeout(this.startMoveTimer)
+    }
     if (self.el && self.el.parentNode) {
       self.el.style.willChange = 'auto'
-      this.danmu.off('changeDirection', direction => {
-        self.direction = direction
-      })
+      this.danmu.off('changeDirection', this.onChangeDirection)
       // self.el.removeEventListener('mouseover', self.mouseoverFun.bind(self))
       this.domObj.unuse(self.el)
       let parent = self.el.parentNode

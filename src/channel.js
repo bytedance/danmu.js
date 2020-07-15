@@ -1,3 +1,5 @@
+import util from './utils/util'
+
 /**
  * [Channel 弹幕轨道控制]
  * @type {Class}
@@ -7,20 +9,20 @@ class Channel {
     this.danmu = danmu
     this.reset()
     let self = this
-    this.danmu.on('bullet_remove', function (r) {
+    util.on(this.danmu, 'bullet_remove', r => {
       self.removeBullet(r.bullet)
-    })
+    }, 'destroy')
     this.direction = danmu.direction
-    this.danmu.on('changeDirection', direction => {
+    util.on(this.danmu, 'changeDirection', direction => {
       self.direction = direction
-    })
+    }, 'destroy')
 
     this.containerPos = this.danmu.container.getBoundingClientRect()
     this.containerWidth = this.containerPos.width
     this.containerHeight = this.containerPos.height
     this.containerLeft = this.containerPos.left
     this.containerRight = this.containerPos.right
-    this.danmu.on('channel_resize', () => {
+    util.on(this.danmu, 'channel_resize', () => {
       self.containerPos = self.danmu.container.getBoundingClientRect()
       if (self.resizing) {
         return
@@ -30,7 +32,15 @@ class Channel {
       self.containerLeft = self.containerPos.left
       self.containerRight = self.containerPos.right
       self.resize(true)
-    })
+    }, 'destroy')
+  }
+  destroy () {
+    clearTimeout(this.resizeTimer)
+    clearTimeout(this.resetTimer)
+    this.channels = []
+    for (let k in this) {
+      delete this[k]
+    }
   }
   resize (isFullscreen = false) {
     let container = this.danmu.container
@@ -39,7 +49,7 @@ class Channel {
       return
     }
     self.resizing = true
-    setTimeout(function () {
+    this.resizeTimer = setTimeout(function () {
       let isDanmuPause = self.danmu.bulletBtn.main.status === 'paused'
       if (self.danmu.bulletBtn.main.data) {
         self.danmu.bulletBtn.main.data.forEach(item => {
@@ -742,7 +752,7 @@ class Channel {
         item.remove()
       })
     }
-    else if (self.channels && self.channels.length > 0) {
+    if (self.channels && self.channels.length > 0) {
       ['scroll', 'top', 'bottom'].forEach(key => {
         for (let i = 0; i < self.channels.length; i++) {
           self.channels[i].queue[key].forEach(item => {
@@ -753,7 +763,7 @@ class Channel {
       })
     }
     
-    setTimeout(function () {
+    this.resetTimer = setTimeout(function () {
       let size = container.getBoundingClientRect()
       self.width = size.width
       self.height = size.height
