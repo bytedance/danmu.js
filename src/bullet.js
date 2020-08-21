@@ -1,11 +1,14 @@
+import BaseClass from './baseClass'
 import util from './utils/util'
 
 /**
  * [Bullet 弹幕构造类]
  * @type {Class}
  */
-class Bullet {
+class Bullet extends BaseClass {
   constructor (danmu, options) {
+    super()
+    this.setLogger('bullet')
     this.danmu = danmu
     this.options = options
     this.duration = options.duration
@@ -58,6 +61,7 @@ class Bullet {
     this.containerPos = containerPos
   }
   attach () {
+    // this.logger.info(`attach #${this.options.txt || '[DOM Element]'}#`)
     let self = this
     self.container.appendChild(self.el)
     self.elPos = self.el.getBoundingClientRect()
@@ -87,6 +91,7 @@ class Bullet {
     })
   }
   detach () {
+    // this.logger.info(`detach #${this.options.txt || '[DOM Element]'}#`)
     let self = this
     if(self.container && self.el) {
       self.domObj.unuse(self.el)
@@ -94,6 +99,7 @@ class Bullet {
     this.danmu.off('changeDirection', this.onChangeDirection)
   }
   topInit () {
+    this.logger.info(`topInit #${this.options.txt || '[DOM Element]'}#`)
     if(this.direction === 'b2t') {
       let containerPos = this.containerPos
       this.el.style.transformOrigin = 'left top'
@@ -104,6 +110,7 @@ class Bullet {
     }
   }
   pauseMove (containerPos, isFullscreen = false) {
+    this.logger.info(`pauseMove #${this.options.txt || '[DOM Element]'}#`)
     // console.log('pauseMove')
     let self = this
     if(this.status === 'paused') {
@@ -165,6 +172,7 @@ class Bullet {
     }
   }
   startMove (containerPos, force) {
+    this.logger.info(`startMove #${this.options.txt || '[DOM Element]'}#`)
     let self = this
     if (!self.hasMove) {
       self.danmu.emit('bullet_start', self)
@@ -251,6 +259,7 @@ class Bullet {
     }
   }
   remove () {
+    this.logger.info(`remove #${this.options.txt || '[DOM Element]'}#`)
     // console.log('remove')
     let self = this
     if (this.removeTimer) {

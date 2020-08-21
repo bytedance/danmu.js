@@ -1,10 +1,15 @@
 import EventEmitter from 'event-emitter'
+import BaseClass from './baseClass'
 import Control from './control'
 import RecyclableDomList from './domrecycle.js'
 import util from './utils/util'
+import { version } from '../version.json'
 
-class DanmuJs {
+class DanmuJs extends BaseClass {
   constructor (options) {
+    super()
+    this.setLogger('danmu')
+    this.logger.info(`danmu.js version: ${version}`)
     let self = this
     self.config = util.deepCopy({
       overlap: false,
@@ -43,25 +48,31 @@ class DanmuJs {
     util.addClass(self.container, 'danmu')
     self.bulletBtn = new Control(self)
     self.emit('ready')
+    this.logger.info('ready')
   }
   
   start () {
+    this.logger.info('start')
     this.bulletBtn.main.start()
   }
 
   pause () {
+    this.logger.info('pause')
     this.bulletBtn.main.pause()
   }
 
   play () {
+    this.logger.info('play')
     this.bulletBtn.main.play()
   }
 
   stop () {
+    this.logger.info('stop')
     this.bulletBtn.main.stop()
   }
 
   destroy () {
+    this.logger.info('destroy')
     this.stop()
     this.bulletBtn.destroy()
     this.domObj.destroy()
@@ -72,6 +83,7 @@ class DanmuJs {
   }
 
   sendComment (comment) {
+    this.logger.info(`sendComment: ${comment.txt || '[DOM Element]'}`)
     if(!comment.duration) {
       comment.duration = 15000
     }
@@ -102,6 +114,7 @@ class DanmuJs {
   }
 
   setCommentID (oldID, newID) {
+    this.logger.info(`setCommentID: oldID ${oldID} newID ${newID}`)
     let containerPos_ = this.container.getBoundingClientRect()
     if (oldID && newID) {
       this.bulletBtn.main.data.some(data => {
@@ -126,6 +139,7 @@ class DanmuJs {
   }
 
   setCommentDuration (id, duration) {
+    this.logger.info(`setCommentDuration: id ${id} duration ${duration}`)
     let containerPos_ = this.container.getBoundingClientRect()
     if (id && duration) {
       duration = duration ? duration : 5000
@@ -151,6 +165,7 @@ class DanmuJs {
   }
 
   setCommentLike (id, like) {
+    this.logger.info(`setCommentLike: id ${id} like ${like}`)
     let containerPos_ = this.container.getBoundingClientRect()
     this.like = like
     if (id && like) {
@@ -178,6 +193,7 @@ class DanmuJs {
   }
 
   restartComment (id) {
+    this.logger.info(`restartComment: id ${id}`)
     this.mouseControl = false
     let pos = this.container.getBoundingClientRect()
     if (id) {
@@ -198,6 +214,7 @@ class DanmuJs {
   }
 
   freezeComment (id) {
+    this.logger.info(`freezeComment: id ${id}`)
     this.mouseControl = true
     let pos = this.container.getBoundingClientRect()
     if (id) {
@@ -217,6 +234,7 @@ class DanmuJs {
   }
 
   removeComment (id) {
+    this.logger.info(`removeComment: id ${id}`)
     if (!id) return
     this.bulletBtn.main.queue.some(item => {
       if(item.id === id) {
@@ -232,6 +250,7 @@ class DanmuJs {
   }
 
   setAllDuration (mode = 'scroll', duration, force = true) {
+    this.logger.info(`setAllDuration: mode ${mode} duration ${duration} force ${force}`)
     let containerPos_ = this.container.getBoundingClientRect()
     if (duration) {
       duration = duration ? duration : 5000
@@ -256,10 +275,12 @@ class DanmuJs {
   }
 
   setOpacity (opacity) {
+    this.logger.info(`setOpacity: opacity ${opacity}`)
     this.container.style.opacity = opacity
   }
   
   setFontSize (size, channelSize) {
+    this.logger.info(`setFontSize: size ${size} channelSize ${channelSize}`)
     this.fontSize = `${size}px`
     if (size) {
       this.bulletBtn.main.data.forEach(data => {
@@ -287,11 +308,13 @@ class DanmuJs {
   }
   
   setArea (area) {
+    this.logger.info(`setArea: area ${area}`)
     this.config.area = area
     this.bulletBtn.main.channel.resize(true)
   }
 
   hide (mode = 'scroll') {
+    this.logger.info(`hide: mode ${mode}`)
     if(this.hideArr.indexOf(mode) < 0) {
       this.hideArr.push(mode)
     }
@@ -300,6 +323,7 @@ class DanmuJs {
   }
 
   show (mode = 'scroll') {
+    this.logger.info(`show: mode ${mode}`)
     let index = this.hideArr.indexOf(mode)
     if(index > -1) {
       this.hideArr.splice(index, 1)
@@ -307,10 +331,12 @@ class DanmuJs {
   }
 
   setDirection (direction = 'r2l') {
+    this.logger.info(`setDirection: direction ${direction}`)
     this.emit('changeDirection', direction)
   }
 
   resize () {
+    this.logger.info(`resize`)
     this.emit('channel_resize')
   }
 }
