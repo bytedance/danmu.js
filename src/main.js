@@ -193,20 +193,21 @@ class Main extends BaseClass {
         bullet = new Bullet(danmu, item)
         if (!item.hasAttached) {
           bullet.attach()
-          item.hasAttach = true
-        }
-        result = channel.addBullet(bullet)
-        if (result.result) {
-          self.queue.push(bullet)
-          self.nums++;
-          bullet.topInit()
-        } else {
-          bullet.detach()
-          if(item.noDiscard) {
-            if(item.prior) {
-              self.data.unshift(item)
-            } else {
-              self.data.push(item)
+          item.hasAttached = true
+
+          result = channel.addBullet(bullet)
+          if (result.result) {
+            self.queue.push(bullet)
+            self.nums++;
+            bullet.topInit()
+          } else {
+            bullet.detach()
+            if(item.noDiscard) {
+              if(item.prior) {
+                self.data.unshift(item)
+              } else {
+                self.data.push(item)
+              }
             }
           }
         }

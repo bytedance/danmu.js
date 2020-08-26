@@ -93,8 +93,8 @@
       <button onclick="toggleDirection()">切换弹幕方向</button>
       <button onclick="toggleArea()">切换弹幕区域</button> -->
     </div>
-    <script src="//cdn.jsdelivr.net/npm/danmu.js@0.2.21/browser/index.js" charset="utf-8"></script>
-    <!-- <script src="../browser/index.js" charset="utf-8"></script> -->
+    <!-- <script src="//cdn.jsdelivr.net/npm/danmu.js@0.2.21/browser/index.js" charset="utf-8"></script> -->
+    <script src="../browser/index.js" charset="utf-8"></script>
     <script type="text/javascript">
         let el = createDom('xg-el', '弹幕弹幕弹幕<img src="./grinning-face.png" />弹幕弹幕', {}, 'xgplayer-el')
         let wrap = document.getElementById('wrap')
@@ -156,14 +156,14 @@
               duration: 5000,
               id: id+'',
               txt: id+'奥利给奥利给奥利给奥利给奥利给', //弹幕文字内容
-              style: {
-                fontSize: '25px',
-                lineHeight: 1.125,
-                color: '#000'
-              },
-              originData: {
-                x: '2121'
-              },
+              // style: {
+              //   fontSize: '25px',
+              //   lineHeight: 1.125,
+              //   color: '#000'
+              // },
+              // originData: {
+              //   x: '2121'
+              // },
               // like: {
               //   el: like,
               //   style: {
@@ -192,8 +192,8 @@
           danmu.sendComment({
             duration: 5000,
             id: id++,
-            prior: true,
-            realTime: true,
+            // prior: true,
+            // realTime: true,
             // noDiscard: true,
             txt: comment,
             style: {
