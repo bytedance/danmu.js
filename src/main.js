@@ -1,3 +1,4 @@
+import BaseClass from './baseClass'
 import Channel from './channel'
 import Bullet from './bullet'
 import util from './utils/util'
@@ -6,8 +7,10 @@ import util from './utils/util'
  * [Main 弹幕主进程]
  * @type {Class}
  */
-class Main {
+class Main extends BaseClass {
   constructor (danmu) {
+    super()
+    this.setLogger('main')
     this.danmu = danmu
     this.container = danmu.container
     this.channel = new Channel(danmu)// 弹幕轨道实例
@@ -27,6 +30,7 @@ class Main {
     this.nums = 0
   }
   destroy () {
+    this.logger.info('destroy')
     clearTimeout(this.dataHandleTimer)
     this.channel.destroy()
     this.data = []
@@ -36,6 +40,7 @@ class Main {
   }
   // 在渲染队列中移除已经展示完的弹幕对象
   updateQueue (rdata) {
+    this.logger.info('updateQueue')
     let self = this
     self.queue.some((item, index) => {
       if (item.id === rdata.bullet.id) {
@@ -47,6 +52,7 @@ class Main {
     })
   }
   init (bol, self) {
+    self.logger.info('init')
     if (!self) {
       self = this
     }
@@ -72,6 +78,7 @@ class Main {
   }
   // 启动弹幕渲染主进程
   start () {
+    this.logger.info('start')
     let self = this
     this.status = 'playing'
     this.queue = []
@@ -79,6 +86,7 @@ class Main {
     this.channel.resetWithCb(self.init, self)
   }
   stop () {
+    this.logger.info('stop')
     let self = this
     this.status = 'closed'
     self.retryTimer = null
@@ -88,6 +96,7 @@ class Main {
     self.container.innerHTML = ''
   }
   play () {
+    this.logger.info('play')
     this.status = 'playing'
     let channels = this.channel.channels
     let containerPos = this.danmu.container.getBoundingClientRect()
@@ -114,6 +123,7 @@ class Main {
     }
   }
   pause () {
+    this.logger.info('pause')
     this.status = 'paused'
     let channels = this.channel.channels
     let containerPos = this.danmu.container.getBoundingClientRect()
@@ -183,20 +193,21 @@ class Main {
         bullet = new Bullet(danmu, item)
         if (!item.hasAttached) {
           bullet.attach()
-          item.hasAttach = true
-        }
-        result = channel.addBullet(bullet)
-        if (result.result) {
-          self.queue.push(bullet)
-          self.nums++;
-          bullet.topInit()
-        } else {
-          bullet.detach()
-          if(item.noDiscard) {
-            if(item.prior) {
-              self.data.unshift(item)
-            } else {
-              self.data.push(item)
+          item.hasAttached = true
+
+          result = channel.addBullet(bullet)
+          if (result.result) {
+            self.queue.push(bullet)
+            self.nums++;
+            bullet.topInit()
+          } else {
+            bullet.detach()
+            if(item.noDiscard) {
+              if(item.prior) {
+                self.data.unshift(item)
+              } else {
+                self.data.push(item)
+              }
             }
           }
         }

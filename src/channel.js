@@ -1,11 +1,14 @@
+import BaseClass from './baseClass'
 import util from './utils/util'
 
 /**
  * [Channel 弹幕轨道控制]
  * @type {Class}
  */
-class Channel {
+class Channel extends BaseClass {
   constructor (danmu) {
+    super()
+    this.setLogger('channel')
     this.danmu = danmu
     this.reset()
     let self = this
@@ -35,6 +38,7 @@ class Channel {
     }, 'destroy')
   }
   destroy () {
+    this.logger.info('destroy')
     clearTimeout(this.resizeTimer)
     clearTimeout(this.resetTimer)
     this.channels = []
@@ -43,6 +47,7 @@ class Channel {
     }
   }
   resize (isFullscreen = false) {
+    this.logger.info('resize')
     let container = this.danmu.container
     let self = this
     if (self.resizing) {
@@ -239,6 +244,7 @@ class Channel {
     }, 10)
   }
   addBullet (bullet) {
+    // this.logger.info(`addBullet ${bullet.options.txt || '[DOM Element]'}`)
     let self = this
     let danmu = this.danmu
     let channels = this.channels
@@ -541,6 +547,7 @@ class Channel {
     }
   }
   removeBullet (bullet) {
+    this.logger.info(`removeBullet ${bullet.options.txt || '[DOM Element]'}`)
     // console.log('removeBullet')
     let channels = this.channels
     let channelId = bullet.channel_id
@@ -569,6 +576,7 @@ class Channel {
     }
   }
   resetArea () {
+    this.logger.info('resetArea')
     // console.log('resetArea')
     let container = this.danmu.container
     let self = this
@@ -744,6 +752,7 @@ class Channel {
     }
   }
   reset () {
+    this.logger.info('reset')
     let container = this.danmu.container
     let self = this
     if (self.danmu.bulletBtn && self.danmu.bulletBtn.main) {
@@ -809,6 +818,7 @@ class Channel {
     }, 200)
   }
   resetWithCb (cb, main) {
+    this.logger.info('resetWithCb')
     let container = this.danmu.container
     let self = this
     if (self.channels && self.channels.length > 0) {
