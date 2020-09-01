@@ -202,6 +202,7 @@ class Main extends BaseClass {
             bullet.topInit()
           } else {
             bullet.detach()
+            item.hasAttached = false
             if(item.noDiscard) {
               if(item.prior) {
                 self.data.unshift(item)
