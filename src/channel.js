@@ -453,16 +453,16 @@ class Channel extends BaseClass {
           let deleteIndex = -1
           let deleteItem = null
           self.danmu.bulletBtn.main.queue.forEach((item, index) => {
-            if (item.el && item.el.getBoundingClientRect().right > self.containerPos.right && item.start >= start) {
+            if (!item.prior && !item.options.realTime && item.el && item.el.getBoundingClientRect().left > self.containerPos.right && item.start >= start) {
               start = item.start
               deleteIndex = index
               deleteItem = item
             }
           })  
           if (deleteItem) {
-            // deleteItem.remove()
-            // self.removeBullet(deleteItem)
-            // self.danmu.bulletBtn.main.queue.splice(deleteIndex, 1)
+            deleteItem.remove()
+            self.removeBullet(deleteItem)
+            self.danmu.bulletBtn.main.queue.splice(deleteIndex, 1)
             bullet.channel_id = deleteItem.channel_id
             for (let i = deleteItem.channel_id[0], max = deleteItem.channel_id[0] + deleteItem.channel_id[1]; i < max; i++) {
               channel = channels[i]
