@@ -71,7 +71,7 @@
       </div>
       <div>
         <input type="text" id="comment" placeholder="输入弹幕内容"/>
-        <button onclick="sendComment()">发送弹幕</button>
+        <button onclick="sendPriorComment()">发送弹幕</button>
       </div>
       <div>
         <!-- <input type="text" id="hidetype" placeholder="输入要屏蔽的弹幕类型"/>
@@ -215,15 +215,16 @@
         function sendPriorComment() {
           danmu.sendComment({  //发送弹幕
             duration: 5000,
-            id: '999999',
+            id: id++,
             txt: '哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈', //弹幕文字内容
-            style: {
-              fontSize: '25px',
-              lineHeight: 1.125,
-              border: 'solid 1px #fff'
-            },
+            // style: {
+            //   fontSize: '25px',
+            //   lineHeight: 1.125,
+            //   border: 'solid 1px #000'
+            // },
             prior: true,
-            realTime: true,
+            // realTime: true,
+            // noDiscard: true,
           })
         }
 

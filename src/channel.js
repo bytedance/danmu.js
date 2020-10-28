@@ -60,11 +60,11 @@ class Channel extends BaseClass {
         self.danmu.bulletBtn.main.data.forEach(item => {
           if (item.bookChannelId) {
             delete item['bookChannelId']
-            // console.log('resize导致' + item.id + '号优先弹幕预定取消')
+            self.logger.info('resize导致' + item.id + '号优先弹幕预定取消')
           }
         })
       }
-      // console.log('resize导致所有轨道恢复正常使用')
+      self.logger.info('resize导致所有轨道恢复正常使用')
       let size = container.getBoundingClientRect()
       self.width = size.width
       self.height = size.height
@@ -410,12 +410,12 @@ class Channel extends BaseClass {
           channel.queue[bullet.mode].unshift(bullet)
           if (bullet.prior) {
             delete channel.bookId[bullet.mode]
-            // console.log(i + '号轨道恢复正常使用')
+            self.logger.info(i + '号轨道恢复正常使用')
           }
           channel.operating[bullet.mode] = false
         }
         if (bullet.prior) {
-          // console.log(bullet.id + '号优先弹幕运行完毕')
+          self.logger.info(bullet.id + '号优先弹幕运行完毕')
           delete bullet['bookChannelId']
           if(danmu.player) {
             let dataList = danmu.bulletBtn.main.data
@@ -503,18 +503,17 @@ class Channel extends BaseClass {
             if (pos !== -1) {
               for (let j = pos; j < pos + occupy; j++) {
                 channels[j].bookId[bullet.mode] = bullet.id
-                // console.log(j + '号轨道被' + bullet.id + '号优先弹幕预定')
+                self.logger.info(j + '号轨道被' + bullet.id + '号优先弹幕预定')
               }
               let nextAddTime = 2
               if(danmu.player) {
                 let dataList = danmu.bulletBtn.main.data
                 dataList.some(function (item) {
                   if (item.id === bullet.id) {
-                    // console.log(bullet.id + '号优先弹幕将于' + nextAddTime + '秒后再次请求注册')
+                    self.logger.info(bullet.id + '号优先弹幕将于' + nextAddTime + '秒后再次请求注册')
                     item.start += nextAddTime * 1000
                     item.bookChannelId = [pos, occupy]
-                    // console.log(bullet.id + '号优先弹幕预定了' + pos + '~' + pos + occupy - 1 + '号轨道')
-                    // console.log(`${bullet.id}号优先弹幕预定了${pos}~${pos + occupy - 1}号轨道`)
+                    self.logger.info(`${bullet.id}号优先弹幕预定了${pos}~${pos + occupy - 1}号轨道`)
                     return true
                   } else {
                     return false
@@ -528,7 +527,7 @@ class Channel extends BaseClass {
               let dataList = danmu.bulletBtn.main.data
               dataList.some(function (item) {
                 if (item.id === bullet.id) {
-                  // console.log(bullet.id + '号优先弹幕将于' + nextAddTime + '秒后再次请求注册')
+                  self.logger.info(bullet.id + '号优先弹幕将于' + nextAddTime + '秒后再次请求注册')
                   item.start += nextAddTime * 1000
                   return true
                 } else {
