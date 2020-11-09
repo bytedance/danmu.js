@@ -94,7 +94,11 @@ class Bullet extends BaseClass {
     // this.logger.info(`detach #${this.options.txt || '[DOM Element]'}#`)
     let self = this
     if(self.container && self.el) {
+      if(self.el.parentNode) {
+        self.el.parentNode.removeChild(self.el)
+      }
       self.domObj.unuse(self.el)
+      self.el = null
     }
     this.danmu.off('changeDirection', this.onChangeDirection)
   }

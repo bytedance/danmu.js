@@ -94,6 +94,7 @@
       <button onclick="toggleArea()">切换弹幕区域</button> -->
     </div>
     <!-- <script src="//cdn.jsdelivr.net/npm/danmu.js@0.2.21/browser/index.js" charset="utf-8"></script> -->
+    <script src="./xgplayer/index.js" type="text/javascript"></script>
     <script src="../browser/index.js" charset="utf-8"></script>
     <script type="text/javascript">
         let el = createDom('xg-el', '弹幕弹幕弹幕<img src="./grinning-face.png" />弹幕弹幕', {}, 'xgplayer-el')
@@ -146,11 +147,23 @@
 
         let id = 1
         function start () {
+          const resizeObserver = new window.ResizeObserver((entries) => {
+          // for (let entry of entries) {
+            // console.log(entry.target);
+            //   if (Player.util.hasClass(entry.target, 'xgplayer-danmu')) {
+                console.log('danmu container size change');
+                danmu.resize();
+              // }
+            // }
+          });
+          resizeObserver.observe(document.getElementById('vs'));
+
           danmu.start()
           setInterval(function() {
             // console.log(player.currentTime+1)
             let currentTime = player.currentTime
-            id++;
+            // id++;
+            // console.log('sendComment: ', id);
             danmu.sendComment({
               duration: 5000,
               id: '' + id++,
