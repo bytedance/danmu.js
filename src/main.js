@@ -66,7 +66,7 @@ class Main extends BaseClass {
         self.readData()
         self.dataHandle()
       }
-      if (self.retryStatus !== 'stop' || this.status === 'paused') {
+      if (self.retryStatus !== 'stop' || self.status === 'paused') {
         self.dataHandleTimer = setTimeout(function () {
           dataHandle()
         }, self.interval - 1000)
@@ -188,7 +188,7 @@ class Main extends BaseClass {
     if (list.length > 0) {
       list.forEach(item => {
         if (self.forceDuration && self.forceDuration != item.duration) {
-          item.duration = self.forceDuration;
+          item.duration = self.forceDuration
         }
         bullet = new Bullet(danmu, item)
         if (!item.hasAttached) {

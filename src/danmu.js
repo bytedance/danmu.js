@@ -296,7 +296,7 @@ class DanmuJs extends BaseClass {
         item.options.style.fontSize = this.fontSize
         item.setFontSize(this.fontSize)
         if (channelSize) {
-          item.top = item.channel_id[0] * channelSize;
+          item.top = item.channel_id[0] * channelSize
           item.topInit()
         }
       })
@@ -336,7 +336,7 @@ class DanmuJs extends BaseClass {
   }
 
   resize () {
-    this.logger.info(`resize`)
+    this.logger.info('resize')
     this.emit('channel_resize')
   }
 }
