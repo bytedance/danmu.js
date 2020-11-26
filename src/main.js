@@ -198,7 +198,7 @@ class Main extends BaseClass {
           result = channel.addBullet(bullet)
           if (result.result) {
             self.queue.push(bullet)
-            self.nums++;
+            self.nums++
             bullet.topInit()
           } else {
             bullet.detach()

@@ -55,7 +55,6 @@ class Channel extends BaseClass {
     }
     self.resizing = true
     this.resizeTimer = setTimeout(function () {
-      let isDanmuPause = self.danmu.bulletBtn.main.status === 'paused'
       if (self.danmu.bulletBtn.main.data) {
         self.danmu.bulletBtn.main.data.forEach(item => {
           if (item.bookChannelId) {
@@ -185,9 +184,9 @@ class Channel extends BaseClass {
           };
           ['scroll', 'top', 'bottom'].forEach(key => {
             if (key === 'top' && i > Math.floor(channels.length / 2)) {
-  
+              //
             } else if (key === 'bottom' && i <= Math.floor(channels.length / 2)) {
-  
+               // 
             } else {
               let num = key === 'bottom' ? i - channels.length + self.channels.length : i
               self.channels[num].queue[key].forEach((item, index) => {
@@ -696,9 +695,9 @@ class Channel extends BaseClass {
         };
         ['scroll', 'top', 'bottom'].forEach(key => {
           if (key === 'top' && i > Math.floor(channels.length / 2)) {
-
+            //
           } else if (key === 'bottom' && i <= Math.floor(channels.length / 2)) {
-
+            //
           } else {
             let num = key === 'bottom' ? i - channels.length + self.channels.length : i
             self.channels[num].queue[key].forEach((item, index) => {

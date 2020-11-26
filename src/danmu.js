@@ -4,6 +4,7 @@ import Control from './control'
 import RecyclableDomList from './domrecycle.js'
 import util from './utils/util'
 import { version } from '../version.json'
+import {addObserver, unObserver} from './resizeObserver'
 
 class DanmuJs extends BaseClass {
   constructor (options) {
@@ -19,7 +20,8 @@ class DanmuJs extends BaseClass {
       },
       live: false,
       comments: [],
-      direction: 'r2l'
+      direction: 'r2l',
+      needResizeObserver: false
     }, options)
     self.hideArr = []
     self.domObj = new RecyclableDomList()
@@ -49,6 +51,14 @@ class DanmuJs extends BaseClass {
     self.bulletBtn = new Control(self)
     self.emit('ready')
     this.logger.info('ready')
+    this.addResizeObserver()
+  }
+
+  addResizeObserver () {
+    this.config.needResizeObserver && addObserver(this.container, () => {
+      console.log('needResizeObserver')
+      this.resize()
+    })
   }
   
   start () {
@@ -72,6 +82,7 @@ class DanmuJs extends BaseClass {
   }
 
   destroy () {
+    unObserver(this.container)
     this.logger.info('destroy')
     this.stop()
     this.bulletBtn.destroy()
