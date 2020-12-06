@@ -57,7 +57,7 @@ class DanmuJs extends BaseClass {
 
   addResizeObserver () {
     this.config.needResizeObserver && addObserver(this.container, () => {
-      console.log('needResizeObserver')
+      this.logger.info('needResizeObserver')
       this.resize()
     })
   }
