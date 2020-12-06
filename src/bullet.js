@@ -9,6 +9,8 @@ class Bullet extends BaseClass {
   constructor (danmu, options) {
     super()
     this.setLogger('bullet')
+    // console.log('Bullet', options)
+    // this.logger.info('options.moveV', options.moveV)
     this.danmu = danmu
     this.options = options
     this.duration = options.duration
@@ -53,11 +55,11 @@ class Bullet extends BaseClass {
     }
     this.status = 'waiting'// waiting,start,end
     let containerPos = this.container.getBoundingClientRect()
-    var random = Math.floor(Math.random() * ((containerPos.width / 10) > 100 ? 200 : containerPos.width / 10));
+    var random = Math.floor(Math.random() * ((containerPos.width / 10) > 100 ? 200 : containerPos.width / 10))
     if (options.realTime) {
       random = 0
     }
-    this.el.style.left = containerPos.width + random + 'px';
+    this.el.style.left = containerPos.width + random + 'px'
     this.containerPos = containerPos
   }
   attach () {
@@ -107,8 +109,8 @@ class Bullet extends BaseClass {
     if(this.direction === 'b2t') {
       let containerPos = this.containerPos
       this.el.style.transformOrigin = 'left top'
-      this.el.style.transform = `translateX(-${this.top}px) translateY(${containerPos.height}px) translateZ(0px) rotate(90deg)`;
-      this.el.style.transition = `transform 0s linear 0s`
+      this.el.style.transform = `translateX(-${this.top}px) translateY(${containerPos.height}px) translateZ(0px) rotate(90deg)`
+      this.el.style.transition = 'transform 0s linear 0s'
     } else {
       this.el.style.top = `${this.top}px`
     }
@@ -134,8 +136,6 @@ class Bullet extends BaseClass {
         let pastS = pastDuration * this.moveV
         let ratio = 0
         let nowS = 0
-        // console.log('self.moveMoreS: ' + self.moveMoreS)
-        // console.log('pastS: ' + pastS)
         if(self.moveMoreS - pastS >= 0) {
           if(this.direction === 'b2t') {
             ratio = (self.moveMoreS - pastS) / self.moveContainerHeight
