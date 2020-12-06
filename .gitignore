@@ -80,3 +80,7 @@ typings/
 .DS_Store
 
 demo/
+
+browser/
+
+dist/
