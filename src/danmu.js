@@ -49,6 +49,7 @@ class DanmuJs extends BaseClass {
     self.direction = self.config.direction
     util.addClass(self.container, 'danmu')
     self.bulletBtn = new Control(self)
+    self.isReady = true
     self.emit('ready')
     this.logger.info('ready')
     this.addResizeObserver()
