@@ -93,8 +93,8 @@
       <button onclick="toggleDirection()">切换弹幕方向</button>
       <button onclick="toggleArea()">切换弹幕区域</button> -->
     </div>
-    <!-- <script src="//cdn.jsdelivr.net/npm/danmu.js@0.2.21/browser/index.js" charset="utf-8"></script> -->
-    <script src="./xgplayer/index.js" type="text/javascript"></script>
+    <!-- <script src="//cdn.jsdelivr.net/npm/danmu.js@0.2.22/browser/index.js" charset="utf-8"></script> -->
+    <!-- <script src="./xgplayer/index.js" type="text/javascript"></script> -->
     <script src="../browser/index.js" charset="utf-8"></script>
     <script type="text/javascript">
         let el = createDom('xg-el', '弹幕弹幕弹幕<img src="./grinning-face.png" />弹幕弹幕', {}, 'xgplayer-el')
@@ -117,15 +117,24 @@
           player,
           // direction,
           comments: [
-            // {
-            //   duration: 5000,
-            //   start: 0,
-            //   id: 1 + '',
-            //   txt: 1 + '', //弹幕文字内容
-            //   style: {
-            //       fontSize: '20px'
-            //   }
-            // }
+            {
+              duration: 5000,
+              start: 500,
+              id: 1 + '',
+              txt: 1 + '', //弹幕文字内容
+              style: {
+                  fontSize: '20px'
+              }
+            },
+            {
+              duration: 5000,
+              start: 5000,
+              id: 2 + '',
+              txt: 222 + '', //弹幕文字内容
+              style: {
+                  fontSize: '20px'
+              }
+            }
           ],
           channelSize: 32.8,
           area: {
@@ -145,24 +154,26 @@
           // }, 4000)
         })
 
+        start()
+
         let id = 1
         function start () {
-          const resizeObserver = new window.ResizeObserver((entries) => {
-          // for (let entry of entries) {
-            // console.log(entry.target);
-            //   if (Player.util.hasClass(entry.target, 'xgplayer-danmu')) {
-                console.log('danmu container size change');
-                danmu.resize();
-              // }
-            // }
-          });
-          resizeObserver.observe(document.getElementById('vs'));
+          // const resizeObserver = new window.ResizeObserver((entries) => {
+          // // for (let entry of entries) {
+          //   // console.log(entry.target);
+          //   //   if (Player.util.hasClass(entry.target, 'xgplayer-danmu')) {
+          //       console.log('danmu container size change');
+          //       danmu.resize();
+          //     // }
+          //   // }
+          // });
+          // resizeObserver.observe(document.getElementById('vs'));
 
           danmu.start()
           setInterval(function() {
             // console.log(player.currentTime+1)
             let currentTime = player.currentTime
-            // id++;
+            id++;
             // console.log('sendComment: ', id);
             danmu.sendComment({
               duration: 5000,
@@ -179,34 +190,34 @@
                 lineHeight: 1.125
               },
             })
-          //   let like = document.createElement('span')
-          //   like.innerText = '10w+'
-          //   // console.log(document.getElementById('duration').value || 5000)
-          //   danmu.sendComment({  //发送弹幕
-          //     duration: 5000,
-          //     id: id+'',
-          //     txt: id+'奥利给奥利给奥利给奥利给奥利给', //弹幕文字内容
-          //     prior: true,
-          //     realTime: true,
-          //     start: player.currentTime,
-          //     style: {
-          //       color: '#000',
-          //       fontSize: '25px',
-          //       padding: '5px 12px',
-          //       fontSize: '25px',
-          //       lineHeight: 1.125
-          //     },
-          //     // originData: {
-          //     //   x: '2121'
-          //     // },
-          //     // like: {
-          //     //   el: like,
-          //     //   style: {
-          //     //     paddingLeft: '10px',
-          //     //     color: '#ff0000'
-          //     //   }
-          //     // }
-          //   })
+            // let like = document.createElement('span')
+            // like.innerText = '10w+'
+            // console.log(document.getElementById('duration').value || 5000)
+            // danmu.sendComment({  //发送弹幕
+            //   duration: 5000,
+            //   id: id+'',
+            //   txt: id+'奥利给奥利给奥利给奥利给奥利给', //弹幕文字内容
+            //   prior: true,
+            //   realTime: true,
+            //   start: player.currentTime,
+            //   style: {
+            //     color: '#000',
+            //     fontSize: '25px',
+            //     padding: '5px 12px',
+            //     fontSize: '25px',
+            //     lineHeight: 1.125
+            //   },
+            //   // originData: {
+            //   //   x: '2121'
+            //   // },
+            //   // like: {
+            //   //   el: like,
+            //   //   style: {
+            //   //     paddingLeft: '10px',
+            //   //     color: '#ff0000'
+            //   //   }
+            //   // }
+            // })
           }, 100)
         }
 

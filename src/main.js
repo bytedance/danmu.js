@@ -50,6 +50,14 @@ class Main extends BaseClass {
         return false
       }
     })
+    self.data.some((item, index) => {
+      if (item.id === rdata.bullet.id) {
+        item.hasAttached = false
+        return true
+      } else {
+        return false
+      }
+    })
   }
   init (bol, self) {
     self.logger.info('init')
@@ -156,6 +164,7 @@ class Main extends BaseClass {
   }
   readData () {
     let self = this, danmu = this.danmu
+    if(!danmu.isReady) return
     let currentTime = 0
     if(danmu.player && danmu.player.currentTime) {
       currentTime = util.formatTime(danmu.player.currentTime)
@@ -194,7 +203,6 @@ class Main extends BaseClass {
         if (!item.hasAttached) {
           bullet.attach()
           item.hasAttached = true
-
           result = channel.addBullet(bullet)
           if (result.result) {
             self.queue.push(bullet)
