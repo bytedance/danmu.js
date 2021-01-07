@@ -40,7 +40,7 @@ class Channel extends BaseClass {
   destroy () {
     this.logger.info('destroy')
     clearTimeout(this.resizeTimer)
-    clearTimeout(this.resetTimer)
+    // clearTimeout(this.resetTimer)
     this.channels = []
     for (let k in this) {
       delete this[k]
@@ -769,8 +769,12 @@ class Channel extends BaseClass {
         }
       })
     }
-    
-    this.resetTimer = setTimeout(function () {
+    if (self.danmu.bulletBtn && self.danmu.bulletBtn.main && self.danmu.bulletBtn.main.data) {
+      self.danmu.bulletBtn.main.data.forEach(item => {
+        item.hasAttached = false
+      })
+    }
+    // this.resetTimer = setTimeout(function () {
       let size = container.getBoundingClientRect()
       self.width = size.width
       self.height = size.height
@@ -813,7 +817,7 @@ class Channel extends BaseClass {
       } else {
         self.channelHeight = fontSize
       }
-    }, 200)
+    // }, 200)
   }
   resetWithCb (cb, main) {
     this.logger.info('resetWithCb')
