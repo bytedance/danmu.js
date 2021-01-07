@@ -10,7 +10,7 @@ class Channel extends BaseClass {
     super()
     this.setLogger('channel')
     this.danmu = danmu
-    this.reset()
+    this.reset(true)
     let self = this
     util.on(this.danmu, 'bullet_remove', r => {
       self.removeBullet(r.bullet)
@@ -749,7 +749,7 @@ class Channel extends BaseClass {
       }
     }
   }
-  reset () {
+  reset (isInit = false) {
     this.logger.info('reset')
     let container = this.danmu.container
     let self = this
@@ -774,7 +774,7 @@ class Channel extends BaseClass {
         item.hasAttached = false
       })
     }
-    // this.resetTimer = setTimeout(function () {
+    function channelReset() {
       let size = container.getBoundingClientRect()
       self.width = size.width
       self.height = size.height
@@ -817,7 +817,12 @@ class Channel extends BaseClass {
       } else {
         self.channelHeight = fontSize
       }
-    // }, 200)
+    }
+    if(isInit) {
+      this.resetTimer = setTimeout(channelReset, 200)
+    } else {
+      channelReset();
+    }
   }
   resetWithCb (cb, main) {
     this.logger.info('resetWithCb')
