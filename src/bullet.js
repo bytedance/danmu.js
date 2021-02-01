@@ -31,7 +31,13 @@ class Bullet extends BaseClass {
     this.domObj = danmu.domObj
     if(options.el && options.el.nodeType === 1) {
       el = this.domObj.use()
-      el.appendChild(util.copyDom(options.el))
+      let copyDOM = util.copyDom(options.el)
+      if(options.eventListeners && options.eventListeners.length > 0) {
+        options.eventListeners.forEach(eventListener => {
+          copyDOM.addEventListener(eventListener.event, eventListener.listener, eventListener.useCapture || false)
+        })
+      }
+      el.appendChild(copyDOM)
       // el = util.copyDom(options.el)
     } else {
       el = this.domObj.use()
