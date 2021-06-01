@@ -61,7 +61,7 @@ class Bullet extends BaseClass {
     }
     this.status = 'waiting'// waiting,start,end
     let containerPos = this.container.getBoundingClientRect()
-    var random = Math.floor(Math.random() * ((containerPos.width / 10) > 100 ? 200 : containerPos.width / 10))
+    let random = Math.floor(Math.random() * ((containerPos.width / 10) > 100 ? 200 : containerPos.width / 10))
     if (options.realTime) {
       random = 0
     }
@@ -242,18 +242,31 @@ class Bullet extends BaseClass {
           }
         }, 20)
       } else {
+        let bulletPos = this.el.getBoundingClientRect()
         this.moveV = (containerPos.width + this.width) / this.duration * 1000
-        let leftDuration = (self.el.getBoundingClientRect().right - containerPos.left) / this.moveV
+        let leftDuration = (bulletPos.right - containerPos.left) / this.moveV
         this.el.style.transition = `transform ${leftDuration}s linear 0s`
+        // this.el.style.left = bulletPos.left + 'px'
         this.startMoveTimer = setTimeout(function () {
           if (self.el) {
-            self.el.style.transform = `translateX(-${self.el.getBoundingClientRect().right - containerPos.left}px) translateY(0px) translateZ(0px)`
-            self.moveTime = new Date().getTime()
-            self.moveMoreS = self.el.getBoundingClientRect().left - containerPos.left
-            self.moveContainerWidth = containerPos.width
-            self.removeTimer = setTimeout(func, leftDuration * 1000)
+            let bulletPos = self.el.getBoundingClientRect()
+            // self.el.style.left = bulletPos.left + 'px'
+            let v = (bulletPos.right - containerPos.left) / leftDuration
+            // console.log(`${self.id} 距离: ${bulletPos.right - containerPos.left}px 时间: ${leftDuration} 速度: ${v} 预定速度: ${self.moveV}`)
+            // console.log(`${self.id} translateX(-${bulletPos.right - containerPos.left}px) translateY(0px) translateZ(0px)`)
+              
+            if(bulletPos.right > containerPos.left && v > self.moveV - 1 && v < self.moveV + 1) {
+              self.el.style.transform = `translateX(-${bulletPos.right - containerPos.left}px) translateY(0px) translateZ(0px)`
+              self.moveTime = new Date().getTime()
+              self.moveMoreS = bulletPos.left - containerPos.left
+              self.moveContainerWidth = containerPos.width
+              self.removeTimer = setTimeout(func, leftDuration * 1000)
+            } else {
+              self.status = 'end'
+              self.remove()
+            }
           }
-        }, 20)
+        }, 0)
       }
     } else {
       // this.el.style.width = `${this.width}px`
