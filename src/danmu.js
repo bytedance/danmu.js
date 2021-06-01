@@ -82,6 +82,11 @@ class DanmuJs extends BaseClass {
     this.bulletBtn.main.stop()
   }
 
+  clear () {
+    this.logger.info('clear')
+    this.bulletBtn.main.clear()
+  }
+
   destroy () {
     unObserver(this.container)
     this.logger.info('destroy')

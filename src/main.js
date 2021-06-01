@@ -103,6 +103,13 @@ class Main extends BaseClass {
     this.queue = []
     self.container.innerHTML = ''
   }
+  clear () {
+    this.logger.info('clear')
+    this.channel.reset()
+    this.data = []
+    this.queue = []
+    this.container.innerHTML = ''
+  }
   play () {
     this.logger.info('play')
     this.status = 'playing'
