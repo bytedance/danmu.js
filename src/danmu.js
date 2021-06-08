@@ -107,6 +107,12 @@ class DanmuJs extends BaseClass {
     if (comment && comment.id && comment.duration && (comment.el || comment.txt)) {
       comment.duration = comment.duration ? comment.duration : 5000
       // console.log(comment.style)
+      if (!comment.style) {
+        comment.style = {
+          opacity: undefined,
+          fontSize: undefined
+        }
+      }
       if (comment.style) {
         if (this.opacity && this.opacity !== comment.style.opacity) {
           comment.style.opacity = this.opacity
