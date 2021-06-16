@@ -246,7 +246,7 @@ class DanmuJs extends BaseClass {
           item.status = 'forcedPause'
           item.pauseMove(pos)
           if (item.el && item.el.style) {
-            item.el.style.zIndex = 10
+            util.style(item.el, 'zIndex', 10)
           }
           return true
         } else {

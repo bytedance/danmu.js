@@ -1,3 +1,4 @@
+import util from "./utils/util"
 
 export default class RecyclableDOMList {
   constructor(options) {
@@ -62,9 +63,9 @@ export default class RecyclableDOMList {
   clearElementStyle(element) {
     const ua = window.navigator.userAgent;
     if(ua.indexOf('MSIE ') > -1 || ua.indexOf('Trident/') > -1) {
-      element.style.transform = 'none'
+      util.style(element, 'transform', 'none')
     } else {
-      element.style = ''
+      element.setAttribute('style', '')
     }
   }
 }

@@ -138,4 +138,13 @@ util.on = (object, event, fn, offEvent) => {
   }
 }
 
+util.style = (elem, name, value)=>{
+  let style = elem.style;
+  try {
+    style[name] = value;
+  } catch (error) {
+    style.setProperty( name, value );
+  }
+}
+
 export default util
