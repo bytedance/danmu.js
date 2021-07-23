@@ -102,7 +102,7 @@ class Bullet extends BaseClass {
   detach () {
     // this.logger.info(`detach #${this.options.txt || '[DOM Element]'}#`)
     let self = this
-    if(self.container && self.el) {
+    if(self.el) {
       if(self.el.parentNode) {
         self.el.parentNode.removeChild(self.el)
       }
@@ -294,12 +294,7 @@ class Bullet extends BaseClass {
     }
     if (self.el && self.el.parentNode) {
       util.style(self.el, 'willChange', 'auto')
-      this.danmu.off('changeDirection', this.onChangeDirection)
-      // self.el.removeEventListener('mouseover', self.mouseoverFun.bind(self))
-      this.domObj.unuse(self.el)
-      let parent = self.el.parentNode
-      parent.removeChild(self.el)
-      self.el = null
+      self.detach()
       self.danmu.emit('bullet_remove', {
         bullet: self
       })

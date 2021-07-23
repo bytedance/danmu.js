@@ -106,41 +106,41 @@
         like.innerText = '10w+'
 
         let danmu = new window.DanmuJs({
-          needResizeObserver: true,
+          // needResizeObserver: true,
           interval: 1500,
-          mouseControl: true,
-          mouseControlPause: false,
+          // mouseControl: true,
+          // mouseControlPause: false,
           container: document.getElementById('vs'),
           containerStyle: {
             zIndex: 100
           },
-          // live: true,
+          live: true,
           player: player,
           // direction,
           comments: [
-            {
-              duration: 5000,
-              start: 500,
-              id: 1 + '',
-              txt: 1 + '', //弹幕文字内容
-              style: {
-                  fontSize: '20px'
-              }
-            },
-            {
-              duration: 5000,
-              start: 5000,
-              id: 2 + '',
-              txt: 222 + '', //弹幕文字内容
-              style: {
-                  fontSize: '20px'
-              }
-            }
+            // {
+            //   duration: 5000,
+            //   // start: 500,
+            //   id: 1 + '',
+            //   txt: 1 + '', //弹幕文字内容
+            //   style: {
+            //       fontSize: '20px'
+            //   }
+            // },
+            // {
+            //   duration: 5000,
+            //   // start: 5000,
+            //   id: 2 + '',
+            //   txt: 222 + '', //弹幕文字内容
+            //   style: {
+            //       fontSize: '20px'
+            //   }
+            // }
           ],
-          channelSize: 32.8,
+          channelSize: 24,
           area: {
             start: 0,
-            end: 0.8
+            end: 1
           }
         })
         danmu.on('bullet_pause', function (data) {
@@ -171,14 +171,14 @@
           // resizeObserver.observe(document.getElementById('vs'));
 
           danmu.start()
-          danmu.resize()
+          // danmu.resize()
           setInterval(function() {
             // console.log(player.currentTime+1)
             let currentTime = player.currentTime
             id++;
             // console.log('sendComment: ', id);
             danmu.sendComment({
-              duration: 15000,
+              duration: 5000,
               id: '' + id,
               // prior: true,
               // realTime: true,
@@ -220,7 +220,7 @@
             //   //   }
             //   // }
             // })
-          }, 200)
+          }, 100)
         }
 
         function play () {

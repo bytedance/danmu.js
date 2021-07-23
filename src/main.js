@@ -217,6 +217,9 @@ class Main extends BaseClass {
             bullet.topInit()
           } else {
             bullet.detach()
+            for (let k in bullet) {
+              delete bullet[k]
+            }
             bullet = null
             item.hasAttached = false
             if(item.noDiscard) {
@@ -225,6 +228,20 @@ class Main extends BaseClass {
               } else {
                 self.data.push(item)
               }
+            }
+          }
+        } else {
+          bullet.detach()
+          for (let k in bullet) {
+            delete bullet[k]
+          }
+          bullet = null
+          item.hasAttached = false
+          if(item.noDiscard) {
+            if(item.prior) {
+              self.data.unshift(item)
+            } else {
+              self.data.push(item)
             }
           }
         }
