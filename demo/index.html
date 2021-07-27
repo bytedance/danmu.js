@@ -107,15 +107,16 @@
 
         let danmu = new window.DanmuJs({
           // needResizeObserver: true,
-          interval: 1500,
+          // interval: 1500,
           // mouseControl: true,
           // mouseControlPause: false,
           container: document.getElementById('vs'),
           containerStyle: {
             zIndex: 100
           },
-          live: true,
+          // live: true,
           player: player,
+          isLive: true,
           // direction,
           comments: [
             // {
@@ -177,20 +178,23 @@
             let currentTime = player.currentTime
             id++;
             // console.log('sendComment: ', id);
+            let el = document.createElement('div')
+            el.innerHTML = '哈哈哈哈哈哈哈哈哈' + id
             danmu.sendComment({
               duration: 5000,
               id: '' + id,
-              // prior: true,
+              prior: true,
+              el,
               // realTime: true,
-              start: 1000*currentTime,
-              txt: '哈哈哈哈哈哈哈哈哈' + id, //弹幕文字内容
-              // style: {
+              // start: 1000*currentTime,
+              // txt: '哈哈哈哈哈哈哈哈哈' + id, //弹幕文字内容
+              style: {
               //   color: '#000',
-              //   fontSize: '25px',
+                 fontSize: '45px',
               //   // padding: '5px 12px',
               //   fontSize: '25px',
               //   lineHeight: 1.125
-              // },
+              },
             })
             // let like = document.createElement('span')
             // like.innerText = '10w+'

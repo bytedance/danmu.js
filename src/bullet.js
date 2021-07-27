@@ -43,12 +43,12 @@ class Bullet extends BaseClass {
       el = this.domObj.use()
       // el = document.createElement('div')
       el.textContent = options.txt
-      if(options.style) {
-        let style = options.style
-        Object.keys(style).forEach(function (key) {
-          util.style(el, key,  style[key])
-        })
-      }
+    }
+    if(options.style) {
+      let style = options.style
+      Object.keys(style).forEach(function (key) {
+        util.style(el, key,  style[key])
+      })
     }
     if(options.mode === 'top' || options.mode === 'bottom') {
       this.mode = options.mode
