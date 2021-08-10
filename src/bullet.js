@@ -10,7 +10,7 @@ class Bullet extends BaseClass {
     super()
     this.setLogger('bullet')
     // console.log('Bullet', options)
-    // this.logger.info('options.moveV', options.moveV)
+    // this.logger && this.logger.info('options.moveV', options.moveV)
     this.danmu = danmu
     this.options = options
     this.duration = options.duration
@@ -70,7 +70,7 @@ class Bullet extends BaseClass {
     this.containerPos = containerPos
   }
   attach () {
-    // this.logger.info(`attach #${this.options.txt || '[DOM Element]'}#`)
+    // this.logger && this.logger.info(`attach #${this.options.txt || '[DOM Element]'}#`)
     let self = this
     self.container.appendChild(self.el)
     self.elPos = self.el.getBoundingClientRect()
@@ -100,7 +100,7 @@ class Bullet extends BaseClass {
     })
   }
   detach () {
-    // this.logger.info(`detach #${this.options.txt || '[DOM Element]'}#`)
+    // this.logger && this.logger.info(`detach #${this.options.txt || '[DOM Element]'}#`)
     let self = this
     if(self.el) {
       if(self.el.parentNode) {
@@ -112,7 +112,7 @@ class Bullet extends BaseClass {
     this.danmu.off('changeDirection', this.onChangeDirection)
   }
   topInit () {
-    this.logger.info(`topInit #${this.options.txt || '[DOM Element]'}#`)
+    this.logger && this.logger.info(`topInit #${this.options.txt || '[DOM Element]'}#`)
     if(this.direction === 'b2t') {
       let containerPos = this.containerPos
       util.style(this.el, 'transformOrigin', 'left top')
@@ -123,7 +123,7 @@ class Bullet extends BaseClass {
     }
   }
   pauseMove (containerPos, isFullscreen = false) {
-    this.logger.info(`pauseMove #${this.options.txt || '[DOM Element]'}#`)
+    this.logger && this.logger.info(`pauseMove #${this.options.txt || '[DOM Element]'}#`)
     // console.log('pauseMove')
     let self = this
     if(this.status === 'paused') {
@@ -183,7 +183,7 @@ class Bullet extends BaseClass {
     }
   }
   startMove (containerPos, force) {
-    this.logger.info(`startMove #${this.options.txt || '[DOM Element]'}#`)
+    this.logger && this.logger.info(`startMove #${this.options.txt || '[DOM Element]'}#`)
     let self = this
     if (!self.hasMove) {
       self.danmu.emit('bullet_start', self)
@@ -283,7 +283,7 @@ class Bullet extends BaseClass {
     }
   }
   remove () {
-    this.logger.info(`remove #${this.options.txt || '[DOM Element]'}#`)
+    this.logger && this.logger.info(`remove #${this.options.txt || '[DOM Element]'}#`)
     // console.log('remove')
     let self = this
     if (this.removeTimer) {

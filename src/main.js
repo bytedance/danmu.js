@@ -30,7 +30,7 @@ class Main extends BaseClass {
     this.nums = 0
   }
   destroy () {
-    this.logger.info('destroy')
+    this.logger && this.logger.info('destroy')
     clearTimeout(this.dataHandleTimer)
     this.channel.destroy()
     this.data = []
@@ -40,7 +40,7 @@ class Main extends BaseClass {
   }
   // 在渲染队列中移除已经展示完的弹幕对象
   updateQueue (rdata) {
-    this.logger.info('updateQueue')
+    this.logger && this.logger.info('updateQueue')
     let self = this
     self.queue.some((item, index) => {
       if (item.id === rdata.bullet.id) {
@@ -60,7 +60,7 @@ class Main extends BaseClass {
     })
   }
   init (bol, self) {
-    self.logger.info('init')
+    self.logger && self.logger.info('init')
     if (!self) {
       self = this
     }
@@ -86,7 +86,7 @@ class Main extends BaseClass {
   }
   // 启动弹幕渲染主进程
   start () {
-    this.logger.info('start')
+    this.logger && this.logger.info('start')
     let self = this
     this.status = 'playing'
     this.queue = []
@@ -94,7 +94,7 @@ class Main extends BaseClass {
     this.channel.resetWithCb(self.init, self)
   }
   stop () {
-    this.logger.info('stop')
+    this.logger && this.logger.info('stop')
     let self = this
     this.status = 'closed'
     self.retryTimer = null
@@ -104,14 +104,14 @@ class Main extends BaseClass {
     self.container.innerHTML = ''
   }
   clear () {
-    this.logger.info('clear')
+    this.logger && this.logger.info('clear')
     this.channel.reset()
     this.data = []
     this.queue = []
     this.container.innerHTML = ''
   }
   play () {
-    this.logger.info('play')
+    this.logger && this.logger.info('play')
     this.status = 'playing'
     let channels = this.channel.channels
     let containerPos = this.danmu.container.getBoundingClientRect()
@@ -138,7 +138,7 @@ class Main extends BaseClass {
     }
   }
   pause () {
-    this.logger.info('pause')
+    this.logger && this.logger.info('pause')
     this.status = 'paused'
     let channels = this.channel.channels
     let containerPos = this.danmu.container.getBoundingClientRect()

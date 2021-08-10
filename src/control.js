@@ -14,13 +14,13 @@ class Control extends BaseClass {
   }
 
   createSwitch (state = true) {
-    this.logger.info('createSwitch')
+    this.logger && this.logger.info('createSwitch')
     this.switchBtn = util.createDom('dk-switch', '<span class="txt">弹</span>', {}, `danmu-switch ${state ? 'danmu-switch-active' : ''}`)
     return this.switchBtn
   }
 
   destroy () {
-    this.logger.info('destroy')
+    this.logger && this.logger.info('destroy')
     this.main.destroy()
     for (let k in this) {
       delete this[k]

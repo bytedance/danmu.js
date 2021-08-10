@@ -38,7 +38,7 @@ class Channel extends BaseClass {
     }, 'destroy')
   }
   destroy () {
-    this.logger.info('destroy')
+    this.logger && this.logger.info('destroy')
     clearTimeout(this.resizeTimer)
     // clearTimeout(this.resetTimer)
     this.channels = []
@@ -47,7 +47,7 @@ class Channel extends BaseClass {
     }
   }
   resize (isFullscreen = false) {
-    this.logger.info('resize')
+    this.logger && this.logger.info('resize')
     let container = this.danmu.container
     let self = this
     if (self.resizing) {
@@ -59,11 +59,11 @@ class Channel extends BaseClass {
         self.danmu.bulletBtn.main.data.forEach(item => {
           if (item.bookChannelId) {
             delete item['bookChannelId']
-            self.logger.info('resize导致' + item.id + '号优先弹幕预定取消')
+            self.logger && self.logger.info('resize导致' + item.id + '号优先弹幕预定取消')
           }
         })
       }
-      self.logger.info('resize导致所有轨道恢复正常使用')
+      self.logger && self.logger.info('resize导致所有轨道恢复正常使用')
       let size = container.getBoundingClientRect()
       self.width = size.width
       self.height = size.height
@@ -243,7 +243,7 @@ class Channel extends BaseClass {
     }, 10)
   }
   addBullet (bullet) {
-    // this.logger.info(`addBullet ${bullet.options.txt || '[DOM Element]'}`)
+    // this.logger && this.logger.info(`addBullet ${bullet.options.txt || '[DOM Element]'}`)
     let self = this
     let danmu = this.danmu
     let channels = this.channels
@@ -409,12 +409,12 @@ class Channel extends BaseClass {
           channel.queue[bullet.mode].unshift(bullet)
           if (bullet.prior) {
             delete channel.bookId[bullet.mode]
-            self.logger.info(i + '号轨道恢复正常使用')
+            self.logger && self.logger.info(i + '号轨道恢复正常使用')
           }
           channel.operating[bullet.mode] = false
         }
         if (bullet.prior) {
-          self.logger.info(bullet.id + '号优先弹幕运行完毕')
+          self.logger && self.logger.info(bullet.id + '号优先弹幕运行完毕')
           delete bullet['bookChannelId']
           if(danmu.player) {
             let dataList = danmu.bulletBtn.main.data
@@ -502,17 +502,17 @@ class Channel extends BaseClass {
             if (pos !== -1) {
               for (let j = pos; j < pos + occupy; j++) {
                 channels[j].bookId[bullet.mode] = bullet.id
-                self.logger.info(j + '号轨道被' + bullet.id + '号优先弹幕预定')
+                self.logger && self.logger.info(j + '号轨道被' + bullet.id + '号优先弹幕预定')
               }
               let nextAddTime = 2
               if(danmu.player) {
                 let dataList = danmu.bulletBtn.main.data
                 dataList.some(function (item) {
                   if (item.id === bullet.id) {
-                    self.logger.info(bullet.id + '号优先弹幕将于' + nextAddTime + '秒后再次请求注册')
+                    self.logger && self.logger.info(bullet.id + '号优先弹幕将于' + nextAddTime + '秒后再次请求注册')
                     item.start += nextAddTime * 1000
                     item.bookChannelId = [pos, occupy]
-                    self.logger.info(`${bullet.id}号优先弹幕预定了${pos}~${pos + occupy - 1}号轨道`)
+                    self.logger && self.logger.info(`${bullet.id}号优先弹幕预定了${pos}~${pos + occupy - 1}号轨道`)
                     return true
                   } else {
                     return false
@@ -526,7 +526,7 @@ class Channel extends BaseClass {
               let dataList = danmu.bulletBtn.main.data
               dataList.some(function (item) {
                 if (item.id === bullet.id) {
-                  self.logger.info(bullet.id + '号优先弹幕将于' + nextAddTime + '秒后再次请求注册')
+                  self.logger && self.logger.info(bullet.id + '号优先弹幕将于' + nextAddTime + '秒后再次请求注册')
                   item.start += nextAddTime * 1000
                   return true
                 } else {
@@ -545,7 +545,7 @@ class Channel extends BaseClass {
     }
   }
   removeBullet (bullet) {
-    this.logger.info(`removeBullet ${bullet.options.txt || '[DOM Element]'}`)
+    this.logger && this.logger.info(`removeBullet ${bullet.options.txt || '[DOM Element]'}`)
     // console.log('removeBullet')
     let channels = this.channels
     let channelId = bullet.channel_id
@@ -574,7 +574,7 @@ class Channel extends BaseClass {
     }
   }
   resetArea () {
-    this.logger.info('resetArea')
+    this.logger && this.logger.info('resetArea')
     // console.log('resetArea')
     let container = this.danmu.container
     let self = this
@@ -750,7 +750,7 @@ class Channel extends BaseClass {
     }
   }
   reset (isInit = false) {
-    this.logger.info('reset')
+    this.logger && this.logger.info('reset')
     let container = this.danmu.container
     let self = this
     if (self.danmu.bulletBtn && self.danmu.bulletBtn.main) {
@@ -825,7 +825,7 @@ class Channel extends BaseClass {
     }
   }
   resetWithCb (cb, main) {
-    this.logger.info('resetWithCb')
+    this.logger && this.logger.info('resetWithCb')
     let container = this.danmu.container
     let self = this
     if (self.channels && self.channels.length > 0) {
