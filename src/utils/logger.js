@@ -1,4 +1,4 @@
-const DEBUG = window.location.href.indexOf('danmu-debug') > -1
+const DEBUG = typeof (window) !== 'undefined' && window.location.href.indexOf('danmu-debug') > -1
 
 class Logger {
     constructor (constructorName) {
