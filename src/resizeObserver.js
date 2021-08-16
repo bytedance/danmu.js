@@ -4,15 +4,18 @@ class ResizeObserver {
     if (!window.ResizeObserver) {
       return
     }
-    this.observer = new window.ResizeObserver((entries) => {
-      const t = new Date().getTime()
-      if (t - this.timeStampe < 200) {
-        return
-      } 
-      this.timeStampe = t
-      this.__trigger(entries) 
-    })
-    this.timeStampe = new Date().getTime()
+    try {
+      this.observer = new window.ResizeObserver((entries) => {
+        const t = new Date().getTime()
+        if (t - this.timeStampe < 200) {
+          return
+        }
+        this.timeStampe = t
+        this.__trigger(entries)
+      })
+      this.timeStampe = new Date().getTime()
+    // eslint-disable-next-line no-empty
+    } catch (err) {}
   }
 
   addObserver (target, handler) {
@@ -90,8 +93,6 @@ function unObserver (target, handler) {
 function destroyObserver (target, handler) {
   resizeObserver.destroyObserver(target, handler)
 }
-
-window.resizeObserver = resizeObserver
 
 export {
   addObserver,
