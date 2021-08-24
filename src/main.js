@@ -188,12 +188,7 @@ class Main extends BaseClass {
         return self.danmu.hideArr.indexOf(item.mode) < 0 && (!item.color || self.danmu.hideArr.indexOf('color') < 0) && item.start - interval <= currentTime && currentTime <= item.start + interval
       })
       if(danmu.live) {
-        self.data = self.data.filter(item => {
-          if (!item.start) {
-            item.start = currentTime
-          }
-          return item.start > currentTime - 3 * interval
-        })
+        self.data = []
       }
     } else {
       list = self.data.splice(0, 1)
