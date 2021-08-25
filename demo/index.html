@@ -114,7 +114,7 @@
           containerStyle: {
             zIndex: 100
           },
-          live: true,
+          // live: true,
           player: player,
           // isLive: true,
           // direction,
@@ -183,17 +183,19 @@
             danmu.sendComment({
               duration: 5000,
               id: '' + id,
-              // prior: true,
-              el,
+              prior: id % 20 === 0,
+              // realTime: true,
+              // el,
               // realTime: true,
               // start: 1000*currentTime,
-              // txt: '哈哈哈哈哈哈哈哈哈' + id, //弹幕文字内容
+              txt: '哈哈哈哈哈哈哈哈哈' + id, //弹幕文字内容
               style: {
-              //   color: '#000',
-                 fontSize: '45px',
+                color: id % 20 === 0 ? '#f00' : '#000',
+                 fontSize: '15px',
               //   // padding: '5px 12px',
               //   fontSize: '25px',
               //   lineHeight: 1.125
+                // border
               },
             })
             // let like = document.createElement('span')

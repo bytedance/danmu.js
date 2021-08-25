@@ -280,7 +280,7 @@ class Channel extends BaseClass {
               flag = false
               break
             }
-            if ((channel.bookId.scroll || bullet.prior) && (channel.bookId.scroll !== bullet.id)) {
+            if (channel.bookId.scroll && (channel.bookId.scroll !== bullet.id)) {
               flag = false
               break
             }
@@ -484,7 +484,7 @@ class Channel extends BaseClass {
         }
 
         if (bullet.prior) {
-          if (!bullet.bookChannelId) {
+          if (!bullet.bookChannelId && !self.danmu.live) {
             pos = -1
             for (let i = 0, max = channels.length - occupy; i <= max; i++) {
               flag = true
