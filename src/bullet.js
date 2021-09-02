@@ -85,13 +85,13 @@ class Bullet extends BaseClass {
       let containerPos = self.containerPos
       self.duration = (containerPos.width + self.width) / self.moveV * 1000
     }
-    if (self.danmu.config.mouseControl) {
+    if (self.danmu.config && self.danmu.config.mouseControl) {
       self.el.addEventListener('mouseover', self.mouseoverFun.bind(self))
     } 
   }
   mouseoverFun (event) {
     let self = this
-    if ((self.danmu.mouseControl && self.danmu.config.mouseControlPause) || self.status === 'waiting' || self.status === 'end') {
+    if ((self.danmu && self.danmu.mouseControl && self.danmu.config.mouseControlPause) || self.status === 'waiting' || self.status === 'end') {
       return
     } 
     self.danmu.emit('bullet_hover', {
