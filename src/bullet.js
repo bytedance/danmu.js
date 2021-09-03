@@ -86,15 +86,16 @@ class Bullet extends BaseClass {
       self.duration = (containerPos.width + self.width) / self.moveV * 1000
     }
     if (self.danmu.config && self.danmu.config.mouseControl) {
-      self.el.addEventListener('mouseover', self.mouseoverFun.bind(self))
+      self.mouseoverFunWrapper = self.mouseoverFun.bind(self)
+      self.el.addEventListener('mouseover', self.mouseoverFunWrapper, false)
     } 
   }
   mouseoverFun (event) {
     let self = this
     if ((self.danmu && self.danmu.mouseControl && self.danmu.config.mouseControlPause) || self.status === 'waiting' || self.status === 'end') {
       return
-    } 
-    self.danmu.emit('bullet_hover', {
+    }
+    self.danmu && self.danmu.emit('bullet_hover', {
       bullet: self,
       event: event
     })
@@ -103,6 +104,9 @@ class Bullet extends BaseClass {
     // this.logger && this.logger.info(`detach #${this.options.txt || '[DOM Element]'}#`)
     let self = this
     if(self.el) {
+      if (self.danmu.config && self.danmu.config.mouseControl) {
+        self.el.removeEventListener('mouseover', self.mouseoverFunWrapper, false)
+      } 
       if(self.el.parentNode) {
         self.el.parentNode.removeChild(self.el)
       }
