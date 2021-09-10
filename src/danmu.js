@@ -272,6 +272,13 @@ class DanmuJs extends BaseClass {
     })
   }
 
+  updateComments (comments, isClear = true) {
+    if(isClear) {
+      this.bulletBtn.main.data = []
+    }
+    this.bulletBtn.main.data = this.bulletBtn.main.data.concat(comments)
+  }
+
   setAllDuration (mode = 'scroll', duration, force = true) {
     this.logger && this.logger.info(`setAllDuration: mode ${mode} duration ${duration} force ${force}`)
     let containerPos_ = this.container.getBoundingClientRect()
