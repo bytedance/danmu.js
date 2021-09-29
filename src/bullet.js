@@ -89,6 +89,10 @@ class Bullet extends BaseClass {
       self.mouseoverFunWrapper = self.mouseoverFun.bind(self)
       self.el.addEventListener('mouseover', self.mouseoverFunWrapper, false)
     } 
+    if(self.danmu.config && self.danmu.config.mouseEnterControl){
+      self.mouseEnterFunWrapper = self.mouseoverFun.bind(self)
+      self.el.addEventListener('mouseenter', self.mouseEnterFunWrapper, false)
+    }
   }
   mouseoverFun (event) {
     let self = this
@@ -107,6 +111,9 @@ class Bullet extends BaseClass {
       if (self.danmu.config && self.danmu.config.mouseControl) {
         self.el.removeEventListener('mouseover', self.mouseoverFunWrapper, false)
       } 
+      if(self.danmu.config && self.danmu.config.mouseEnterControl){
+        self.el.removeEventListener('mouseenter', self.mouseEnterFunWrapper, false)
+      }
       if(self.el.parentNode) {
         self.el.parentNode.removeChild(self.el)
       }
