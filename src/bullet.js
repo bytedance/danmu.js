@@ -22,6 +22,7 @@ class Bullet extends BaseClass {
     this.color = options.color
     this.bookChannelId = options.bookChannelId
     this.direction = danmu.direction
+    this.reuseDOM = true
     let self = this
     this.onChangeDirection = direction => {
       self.direction = direction
@@ -30,14 +31,19 @@ class Bullet extends BaseClass {
     let el
     this.domObj = danmu.domObj
     if(options.el && options.el.nodeType === 1) {
-      el = this.domObj.use()
-      let copyDOM = util.copyDom(options.el)
-      if(options.eventListeners && options.eventListeners.length > 0) {
-        options.eventListeners.forEach(eventListener => {
-          copyDOM.addEventListener(eventListener.event, eventListener.listener, eventListener.useCapture || false)
-        })
+      if(danmu.config.disableCopyDOM && !options.el.parentNode) {
+        el = options.el
+        this.reuseDOM = false
+      } else {
+        el = this.domObj.use()
+        let copyDOM = util.copyDom(options.el)
+        if(options.eventListeners && options.eventListeners.length > 0) {
+          options.eventListeners.forEach(eventListener => {
+            copyDOM.addEventListener(eventListener.event, eventListener.listener, eventListener.useCapture || false)
+          })
+        }
+        el.appendChild(copyDOM)
       }
-      el.appendChild(copyDOM)
       // el = util.copyDom(options.el)
     } else {
       el = this.domObj.use()
@@ -117,7 +123,9 @@ class Bullet extends BaseClass {
       if(self.el.parentNode) {
         self.el.parentNode.removeChild(self.el)
       }
-      self.domObj.unuse(self.el)
+      if(self.reuseDOM) {
+        self.domObj.unuse(self.el)
+      }
       self.el = null
     }
     this.danmu.off('changeDirection', this.onChangeDirection)

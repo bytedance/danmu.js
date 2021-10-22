@@ -97,7 +97,6 @@
     <!-- <script src="./xgplayer/index.js" type="text/javascript"></script> -->
     <script src="../browser/index.js" charset="utf-8"></script>
     <script type="text/javascript">
-        // let el = createDom('xg-el', '弹幕弹幕弹幕<img src="./grinning-face.png" />弹幕弹幕', {}, 'xgplayer-el')
         let wrap = document.getElementById('wrap')
         let player = document.getElementById('mse')
         let direction = 'r2l'
@@ -119,25 +118,26 @@
           // isLive: true,
           // direction,
           comments: [
-            {
-              duration: 5000,
-              // start: 500,
-              id: 1 + '',
-              txt: 1 + '', //弹幕文字内容
-              style: {
-                  fontSize: '20px'
-              }
-            },
-            {
-              duration: 5000,
-              // start: 5000,
-              id: 2 + '',
-              txt: 222 + '', //弹幕文字内容
-              style: {
-                  fontSize: '20px'
-              }
-            }
+            // {
+            //   duration: 5000,
+            //   // start: 500,
+            //   id: 1 + '',
+            //   txt: 1 + '', //弹幕文字内容
+            //   style: {
+            //       fontSize: '20px'
+            //   }
+            // },
+            // {
+            //   duration: 5000,
+            //   // start: 5000,
+            //   id: 2 + '',
+            //   txt: 222 + '', //弹幕文字内容
+            //   style: {
+            //       fontSize: '20px'
+            //   }
+            // }
           ],
+          disableCopyDOM: true,
           mouseControl: true, // 打开鼠标控制, 打开后可监听到 bullet_hover 事件。danmu.on('bullet_hover', function (data) {})
           mouseControlPause: true, // 鼠标触摸暂停。mouseControl: true 生效
           channelSize: 24,
@@ -244,8 +244,10 @@
         }
 
         function sendComment() {
-          let comment = document.getElementById('comment').value
+          // let comment = document.getElementById('comment').value
           id++
+          let el = createDom('xg-el', '弹幕弹幕弹幕<img src="./grinning-face.png" />弹幕弹幕', {}, 'xgplayer-el')
+        
           danmu.sendComment({
             duration: 15000,
             id: id,
@@ -255,22 +257,22 @@
             // prior: true,
             // realTime: true,
             start: 1000*player.currentTime,
-            txt: id + comment,
-            // el: el,
-            style: {
-              color: '#000',
-              fontSize: '25px',
-              padding: '5px 12px',
-              fontSize: '25px',
-              lineHeight: 1.125
-            },
-            eventListeners: [{
-              event: 'click',
-              listener: function (e) {
-                console.log('click')
-              },
-              useCapture: false,
-            }]
+            // txt: id + comment,
+            el: el,
+            // style: {
+            //   color: '#000',
+            //   fontSize: '25px',
+            //   padding: '5px 12px',
+            //   fontSize: '25px',
+            //   lineHeight: 1.125
+            // },
+            // eventListeners: [{
+            //   event: 'click',
+            //   listener: function (e) {
+            //     console.log('click')
+            //   },
+            //   useCapture: false,
+            // }]
             // like: {
             //   el: like,
             //   style: {
@@ -419,23 +421,23 @@
           danmu.bulletBtn.main.channel.resetArea()
         }
 
-        // function createDom (el = 'div', tpl = '', attrs = {}, cname = '') {
-        //   let dom = document.createElement(el)
-        //   dom.className = cname
-        //   dom.innerHTML = tpl
-        //   Object.keys(attrs).forEach(item => {
-        //     let key = item
-        //     let value = attrs[item]
-        //     if (el === 'video' || el === 'audio') {
-        //       if (value) {
-        //         dom.setAttribute(key, value)
-        //       }
-        //     } else {
-        //       dom.setAttribute(key, value)
-        //     }
-        //   })
-        //   return dom
-        // }
+        function createDom (el = 'div', tpl = '', attrs = {}, cname = '') {
+          let dom = document.createElement(el)
+          dom.className = cname
+          dom.innerHTML = tpl
+          Object.keys(attrs).forEach(item => {
+            let key = item
+            let value = attrs[item]
+            if (el === 'video' || el === 'audio') {
+              if (value) {
+                dom.setAttribute(key, value)
+              }
+            } else {
+              dom.setAttribute(key, value)
+            }
+          })
+          return dom
+        }
     </script>
 </body>
 </html>
