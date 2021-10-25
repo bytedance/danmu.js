@@ -314,6 +314,9 @@ class Bullet extends BaseClass {
     if (self.el && self.el.parentNode) {
       util.style(self.el, 'willChange', 'auto')
       self.detach()
+      if(this.options.el && this.options.el.nodeType === 1 && this.danmu.config.disableCopyDOM) {
+        util.style(this.options.el, 'transform', 'none')
+      }
       self.danmu.emit('bullet_remove', {
         bullet: self
       })
