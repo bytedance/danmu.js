@@ -202,14 +202,30 @@ class Main extends BaseClass {
           item.duration = self.forceDuration
         }
         bullet = new Bullet(danmu, item)
-        if (!item.hasAttached) {
-          bullet.attach()
-          item.hasAttached = true
-          result = channel.addBullet(bullet)
-          if (result.result) {
-            self.queue.push(bullet)
-            self.nums++
-            bullet.topInit()
+        if(bullet && !bullet.bulletCreateFail) {
+          if (!item.hasAttached) {
+            bullet.attach()
+            item.hasAttached = true
+            result = channel.addBullet(bullet)
+            if (result.result) {
+              self.queue.push(bullet)
+              self.nums++
+              bullet.topInit()
+            } else {
+              bullet.detach()
+              for (let k in bullet) {
+                delete bullet[k]
+              }
+              bullet = null
+              item.hasAttached = false
+              if(item.noDiscard) {
+                if(item.prior) {
+                  self.data.unshift(item)
+                } else {
+                  self.data.push(item)
+                }
+              }
+            }
           } else {
             bullet.detach()
             for (let k in bullet) {
@@ -223,20 +239,6 @@ class Main extends BaseClass {
               } else {
                 self.data.push(item)
               }
-            }
-          }
-        } else {
-          bullet.detach()
-          for (let k in bullet) {
-            delete bullet[k]
-          }
-          bullet = null
-          item.hasAttached = false
-          if(item.noDiscard) {
-            if(item.prior) {
-              self.data.unshift(item)
-            } else {
-              self.data.push(item)
             }
           }
         }

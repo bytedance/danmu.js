@@ -24,18 +24,16 @@ class Bullet extends BaseClass {
     this.direction = danmu.direction
     this.reuseDOM = true
     let self = this
-    this.onChangeDirection = direction => {
-      self.direction = direction
-    }
-    this.danmu.on('changeDirection', this.onChangeDirection)
     let el
     this.domObj = danmu.domObj
     if(options.el && options.el.nodeType === 1) {
-      if(danmu.config.disableCopyDOM && !options.el.parentNode) {
+      if(options.el.parentNode) return { bulletCreateFail: true };
+      if(danmu.config.disableCopyDOM) {
         el = options.el
         this.reuseDOM = false
       } else {
         el = this.domObj.use()
+        // console.log(`Create copyDOM with options.el id:${options.id} danmu.config.disableCopyDOM:${danmu.config.disableCopyDOM} !!options.el.parentNode:${!!options.el.parentNode}`)
         let copyDOM = util.copyDom(options.el)
         if(options.eventListeners && options.eventListeners.length > 0) {
           options.eventListeners.forEach(eventListener => {
@@ -46,10 +44,15 @@ class Bullet extends BaseClass {
       }
       // el = util.copyDom(options.el)
     } else {
+      // console.log(`Create copyDOM with options.txt id:${options.id} `)
       el = this.domObj.use()
       // el = document.createElement('div')
       el.textContent = options.txt
     }
+    this.onChangeDirection = direction => {
+      self.direction = direction
+    }
+    this.danmu.on('changeDirection', this.onChangeDirection)
     if(options.style) {
       let style = options.style
       Object.keys(style).forEach(function (key) {
