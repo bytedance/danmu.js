@@ -120,9 +120,6 @@ class DanmuJs extends BaseClass {
         if (this.fontSize && this.fontSize !== comment.style.fontSize) {
           comment.style.fontSize = this.fontSize
         }
-        if (this.like) {
-          comment.like = comment.like ? comment.like : this.like
-        }
       }
       if(comment.prior || comment.realTime) {
         this.bulletBtn.main.data.unshift(comment)
@@ -190,7 +187,6 @@ class DanmuJs extends BaseClass {
   setCommentLike (id, like) {
     this.logger && this.logger.info(`setCommentLike: id ${id} like ${like}`)
     let containerPos_ = this.container.getBoundingClientRect()
-    this.like = like
     if (id && like) {
       this.bulletBtn.main.data.some(data => {
         if(data.id === id) {
