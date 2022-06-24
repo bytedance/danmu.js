@@ -3,18 +3,24 @@
   "version": "0.6.3",
   "description": "HTML5 danmu (danmaku) plugin for any DOM element",
   "main": "./dist/index.js",
+  "files": ["dist", "browser"],
+  "unpkgFiles": [
+    "browser",
+    "dist"
+  ],
   "scripts": {
     "build": "node ./src/version.js && webpack --progress --display-chunks -p"
   },
   "keywords": [
-    "danmu",
-    "danmaku",
-    "弹幕",
-    "bullet screen",
-    "barrage",
-    "live commenting",
-    "HTML5"
+      "danmu",
+      "danmaku",
+      "弹幕",
+      "bullet screen",
+      "barrage",
+      "live commenting",
+      "HTML5"
   ],
+
   "babel": {
     "presets": [
       "es2015"
