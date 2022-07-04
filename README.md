@@ -101,7 +101,7 @@ player.danmu.setAllDuration(mode, duration) //改变所有已加入队列弹幕�
 player.danmu.setCommentID(oldID, newID) //改变某一个弹幕的id
 player.danmu.hide(mode) //屏蔽某一类弹幕(参数可选值 scroll | top | bottom | color)
 player.danmu.show(mode) //显示某一类弹幕(参数可选值 scroll | top | bottom | color)
-player.danmu.setArea(area) // 修改弹幕显示区域
+player.danmu.setArea(area) // 修改弹幕显示区域, 参考上方config中area的配置
 player.danmu.setOpacity(opacity) // 设置透明度
 player.danmu.setFontSize(size, channelSize) // 设置样式 size 为字体大小 channelSize 如果不需要修改轨道大小则无需传入 channelSize
 danmu.setCommentLike(id, {

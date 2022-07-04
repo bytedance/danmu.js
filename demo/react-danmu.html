@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Hello World</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+    <!-- Don't use this in production: -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.byted-static.com/danmu.js/0.6.4/browser/index.js" charset="utf-8"></script>
+    <style>
+      html {
+        width: 100%;
+        height: 100%;
+      }
+      body {
+        width: 100%;
+        height: 100%;
+      }
+      #DanmuContainer {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 9999;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="text/babel">
+      const { useState, useRef, useEffect } = React
+      const Demo = ({ text }) => {
+        const [text2, setText] = useState(text)
+        const domRef = useRef(null)
+
+        useEffect(() => {
+          setTimeout(() => {
+            setText('3333')
+          }, 1000)
+
+          console.log('domRef.current', domRef.current)
+          // const danmuDom = document.getElementsByClassName('danMuText');
+          // for(var i=0;i<danmuDom.length;i++) {
+          //     let element = danmuDom[i];
+          //     element.addEventListener('click', () => {
+          //         console.log('click');
+          //         setText('1111');
+          //     });
+          // }
+        }, [])
+        return (
+          <div className="danMuText" ref={domRef} onClick={(e) => console.log('onlick', e)} key={text2}>
+            {text2}
+          </div>
+        )
+      }
+
+      /**
+       * 生成弹幕样式节点
+       * @param text 弹幕内容
+       * @param isAuthor 是否为本人弹幕
+       * @param isLike 是否喜欢弹幕
+       * @param showDelete 是否显示删除icon
+       * @returns 返回一个divElement
+       */
+      const createDanMuEl = ({ text, isAuthor = false, isLike = false, showDelete = false }) => {
+        const dom = document.createElement('div')
+        // dom.className = cls('container', { isAuthor })
+
+        // eslint-disable-next-line react/no-deprecated
+        const dom2 = ReactDOM.render(<Demo text={text} />, dom)
+        console.log('aaaa', dom2, dom2 instanceof HTMLElement)
+        return dom
+      }
+
+      function MyApp() {
+        useEffect(() => {
+          console.log(1111)
+
+          let dom1 = createDanMuEl({
+            text: '我是弹幕111'
+          })
+
+          let dom2 = createDanMuEl({
+            text: '我是弹幕222'
+          })
+
+          let player = document.getElementById('mse')
+          let direction = 'r2l'
+          let like = document.createElement('span')
+          like.innerText = '10w+'
+
+          let danmu = new window.DanmuJs({
+            // needResizeObserver: true,
+            // interval: 1500,
+            // mouseControl: true,
+            // mouseControlPause: false,
+            channelSize: 12,
+            container: document.getElementById('DanmuContainer'),
+            containerStyle: {
+              // zIndex: 100
+            },
+            // live: true,
+            player: player,
+            // isLive: true,
+            // direction,
+            comments: [
+              {
+                duration: 5000,
+                // start: 500,
+                id: 1 + '',
+                txt: 1 + '', //弹幕文字内容
+                el: dom1,
+                style: {
+                  fontSize: '20px'
+                }
+              },
+              {
+                duration: 5000,
+                // start: 5000,
+                id: 2 + '',
+                txt: 222 + '', //弹幕文字内容
+                el: dom2,
+                style: {
+                  fontSize: '20px'
+                }
+              }
+            ],
+            disableCopyDOM: true,
+            mouseControl: true, // 打开鼠标控制, 打开后可监听到 bullet_hover 事件。danmu.on('bullet_hover', function (data) {})
+            mouseControlPause: true, // 鼠标触摸暂停。mouseControl: true 生效
+            //   channelSize: 24,
+            area: {
+              start: 0,
+              end: 1
+            }
+          })
+
+          danmu.start()
+
+          danmu.on('bullet_hover', function (e) {
+            danmu.freezeComment(e.bullet.id)
+          })
+        })
+
+        return (
+          <div>
+            <video
+              id="mse"
+              muted
+              controls
+              src="//s1.pstatp.com/cdn/expire-1-M/byted-player-videos/1.0.0/xgplayer-demo.mp4"
+              type="video/mp4"
+            >
+              your browser does not support the video tag
+            </video>
+            <div id="DanmuContainer"></div>
+          </div>
+        )
+      }
+
+      const container = document.getElementById('root')
+      const root = ReactDOM.createRoot(container)
+      root.render(<MyApp />)
+    </script>
+    <!--
+      Note: this page is a great way to try React but it's not suitable for production.
+      It slowly compiles JSX with Babel in the browser and uses a large development build of React.
+
+      Read this section for a production-ready setup with JSX:
+      https://reactjs.org/docs/add-react-to-a-website.html#add-jsx-to-a-project
+
+      In a larger project, you can use an integrated toolchain that includes JSX instead:
+      https://reactjs.org/docs/create-a-new-react-app.html
+
+      You can also use React without JSX, in which case you can remove Babel:
+      https://reactjs.org/docs/react-without-jsx.html
+    -->
+  </body>
+</html>
