@@ -77,3 +77,7 @@ typings/
 .idea/
 
 .DS_Store
+
+browser/
+
+dist/
