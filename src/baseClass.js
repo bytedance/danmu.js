@@ -1,9 +1,7 @@
 import Log from './utils/logger'
 
 class BaseClass {
-  constructor () {
-  }
-  setLogger (name = '') {
+  setLogger(name = '') {
     this.logger = new Log(name + '.js')
   }
 }

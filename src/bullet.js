@@ -187,7 +187,11 @@ class Bullet extends BaseClass {
         }
         // console.log('nowS: ' + nowS)
         if (this.direction === 'b2t') {
-          styleUtil(this.el, 'transform', `translateX(-${this.top}px) translateY(${nowS}px) translateZ(0px) rotate(90deg)`)
+          styleUtil(
+            this.el,
+            'transform',
+            `translateX(-${this.top}px) translateY(${nowS}px) translateZ(0px) rotate(90deg)`
+          )
         } else {
           styleUtil(this.el, 'left', `${nowS}px`)
         }

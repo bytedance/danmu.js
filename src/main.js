@@ -58,7 +58,7 @@ class Main extends BaseClass {
         return false
       }
     })
-    self.data.some((item, index) => {
+    self.data.some((item) => {
       if (item.id === rdata.bullet.id) {
         item.hasAttached = false
         return true
@@ -124,6 +124,7 @@ class Main extends BaseClass {
     let channels = this.channel.channels
     let containerPos = this.danmu.container.getBoundingClientRect()
     if (channels && channels.length > 0) {
+      // eslint-disable-next-line no-extra-semi
       ;['scroll', 'top', 'bottom'].forEach((key) => {
         // for (let i = 0; i < channels.length; i++) {
         //   channels[i].queue[key].forEach(item => {

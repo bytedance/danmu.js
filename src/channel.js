@@ -170,6 +170,7 @@ class Channel extends BaseClass {
           })
         }
         for (let i = 0; i < channels.length; i++) {
+          // eslint-disable-next-line no-extra-semi
           ;['scroll', 'top', 'bottom'].forEach((key) => {
             channels[i].queue[key].forEach((item) => {
               // console.log('resized 重置:' + item)
@@ -242,6 +243,7 @@ class Channel extends BaseClass {
         //   })
         // }
         for (let i = 0; i < channels.length; i++) {
+          // eslint-disable-next-line no-extra-semi
           ;['scroll', 'top', 'bottom'].forEach((key) => {
             channels[i].queue[key].forEach((item) => {
               // console.log('resized 重置:' + item)
@@ -697,6 +699,7 @@ class Channel extends BaseClass {
         })
       }
       for (let i = 0; i < channels.length; i++) {
+        // eslint-disable-next-line no-extra-semi
         ;['scroll', 'top', 'bottom'].forEach((key) => {
           channels[i].queue[key].forEach((item) => {
             // console.log('resized 重置:' + item)
@@ -767,6 +770,7 @@ class Channel extends BaseClass {
       //   })
       // }
       for (let i = 0; i < channels.length; i++) {
+        // eslint-disable-next-line no-extra-semi
         ;['scroll', 'top', 'bottom'].forEach((key) => {
           channels[i].queue[key].forEach((item) => {
             // console.log('resized 重置:' + item)
@@ -793,6 +797,7 @@ class Channel extends BaseClass {
       })
     }
     if (self.channels && self.channels.length > 0) {
+      // eslint-disable-next-line no-extra-semi
       ;['scroll', 'top', 'bottom'].forEach((key) => {
         for (let i = 0; i < self.channels.length; i++) {
           self.channels[i].queue[key].forEach((item) => {
@@ -866,6 +871,7 @@ class Channel extends BaseClass {
     let container = this.danmu.container
     let self = this
     if (self.channels && self.channels.length > 0) {
+      // eslint-disable-next-line no-extra-semi
       ;['scroll', 'top', 'bottom'].forEach((key) => {
         for (let i = 0; i < self.channels.length; i++) {
           self.channels[i].queue[key].forEach((item) => {

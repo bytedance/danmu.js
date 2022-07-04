@@ -35,7 +35,7 @@ export class DanmuJs extends BaseClass {
 
     self.hideArr = []
     self.domObj = new RecyclableDomList()
-    
+
     self.config.comments.forEach((comment) => {
       comment.duration = comment.duration ? comment.duration : 5000
       if (!comment.mode) {
@@ -45,6 +45,7 @@ export class DanmuJs extends BaseClass {
     if (self.config.container && self.config.container.nodeType === 1) {
       self.container = self.config.container
     } else {
+      // eslint-disable-next-line quotes
       self.emit('error', "container id can't be empty")
       return false
     }
