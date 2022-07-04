@@ -8,7 +8,7 @@
   }
 }
 
-.danmu-switch{
+.danmu-switch {
   width: 32px;
   height: 20px;
   border-radius: 100px;
@@ -19,11 +19,11 @@
   position: relative;
   text-align: center;
   margin: 10px auto;
-  &.danmu-switch-active{
+  &.danmu-switch-active {
     padding-left: 12px;
     background-color: #f85959;
   }
-  span.txt{
+  span.txt {
     width: 20px;
     height: 20px;
     line-height: 20px;

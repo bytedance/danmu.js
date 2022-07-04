@@ -76,11 +76,4 @@ typings/
 #editor workspace file
 .idea/
 
-
 .DS_Store
-
-demo/
-
-browser/
-
-dist/

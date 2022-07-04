@@ -1,12 +1,12 @@
 import BaseClass from './baseClass'
-import util from './utils/util'
+import { copyDom, styleUtil } from './utils/util'
 
 /**
  * [Bullet 弹幕构造类]
  * @type {Class}
  */
 class Bullet extends BaseClass {
-  constructor (danmu, options) {
+  constructor(danmu, options) {
     super()
     this.setLogger('bullet')
     // console.log('Bullet', options)
@@ -26,40 +26,40 @@ class Bullet extends BaseClass {
     let self = this
     let el
     this.domObj = danmu.domObj
-    if(options.el && options.el.nodeType === 1) {
-      if(options.el.parentNode) return { bulletCreateFail: true };
-      if(danmu.config.disableCopyDOM) {
+    if (options.el && options.el.nodeType === 1) {
+      if (options.el.parentNode) return { bulletCreateFail: true }
+      if (danmu.config.disableCopyDOM) {
         el = options.el
         this.reuseDOM = false
       } else {
         el = this.domObj.use()
         // console.log(`Create copyDOM with options.el id:${options.id} danmu.config.disableCopyDOM:${danmu.config.disableCopyDOM} !!options.el.parentNode:${!!options.el.parentNode}`)
-        let copyDOM = util.copyDom(options.el)
-        if(options.eventListeners && options.eventListeners.length > 0) {
-          options.eventListeners.forEach(eventListener => {
+        let copyDOM = copyDom(options.el)
+        if (options.eventListeners && options.eventListeners.length > 0) {
+          options.eventListeners.forEach((eventListener) => {
             copyDOM.addEventListener(eventListener.event, eventListener.listener, eventListener.useCapture || false)
           })
         }
         el.appendChild(copyDOM)
       }
-      // el = util.copyDom(options.el)
+      // el = copyDom(options.el)
     } else {
       // console.log(`Create copyDOM with options.txt id:${options.id} `)
       el = this.domObj.use()
       // el = document.createElement('div')
       el.textContent = options.txt
     }
-    this.onChangeDirection = direction => {
+    this.onChangeDirection = (direction) => {
       self.direction = direction
     }
     this.danmu.on('changeDirection', this.onChangeDirection)
-    if(options.style) {
+    if (options.style) {
       let style = options.style
       Object.keys(style).forEach(function (key) {
-        util.style(el, key,  style[key])
+        styleUtil(el, key, style[key])
       })
     }
-    if(options.mode === 'top' || options.mode === 'bottom') {
+    if (options.mode === 'top' || options.mode === 'bottom') {
       this.mode = options.mode
     } else {
       this.mode = 'scroll'
@@ -68,87 +68,96 @@ class Bullet extends BaseClass {
     if (options.like && options.like.el) {
       this.setLikeDom(options.like.el, options.like.style)
     }
-    this.status = 'waiting'// waiting,start,end
+    this.status = 'waiting' // waiting,start,end
     let containerPos = this.container.getBoundingClientRect()
-    let random = Math.floor(Math.random() * ((containerPos.width / 10) > 100 ? 200 : containerPos.width / 10))
+    let random = Math.floor(Math.random() * (containerPos.width / 10 > 100 ? 200 : containerPos.width / 10))
     if (options.realTime) {
       random = 0
     }
     let left = containerPos.width + random + 'px'
-    util.style(this.el, 'left', left)
+    styleUtil(this.el, 'left', left)
     this.containerPos = containerPos
   }
-  attach () {
+  attach() {
     // this.logger && this.logger.info(`attach #${this.options.txt || '[DOM Element]'}#`)
     let self = this
     self.container.appendChild(self.el)
     self.elPos = self.el.getBoundingClientRect()
-    if(self.direction === 'b2t') {
+    if (self.direction === 'b2t') {
       self.width = self.elPos.height
       self.height = self.elPos.width
     } else {
       self.width = self.elPos.width
       self.height = self.elPos.height
     }
-    if(self.moveV) {
+    if (self.moveV) {
       let containerPos = self.containerPos
-      self.duration = (containerPos.width + self.width) / self.moveV * 1000
+      self.duration = ((containerPos.width + self.width) / self.moveV) * 1000
     }
     if (self.danmu.config && self.danmu.config.mouseControl) {
       self.mouseoverFunWrapper = self.mouseoverFun.bind(self)
       self.el.addEventListener('mouseover', self.mouseoverFunWrapper, false)
-    } 
-    if(self.danmu.config && self.danmu.config.mouseEnterControl){
+    }
+    if (self.danmu.config && self.danmu.config.mouseEnterControl) {
       self.mouseEnterFunWrapper = self.mouseoverFun.bind(self)
       self.el.addEventListener('mouseenter', self.mouseEnterFunWrapper, false)
     }
   }
-  mouseoverFun (event) {
+  mouseoverFun(event) {
     let self = this
-    if ((self.danmu && self.danmu.mouseControl && self.danmu.config.mouseControlPause) || self.status === 'waiting' || self.status === 'end') {
+    if (
+      (self.danmu && self.danmu.mouseControl && self.danmu.config.mouseControlPause) ||
+      self.status === 'waiting' ||
+      self.status === 'end'
+    ) {
       return
     }
-    self.danmu && self.danmu.emit('bullet_hover', {
-      bullet: self,
-      event: event
-    })
+    self.danmu &&
+      self.danmu.emit('bullet_hover', {
+        bullet: self,
+        event: event
+      })
   }
-  detach () {
+  detach() {
     // this.logger && this.logger.info(`detach #${this.options.txt || '[DOM Element]'}#`)
     let self = this
-    if(self.el) {
+    if (self.el) {
       if (self.danmu.config && self.danmu.config.mouseControl) {
         self.el.removeEventListener('mouseover', self.mouseoverFunWrapper, false)
-      } 
-      if(self.danmu.config && self.danmu.config.mouseEnterControl){
+      }
+      if (self.danmu.config && self.danmu.config.mouseEnterControl) {
         self.el.removeEventListener('mouseenter', self.mouseEnterFunWrapper, false)
       }
-      if(self.el.parentNode) {
+      if (self.el.parentNode) {
         self.el.parentNode.removeChild(self.el)
       }
-      if(self.reuseDOM) {
+      if (self.reuseDOM) {
         self.domObj.unuse(self.el)
       }
       self.el = null
     }
     this.danmu.off('changeDirection', this.onChangeDirection)
   }
-  topInit () {
+  topInit() {
     this.logger && this.logger.info(`topInit #${this.options.txt || '[DOM Element]'}#`)
-    if(this.direction === 'b2t') {
+    if (this.direction === 'b2t') {
       let containerPos = this.containerPos
-      util.style(this.el, 'transformOrigin', 'left top')
-      util.style(this.el, 'transform', `translateX(-${this.top}px) translateY(${containerPos.height}px) translateZ(0px) rotate(90deg)`)
-      util.style(this.el, 'transition', 'transform 0s linear 0s')
+      styleUtil(this.el, 'transformOrigin', 'left top')
+      styleUtil(
+        this.el,
+        'transform',
+        `translateX(-${this.top}px) translateY(${containerPos.height}px) translateZ(0px) rotate(90deg)`
+      )
+      styleUtil(this.el, 'transition', 'transform 0s linear 0s')
     } else {
-      util.style(this.el, 'top', `${this.top}px`)
+      styleUtil(this.el, 'top', `${this.top}px`)
     }
   }
-  pauseMove (containerPos, isFullscreen = false) {
+  pauseMove(containerPos, isFullscreen = false) {
     this.logger && this.logger.info(`pauseMove #${this.options.txt || '[DOM Element]'}#`)
     // console.log('pauseMove')
     let self = this
-    if(this.status === 'paused') {
+    if (this.status === 'paused') {
       return
     }
     if (self.status !== 'forcedPause') {
@@ -158,15 +167,15 @@ class Bullet extends BaseClass {
     if (!this.el) {
       return
     }
-    util.style(this.el, 'willChange', 'auto')
-    if(this.mode === 'scroll') {
-      if(isFullscreen) {
+    styleUtil(this.el, 'willChange', 'auto')
+    if (this.mode === 'scroll') {
+      if (isFullscreen) {
         let pastDuration = (new Date().getTime() - self.moveTime) / 1000
         let pastS = pastDuration * this.moveV
         let ratio = 0
         let nowS = 0
-        if(self.moveMoreS - pastS >= 0) {
-          if(this.direction === 'b2t') {
+        if (self.moveMoreS - pastS >= 0) {
+          if (this.direction === 'b2t') {
             ratio = (self.moveMoreS - pastS) / self.moveContainerHeight
             nowS = ratio * containerPos.height
           } else {
@@ -177,34 +186,40 @@ class Bullet extends BaseClass {
           nowS = self.moveMoreS - pastS
         }
         // console.log('nowS: ' + nowS)
-        if(this.direction === 'b2t') {
-          util.style(this.el, 'transform', `translateX(-${this.top}px) translateY(${nowS}px) translateZ(0px) rotate(90deg)`)
+        if (this.direction === 'b2t') {
+          styleUtil(this.el, 'transform', `translateX(-${this.top}px) translateY(${nowS}px) translateZ(0px) rotate(90deg)`)
         } else {
-          util.style(this.el, 'left', `${nowS}px`)
+          styleUtil(this.el, 'left', `${nowS}px`)
         }
       } else {
-        if(this.direction === 'b2t') {
-          util.style(this.el, 'transform', `translateX(-${this.top}px) translateY(${this.el.getBoundingClientRect().top - containerPos.top}px) translateZ(0px) rotate(90deg)`)
+        if (this.direction === 'b2t') {
+          styleUtil(
+            this.el,
+            'transform',
+            `translateX(-${this.top}px) translateY(${
+              this.el.getBoundingClientRect().top - containerPos.top
+            }px) translateZ(0px) rotate(90deg)`
+          )
         } else {
-          util.style(this.el, 'left', `${this.el.getBoundingClientRect().left - containerPos.left}px`)
+          styleUtil(this.el, 'left', `${this.el.getBoundingClientRect().left - containerPos.left}px`)
         }
       }
-      if(this.direction === 'b2t') {
+      if (this.direction === 'b2t') {
         // this.el.style.transform = `translateX(-${this.top}px) translateY(${nowS}px) translateZ(0px) rotate(90deg)`
-        util.style(this.el, 'transition', 'transform 0s linear 0s')
+        styleUtil(this.el, 'transition', 'transform 0s linear 0s')
       } else {
-        util.style(this.el, 'transform', 'translateX(0px) translateY(0px) translateZ(0px)')
-        util.style(this.el, 'transition', 'transform 0s linear 0s')
+        styleUtil(this.el, 'transform', 'translateX(0px) translateY(0px) translateZ(0px)')
+        styleUtil(this.el, 'transition', 'transform 0s linear 0s')
       }
     } else {
-      if(!this.pastDuration || !this.startTime) {
+      if (!this.pastDuration || !this.startTime) {
         this.pastDuration = 1
       } else {
         this.pastDuration = this.pastDuration + new Date().getTime() - this.startTime
       }
     }
   }
-  startMove (containerPos, force) {
+  startMove(containerPos, force) {
     this.logger && this.logger.info(`startMove #${this.options.txt || '[DOM Element]'}#`)
     let self = this
     if (!self.hasMove) {
@@ -215,15 +230,15 @@ class Bullet extends BaseClass {
       return
     }
     if (!this.el) return
-    if(this.status === 'start') return
+    if (this.status === 'start') return
     this.status = 'start'
-    util.style(this.el, 'willChange', 'transform')
-    function func () {
+    styleUtil(this.el, 'willChange', 'transform')
+    function func() {
       if (self.el) {
-        if(self.mode === 'scroll') {
+        if (self.mode === 'scroll') {
           let containerPos_ = self.containerPos
           let bulletPos = self.el.getBoundingClientRect()
-          if(self.direction === 'b2t') {
+          if (self.direction === 'b2t') {
             if (bulletPos && bulletPos.bottom <= containerPos_.top + 100) {
               self.status = 'end'
               self.remove()
@@ -250,14 +265,18 @@ class Bullet extends BaseClass {
         }
       }
     }
-    if(this.mode === 'scroll') {
-      if(this.direction === 'b2t') {
-        this.moveV = (containerPos.height + this.height) / this.duration * 1000
+    if (this.mode === 'scroll') {
+      if (this.direction === 'b2t') {
+        this.moveV = ((containerPos.height + this.height) / this.duration) * 1000
         let leftDuration = (self.el.getBoundingClientRect().bottom - containerPos.top) / this.moveV
-        util.style(this.el, 'transition', `transform ${leftDuration}s linear 0s`)
+        styleUtil(this.el, 'transition', `transform ${leftDuration}s linear 0s`)
         this.startMoveTimer = setTimeout(function () {
           if (self.el) {
-            util.style(self.el, 'transform', `translateX(-${self.top}px) translateY(-${self.height}px) translateZ(0px) rotate(90deg)`)
+            styleUtil(
+              self.el,
+              'transform',
+              `translateX(-${self.top}px) translateY(-${self.height}px) translateZ(0px) rotate(90deg)`
+            )
             self.moveTime = new Date().getTime()
             self.moveMoreS = self.el.getBoundingClientRect().top - containerPos.top
             self.moveContainerHeight = containerPos.height
@@ -266,9 +285,9 @@ class Bullet extends BaseClass {
         }, 20)
       } else {
         let bulletPos = this.el.getBoundingClientRect()
-        this.moveV = (containerPos.width + this.width) / this.duration * 1000
+        this.moveV = ((containerPos.width + this.width) / this.duration) * 1000
         let leftDuration = (bulletPos.right - containerPos.left) / this.moveV
-        util.style(this.el, 'transition', `transform ${leftDuration}s linear 0s`)
+        styleUtil(this.el, 'transition', `transform ${leftDuration}s linear 0s`)
         // this.el.style.left = bulletPos.left + 'px'
         this.startMoveTimer = setTimeout(function () {
           if (self.el) {
@@ -277,9 +296,13 @@ class Bullet extends BaseClass {
             let v = (bulletPos.right - containerPos.left) / leftDuration
             // console.log(`${self.id} 距离: ${bulletPos.right - containerPos.left}px 时间: ${leftDuration} 速度: ${v} 预定速度: ${self.moveV}`)
             // console.log(`${self.id} translateX(-${bulletPos.right - containerPos.left}px) translateY(0px) translateZ(0px)`)
-              
-            if(bulletPos.right > containerPos.left && v > self.moveV - 1 && v < self.moveV + 1) {
-              util.style(self.el, 'transform', `translateX(-${bulletPos.right - containerPos.left}px) translateY(0px) translateZ(0px)`)
+
+            if (bulletPos.right > containerPos.left && v > self.moveV - 1 && v < self.moveV + 1) {
+              styleUtil(
+                self.el,
+                'transform',
+                `translateX(-${bulletPos.right - containerPos.left}px) translateY(0px) translateZ(0px)`
+              )
               self.moveTime = new Date().getTime()
               self.moveMoreS = bulletPos.left - containerPos.left
               self.moveContainerWidth = containerPos.width
@@ -294,9 +317,9 @@ class Bullet extends BaseClass {
     } else {
       // this.el.style.width = `${this.width}px`
       // this.el.style.height = `${this.height}px`
-      util.style(this.el, 'left', '50%');
-      util.style(this.el, 'margin', `0 0 0 -${this.width/2}px`)
-      if(!this.pastDuration) {
+      styleUtil(this.el, 'left', '50%')
+      styleUtil(this.el, 'margin', `0 0 0 -${this.width / 2}px`)
+      if (!this.pastDuration) {
         this.pastDuration = 1
       }
       let leftDuration = this.duration >= this.pastDuration ? this.duration - this.pastDuration : 0
@@ -304,7 +327,7 @@ class Bullet extends BaseClass {
       this.startTime = new Date().getTime()
     }
   }
-  remove () {
+  remove() {
     this.logger && this.logger.info(`remove #${this.options.txt || '[DOM Element]'}#`)
     // console.log('remove')
     let self = this
@@ -315,22 +338,22 @@ class Bullet extends BaseClass {
       clearTimeout(this.startMoveTimer)
     }
     if (self.el && self.el.parentNode) {
-      util.style(self.el, 'willChange', 'auto')
+      styleUtil(self.el, 'willChange', 'auto')
       self.detach()
-      if(this.options.el && this.options.el.nodeType === 1 && this.danmu.config.disableCopyDOM) {
-        util.style(this.options.el, 'transform', 'none')
+      if (this.options.el && this.options.el.nodeType === 1 && this.danmu.config.disableCopyDOM) {
+        styleUtil(this.options.el, 'transform', 'none')
       }
       self.danmu.emit('bullet_remove', {
         bullet: self
       })
     }
   }
-  setFontSize (size) {
+  setFontSize(size) {
     if (this.el) {
-      this.el.style[ 'fontSize' ] = size
+      this.el.style['fontSize'] = size
     }
   }
-  setLikeDom (el, style) {
+  setLikeDom(el, style) {
     if (el) {
       Object.keys(style).forEach(function (key) {
         el.style[key] = style[key]
