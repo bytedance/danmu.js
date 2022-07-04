@@ -60,7 +60,8 @@
       ],
       area: {  //弹幕显示区域
         start: 0, //区域顶部到播放器顶部所占播放器高度的比例
-        end: 1 //区域底部到播放器顶部所占播放器高度的比例
+        end: 1, //区域底部到播放器顶部所占播放器高度的比例
+        lines: undefined // 弹幕虚拟轨道显示行数。当指定行数时，显示范围 start/end 不生效；当弹幕字体大小超过所需要的总虚拟轨道数时，弹幕也不会出现在轨道上，因此请设置好弹幕fontSize及影响弹幕高度的其他样式，让弹幕和轨道高度匹配
       },
       channelSize: 40, // 轨道大小
       mouseControl: true, // 打开鼠标控制, 打开后可监听到 bullet_hover 事件。danmu.on('bullet_hover', function (data) {})

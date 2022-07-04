@@ -147,3 +147,7 @@ export function styleUtil(elem, name, value) {
     style.setProperty(name, value)
   }
 }
+
+export function isNumber(val) {
+  return typeof val === 'number' && !isNaN(val)
+}

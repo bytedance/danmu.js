@@ -26,7 +26,8 @@ export class DanmuJs extends BaseClass {
       live: false,
       comments: [],
       direction: 'r2l',
-      needResizeObserver: false
+      needResizeObserver: false,
+      channelSize: undefined
     }
     deepCopy(self.config, options)
 

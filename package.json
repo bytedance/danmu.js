@@ -12,7 +12,7 @@
     "dist"
   ],
   "scripts": {
-    "watch": "npm run build -- --watch",
+    "dev": "npm run build -- --watch",
     "build": "node ./src/version.js && webpack --progress --display-chunks -p"
   },
   "keywords": [
@@ -51,7 +51,9 @@
     "sass-loader": "^7.0.3",
     "style-loader": "^0.21.0",
     "webpack": "^4.11.0",
-    "webpack-cli": "^3.0.2"
+    "webpack-cli": "^3.0.2",
+    "webpack-merge": "^5.8.0",
+    "yargs": "^17.5.1"
   },
   "repository": {
     "type": "git",

@@ -26,12 +26,11 @@ class Main extends BaseClass {
     this.interval = danmu.config.interval || 2000 // 弹幕队列缓存间隔
     this.status = 'idle' // 当前弹幕正在闲置
     attachEventListener(danmu, 'bullet_remove', this.updateQueue.bind(this), 'destroy')
-    let self = this
     attachEventListener(
       this.danmu,
       'changeDirection',
       (direction) => {
-        self.danmu.direction = direction
+        this.danmu.direction = direction
       },
       'destroy'
     )
@@ -67,13 +66,12 @@ class Main extends BaseClass {
       }
     })
   }
-  init(bol, self) {
+  init() {
+    const self = this
     self.logger && self.logger.info('init')
-    if (!self) {
-      self = this
-    }
     self.retryStatus = 'normal'
     self.data.sort((a, b) => a.start - b.start)
+    
     let dataHandle = function () {
       if (self.status === 'closed' && self.retryStatus === 'stop') {
         return
@@ -95,20 +93,22 @@ class Main extends BaseClass {
   // 启动弹幕渲染主进程
   start() {
     this.logger && this.logger.info('start')
-    let self = this
-    this.status = 'playing'
-    this.queue = []
-    this.container.innerHTML = ''
-    this.channel.resetWithCb(self.init, self)
+    const self = this
+    self.status = 'playing'
+    self.queue = []
+    self.container.innerHTML = ''
+    // this.channel.resetWithCb(self.init, self)
+    self.channel.reset()
+    self.init()
   }
   stop() {
     this.logger && this.logger.info('stop')
-    let self = this
-    this.status = 'closed'
+    const self = this
+    self.status = 'closed'
     self.retryTimer = null
     self.retryStatus = 'stop'
     self.channel.reset()
-    this.queue = []
+    self.queue = []
     self.container.innerHTML = ''
   }
   clear() {
