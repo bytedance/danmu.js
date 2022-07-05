@@ -71,7 +71,7 @@
       </div>
       <div>
         <input type="text" id="comment" placeholder="输入弹幕内容"/>
-        <button onclick="sendPriorComment()">发送弹幕</button>
+        <button onclick="sendComment()">发送弹幕</button>
       </div>
       <div>
         <!-- <input type="text" id="hidetype" placeholder="输入要屏蔽的弹幕类型"/>
@@ -97,7 +97,6 @@
     <!-- <script src="./xgplayer/index.js" type="text/javascript"></script> -->
     <script src="../browser/index.js" charset="utf-8"></script>
     <script type="text/javascript">
-        let el = createDom('xg-el', '弹幕弹幕弹幕<img src="./grinning-face.png" />弹幕弹幕', {}, 'xgplayer-el')
         let wrap = document.getElementById('wrap')
         let player = document.getElementById('mse')
         let direction = 'r2l'
@@ -106,54 +105,58 @@
         like.innerText = '10w+'
 
         let danmu = new window.DanmuJs({
-          needResizeObserver: true,
-          interval: 1500,
-          mouseControl: true,
-          mouseControlPause: false,
+          // needResizeObserver: true,
+          // interval: 1500,
+          // mouseControl: true,
+          // mouseControlPause: false,
           container: document.getElementById('vs'),
           containerStyle: {
-            zIndex: 100
+            // zIndex: 100
           },
           // live: true,
-          player,
+          player: player,
+          // isLive: true,
           // direction,
           comments: [
-            {
-              duration: 5000,
-              start: 500,
-              id: 1 + '',
-              txt: 1 + '', //弹幕文字内容
-              style: {
-                  fontSize: '20px'
-              }
-            },
-            {
-              duration: 5000,
-              start: 5000,
-              id: 2 + '',
-              txt: 222 + '', //弹幕文字内容
-              style: {
-                  fontSize: '20px'
-              }
-            }
+            // {
+            //   duration: 5000,
+            //   // start: 500,
+            //   id: 1 + '',
+            //   txt: 1 + '', //弹幕文字内容
+            //   style: {
+            //       fontSize: '20px'
+            //   }
+            // },
+            // {
+            //   duration: 5000,
+            //   // start: 5000,
+            //   id: 2 + '',
+            //   txt: 222 + '', //弹幕文字内容
+            //   style: {
+            //       fontSize: '20px'
+            //   }
+            // }
           ],
-          channelSize: 32.8,
+          disableCopyDOM: true,
+          // mouseControl: true, // 打开鼠标控制, 打开后可监听到 bullet_hover 事件。danmu.on('bullet_hover', function (data) {})
+          // mouseControlPause: true, // 鼠标触摸暂停。mouseControl: true 生效
+          // channelSize: 24,
           area: {
             start: 0,
-            end: 0.8
+            end: 1
           }
         })
-        danmu.on('bullet_pause', function (data) {
-          console.log(data)
-        })
+        // danmu.on('bullet_pause', function (data) {
+        //   console.log(data)
+        // })
 
-        danmu.on('bullet_hover', function (data) {
-          // console.log(data.event)
-          // danmu.freezeComment(data.bullet.id)
-          // setTimeout(function () {
-          //   danmu.restartComment(data.bullet.id)
-          // }, 4000)
-        })
+        // danmu.on('bullet_hover', function (data) {
+        //   console.log(data.event)
+        //   // danmu.freezeComment(data.bullet.id)
+        //   // setTimeout(function () {
+        //   //   danmu.restartComment(data.bullet.id)
+        //   // }, 4000)
+        // })
 
         start()
 
@@ -171,55 +174,61 @@
           // resizeObserver.observe(document.getElementById('vs'));
 
           danmu.start()
-          setInterval(function() {
-            // console.log(player.currentTime+1)
-            let currentTime = player.currentTime
-            id++;
-            // console.log('sendComment: ', id);
-            danmu.sendComment({
-              duration: 5000,
-              id: '' + id++,
-              // prior: true,
-              // realTime: true,
-              start: 1000*currentTime,
-              txt: id + '哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈', //弹幕文字内容
-              style: {
-                color: '#000',
-                fontSize: '25px',
-                // padding: '5px 12px',
-                fontSize: '25px',
-                lineHeight: 1.125
-              },
-            })
-            // let like = document.createElement('span')
-            // like.innerText = '10w+'
-            // console.log(document.getElementById('duration').value || 5000)
-            // danmu.sendComment({  //发送弹幕
-            //   duration: 5000,
-            //   id: id+'',
-            //   txt: id+'奥利给奥利给奥利给奥利给奥利给', //弹幕文字内容
-            //   prior: true,
-            //   realTime: true,
-            //   start: player.currentTime,
-            //   style: {
-            //     color: '#000',
-            //     fontSize: '25px',
-            //     padding: '5px 12px',
-            //     fontSize: '25px',
-            //     lineHeight: 1.125
-            //   },
-            //   // originData: {
-            //   //   x: '2121'
-            //   // },
-            //   // like: {
-            //   //   el: like,
-            //   //   style: {
-            //   //     paddingLeft: '10px',
-            //   //     color: '#ff0000'
-            //   //   }
-            //   // }
-            // })
-          }, 100)
+          // danmu.resize()
+          // setInterval(function() {
+          //   // console.log(player.currentTime+1)
+          //   let currentTime = player.currentTime
+          //   id++;
+          //   // console.log('sendComment: ', id);
+          //   let el = document.createElement('div')
+          //   el.innerHTML = '哈哈哈哈哈哈哈哈哈66' + id
+          //   danmu.sendComment({
+          //     duration: 5000,
+          //     id: '' + id,
+          //     // prior: id % 20 === 0,
+          //     // realTime: true,
+          //     el,
+          //     // realTime: true,
+          //     // start: 1000*currentTime,
+          //     // txt: '哈哈哈哈哈哈哈哈哈123' + id, //弹幕文字内容
+          //     style: {
+          //       color: id % 20 === 0 ? '#f00' : '#000',
+          //        fontSize: '15px',
+          //     //   // padding: '5px 12px',
+          //     //   fontSize: '25px',
+          //     //   lineHeight: 1.125
+          //       // border
+          //     },
+          //   })
+          //   // let like = document.createElement('span')
+          //   // like.innerText = '10w+'
+          //   // console.log(document.getElementById('duration').value || 5000)
+          //   // danmu.sendComment({  //发送弹幕
+          //   //   duration: 5000,
+          //   //   id: id+'',
+          //   //   txt: id+'奥利给奥利给奥利给奥利给奥利给', //弹幕文字内容
+          //   //   prior: true,
+          //   //   realTime: true,
+          //   //   start: player.currentTime,
+          //   //   style: {
+          //   //     color: '#000',
+          //   //     fontSize: '25px',
+          //   //     padding: '5px 12px',
+          //   //     fontSize: '25px',
+          //   //     lineHeight: 1.125
+          //   //   },
+          //   //   // originData: {
+          //   //   //   x: '2121'
+          //   //   // },
+          //   //   // like: {
+          //   //   //   el: like,
+          //   //   //   style: {
+          //   //   //     paddingLeft: '10px',
+          //   //   //     color: '#ff0000'
+          //   //   //   }
+          //   //   // }
+          //   // })
+          // }, 100)
         }
 
         function play () {
@@ -235,10 +244,12 @@
         }
 
         function sendComment() {
-          let comment = document.getElementById('comment').value
+          // let comment = document.getElementById('comment').value
           id++
+          let el = createDom('xg-el', '弹幕弹幕弹幕<img src="./grinning-face.png" />弹幕弹幕', {}, 'xgplayer-el')
+        
           danmu.sendComment({
-            duration: 5000,
+            duration: 15000,
             id: id,
             // prior: true,
             // realTime: true,
@@ -246,14 +257,22 @@
             // prior: true,
             // realTime: true,
             start: 1000*player.currentTime,
-            txt: id + comment,
-            style: {
-              color: '#000',
-              fontSize: '25px',
-              padding: '5px 12px',
-              fontSize: '25px',
-              lineHeight: 1.125
-            },
+            // txt: id + comment,
+            el: el,
+            // style: {
+            //   color: '#000',
+            //   fontSize: '25px',
+            //   padding: '5px 12px',
+            //   fontSize: '25px',
+            //   lineHeight: 1.125
+            // },
+            // eventListeners: [{
+            //   event: 'click',
+            //   listener: function (e) {
+            //     console.log('click')
+            //   },
+            //   useCapture: false,
+            // }]
             // like: {
             //   el: like,
             //   style: {

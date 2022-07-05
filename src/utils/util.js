@@ -1,10 +1,8 @@
-let util = {}
-
-util.createDom = function (el = 'div', tpl = '', attrs = {}, cname = '') {
+export function createDom(el = 'div', tpl = '', attrs = {}, cname = '') {
   let dom = document.createElement(el)
   dom.className = cname
   dom.innerHTML = tpl
-  Object.keys(attrs).forEach(item => {
+  Object.keys(attrs).forEach((item) => {
     let key = item
     let value = attrs[item]
     if (el === 'video' || el === 'audio') {
@@ -18,48 +16,51 @@ util.createDom = function (el = 'div', tpl = '', attrs = {}, cname = '') {
   return dom
 }
 
-util.hasClass = function (el, className) {
+export function hasClass(el, className) {
   if (el.classList) {
-    return Array.prototype.some.call(el.classList, item => item === className)
+    return Array.prototype.some.call(el.classList, (item) => item === className)
   } else {
     return !!el.className.match(new RegExp('(\\s|^)' + className + '(\\s|$)'))
   }
 }
 
-util.addClass = function (el, className) {
+export function addClass(el, className) {
   if (el.classList) {
-    className.replace(/(^\s+|\s+$)/g, '').split(/\s+/g).forEach(item => {
-      item && el.classList.add(item)
-    })
-  } else if (!util.hasClass(el, className)) {
+    className
+      .replace(/(^\s+|\s+$)/g, '')
+      .split(/\s+/g)
+      .forEach((item) => {
+        item && el.classList.add(item)
+      })
+  } else if (!hasClass(el, className)) {
     el.className += ' ' + className
   }
 }
 
-util.removeClass = function (el, className) {
+export function removeClass(el, className) {
   if (el.classList) {
-    className.split(/\s+/g).forEach(item => {
+    className.split(/\s+/g).forEach((item) => {
       el.classList.remove(item)
     })
-  } else if (util.hasClass(el, className)) {
-    className.split(/\s+/g).forEach(item => {
+  } else if (hasClass(el, className)) {
+    className.split(/\s+/g).forEach((item) => {
       let reg = new RegExp('(\\s|^)' + item + '(\\s|$)')
       el.className = el.className.replace(reg, ' ')
     })
   }
 }
 
-util.toggleClass = function (el, className) {
-  className.split(/\s+/g).forEach(item => {
-    if (util.hasClass(el, item)) {
-      util.removeClass(el, item)
+export function toggleClass(el, className) {
+  className.split(/\s+/g).forEach((item) => {
+    if (hasClass(el, item)) {
+      removeClass(el, item)
     } else {
-      util.addClass(el, item)
+      addClass(el, item)
     }
   })
 }
 
-util.findDom = function (el = document, sel) {
+export function findDom(el = document, sel) {
   let dom
   // fix querySelector IDs that start with a digit
   // https://stackoverflow.com/questions/37270787/uncaught-syntaxerror-failed-to-execute-queryselector-on-document
@@ -73,17 +74,17 @@ util.findDom = function (el = document, sel) {
   return dom
 }
 
-util.deepCopy = function (dst, src) {
-  if (util.typeOf(src) === 'Object' && util.typeOf(dst) === 'Object') {
-    Object.keys(src).forEach(key => {
-      if (util.typeOf(src[key]) === 'Object' && !(src[key] instanceof Node)) {
+export function deepCopy(dst, src) {
+  if (typeOf(src) === 'Object' && typeOf(dst) === 'Object') {
+    Object.keys(src).forEach((key) => {
+      if (typeOf(src[key]) === 'Object' && !(src[key] instanceof Node)) {
         if (!dst[key]) {
           dst[key] = src[key]
         } else {
-          util.deepCopy(dst[key], src[key])
+          deepCopy(dst[key], src[key])
         }
-      } else if (util.typeOf(src[key]) === 'Array') {
-        dst[key] = util.typeOf(dst[key]) === 'Array' ? dst[key].concat(src[key]) : src[key]
+      } else if (typeOf(src[key]) === 'Array') {
+        dst[key] = typeOf(dst[key]) === 'Array' ? dst[key].concat(src[key]) : src[key]
       } else {
         dst[key] = src[key]
       }
@@ -92,11 +93,11 @@ util.deepCopy = function (dst, src) {
   }
 }
 
-util.typeOf = function (obj) {
+export function typeOf(obj) {
   return Object.prototype.toString.call(obj).match(/([^\s.*]+)(?=]$)/g)[0]
 }
 
-util.copyDom = function (dom) {
+export function copyDom(dom) {
   if (dom && dom.nodeType === 1) {
     let back = document.createElement(dom.tagName)
     Array.prototype.forEach.call(dom.attributes, (node) => {
@@ -111,26 +112,26 @@ util.copyDom = function (dom) {
   }
 }
 
-util.formatTime = function (time) {
+export function formatTime(time) {
   let s = Math.floor(time)
   let ms = time - s
   return s * 1000 + ms
 }
 
-util.offInDestroy = (object, event, fn, offEvent) => {
-  function onDestroy () {
+function offInDestroy(object, event, fn, offEvent) {
+  function onDestroy() {
     object.off(event, fn)
     object.off(offEvent, onDestroy)
   }
   object.once(offEvent, onDestroy)
 }
 
-util.on = (object, event, fn, offEvent) => {
+export function attachEventListener(object, event, fn, offEvent) {
   if (offEvent) {
     object.on(event, fn)
-    util.offInDestroy(object, event, fn, offEvent)
+    offInDestroy(object, event, fn, offEvent)
   } else {
-    let _fn = data => {
+    let _fn = (data) => {
       fn(data)
       object.off(event, _fn)
     }
@@ -138,4 +139,11 @@ util.on = (object, event, fn, offEvent) => {
   }
 }
 
-export default util
+export function styleUtil(elem, name, value) {
+  let style = elem.style
+  try {
+    style[name] = value
+  } catch (error) {
+    style.setProperty(name, value)
+  }
+}

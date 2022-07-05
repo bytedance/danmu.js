@@ -47,7 +47,7 @@
             fontSize: '20px',
             padding: '2px 11px',
           },
-          mode: 'top' //显示模式，top顶部居中，bottom底部居中，scroll滚动，默认为scroll
+          mode: 'top', //显示模式，top顶部居中，bottom底部居中，scroll滚动，默认为scroll
           like: { // 点赞相关参数
             el: likeDOM, // el 仅支持传入 dom 
             style: { // el 绑定样式

@@ -1,9 +1,18 @@
 {
   "name": "danmu.js",
-  "version": "0.3.2",
+  "version": "0.6.4",
   "description": "HTML5 danmu (danmaku) plugin for any DOM element",
   "main": "./dist/index.js",
+  "files": [
+    "dist",
+    "browser"
+  ],
+  "unpkgFiles": [
+    "browser",
+    "dist"
+  ],
   "scripts": {
+    "watch": "npm run build -- --watch",
     "build": "node ./src/version.js && webpack --progress --display-chunks -p"
   },
   "keywords": [
@@ -35,7 +44,8 @@
     "babel-preset-es2015": "^6.24.1",
     "css-loader": "^1.0.0",
     "cz-conventional-changelog": "^2.1.0",
-    "node-sass": "^4.9.0",
+    "eslint": "^8.19.0",
+    "node-sass": "^4.14.1",
     "postcss-cssnext": "^3.1.0",
     "postcss-loader": "^2.1.5",
     "sass-loader": "^7.0.3",

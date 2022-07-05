@@ -1,4 +1,4 @@
 node_modules/*
-browser/*
-dist/*
+demo/*
 webpack.config.js
+.eslintrc.js

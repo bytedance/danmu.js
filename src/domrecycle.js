@@ -1,3 +1,4 @@
+import { styleUtil } from './utils/util'
 
 export default class RecyclableDOMList {
   constructor(options) {
@@ -33,7 +34,7 @@ export default class RecyclableDOMList {
     this.usingList.splice(idx, 1)
     dom.innerHTML = ''
     dom.textcontent = ''
-    dom.style = ''
+    this.clearElementStyle(dom)
     this.idleList.push(dom)
   }
 
@@ -47,15 +48,27 @@ export default class RecyclableDOMList {
     for (let i = 0; i < this.idleList.length; i++) {
       this.idleList[i].innerHTML = ''
       this.idleList[i].textcontent = ''
-      this.idleList[i].style = ''
+      this.clearElementStyle(this.idleList[i])
     }
     for (let i = 0; i < this.usingList.length; i++) {
       this.usingList[i].innerHTML = ''
       this.usingList[i].textcontent = ''
-      this.usingList[i].style = ''
+      this.clearElementStyle(this.usingList[i])
     }
     for (let k in this) {
       delete this[k]
+    }
+  }
+
+  clearElementStyle(element) {
+    const ua = typeof window !== 'undefined' ? window.navigator.userAgent : null
+    if (!ua) {
+      return
+    }
+    if (ua.indexOf('MSIE ') > -1 || ua.indexOf('Trident/') > -1) {
+      styleUtil(element, 'transform', 'none')
+    } else {
+      element.setAttribute('style', '')
     }
   }
 }
