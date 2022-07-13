@@ -67,6 +67,10 @@ export class DanmuJs extends BaseClass {
     this.addResizeObserver()
   }
 
+  get status() {
+    return this.bulletBtn.main.status
+  }
+
   addResizeObserver() {
     this.config.needResizeObserver &&
       addObserver(this.container, () => {

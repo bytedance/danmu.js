@@ -19,15 +19,24 @@ class Main extends BaseClass {
     this.channel = new Channel(danmu) // 弹幕轨道实例
     this.data = [].concat(danmu.config.comments)
     this.playedData = []
+
+    /**
+     * @type {Array<Bullet>}
+     */
     this.queue = [] // 等待播放的弹幕队列
     this.timer = null // 弹幕动画定时器句柄
     this.retryTimer = null // 弹幕更新重试定时器句柄
     this.retryStatus = 'normal'
     this.interval = danmu.config.interval || 2000 // 弹幕队列缓存间隔
-    this.status = 'idle' // 当前弹幕正在闲置
+
+    /**
+     * @type {'idle' | 'paused' | 'playing' | 'closed'}
+     */
+    this._status = 'idle' // 当前弹幕正在闲置
+
     attachEventListener(danmu, 'bullet_remove', this.updateQueue.bind(this), 'destroy')
     attachEventListener(
-      this.danmu,
+      danmu,
       'changeDirection',
       (direction) => {
         this.danmu.direction = direction
@@ -36,6 +45,11 @@ class Main extends BaseClass {
     )
     this.nums = 0
   }
+
+  get status() {
+    return this._status
+  }
+  
   destroy() {
     this.logger && this.logger.info('destroy')
     clearTimeout(this.dataHandleTimer)
@@ -71,16 +85,16 @@ class Main extends BaseClass {
     self.logger && self.logger.info('init')
     self.retryStatus = 'normal'
     self.data.sort((a, b) => a.start - b.start)
-    
+
     let dataHandle = function () {
-      if (self.status === 'closed' && self.retryStatus === 'stop') {
+      if (self._status === 'closed' && self.retryStatus === 'stop') {
         return
       }
-      if (self.status === 'playing') {
+      if (self._status === 'playing') {
         self.readData()
         self.dataHandle()
       }
-      if (self.retryStatus !== 'stop' || self.status === 'paused') {
+      if (self.retryStatus !== 'stop' || self._status === 'paused') {
         self.dataHandleTimer = setTimeout(function () {
           dataHandle()
         }, self.interval - 1000)
@@ -94,7 +108,7 @@ class Main extends BaseClass {
   start() {
     this.logger && this.logger.info('start')
     const self = this
-    self.status = 'playing'
+    self._status = 'playing'
     self.queue = []
     self.container.innerHTML = ''
     // this.channel.resetWithCb(self.init, self)
@@ -104,7 +118,7 @@ class Main extends BaseClass {
   stop() {
     this.logger && this.logger.info('stop')
     const self = this
-    self.status = 'closed'
+    self._status = 'closed'
     self.retryTimer = null
     self.retryStatus = 'stop'
     self.channel.reset()
@@ -120,7 +134,7 @@ class Main extends BaseClass {
   }
   play() {
     this.logger && this.logger.info('play')
-    this.status = 'playing'
+    this._status = 'playing'
     let channels = this.channel.channels
     let containerPos = this.danmu.container.getBoundingClientRect()
     if (channels && channels.length > 0) {
@@ -148,7 +162,7 @@ class Main extends BaseClass {
   }
   pause() {
     this.logger && this.logger.info('pause')
-    this.status = 'paused'
+    this._status = 'paused'
     let channels = this.channel.channels
     let containerPos = this.danmu.container.getBoundingClientRect()
     if (channels && channels.length > 0) {
@@ -166,13 +180,12 @@ class Main extends BaseClass {
   }
   dataHandle() {
     let self = this
-    if (this.status === 'paused' || this.status === 'closed') {
+    if (this._status === 'paused' || this._status === 'closed') {
       return
     }
     if (self.queue.length) {
       self.queue.forEach((item) => {
         if (item.status === 'waiting') {
-          // item.status = 'start'
           item.startMove(self.channel.containerPos)
         }
       })
