@@ -72,6 +72,15 @@ export class DanmuJs extends BaseClass {
     return this.main.status
   }
 
+  get state() {
+    const main = this.main
+    return {
+      status: main.status,
+      comments: main.data,
+      bullets: main.queue
+    }
+  }
+
   addResizeObserver() {
     this.config.needResizeObserver &&
       addObserver(this.container, () => {
