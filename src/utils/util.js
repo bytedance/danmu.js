@@ -139,6 +139,11 @@ export function attachEventListener(object, event, fn, offEvent) {
   }
 }
 
+/**
+ * @param {HTMLElement} elem 
+ * @param {string} name 
+ * @param {string} value 
+ */
 export function styleUtil(elem, name, value) {
   let style = elem.style
   try {

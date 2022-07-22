@@ -28,7 +28,10 @@ class Main extends BaseClass {
     this.retryTimer = null // 弹幕更新重试定时器句柄
     this.retryStatus = 'normal'
     this.interval = danmu.config.interval || 2000 // 弹幕队列缓存间隔
-
+    /**
+     * @type {Array<string>}
+     */
+    this.willChanges = []
     /**
      * @type {'idle' | 'paused' | 'playing' | 'closed'}
      */
@@ -49,7 +52,7 @@ class Main extends BaseClass {
   get status() {
     return this._status
   }
-  
+
   destroy() {
     this.logger && this.logger.info('destroy')
     clearTimeout(this.dataHandleTimer)

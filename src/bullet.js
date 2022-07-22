@@ -6,6 +6,9 @@ import { copyDom, styleUtil } from './utils/util'
  * @type {Class}
  */
 class Bullet extends BaseClass {
+  /**
+   * @param {import('./danmu').DanmuJs} danmu
+   */
   constructor(danmu, options) {
     super()
     this.setLogger('bullet')
@@ -23,6 +26,7 @@ class Bullet extends BaseClass {
     this.bookChannelId = options.bookChannelId
     this.direction = danmu.direction
     this.reuseDOM = true
+    this.willChanges = []
     let self = this
     let el
     this.domObj = danmu.domObj
@@ -103,6 +107,10 @@ class Bullet extends BaseClass {
       self.el.addEventListener('mouseenter', self.mouseEnterFunWrapper, false)
     }
   }
+  willChange() {
+    let val = this.danmu.main.willChanges.concat(this.willChanges).join()
+    styleUtil(this.el, 'willChange', val)
+  }
   mouseoverFun(event) {
     let self = this
     if (
@@ -120,19 +128,24 @@ class Bullet extends BaseClass {
   }
   detach() {
     // this.logger && this.logger.info(`detach #${this.options.txt || '[DOM Element]'}#`)
-    let self = this
-    if (self.el) {
-      if (self.danmu.config && self.danmu.config.mouseControl) {
-        self.el.removeEventListener('mouseover', self.mouseoverFunWrapper, false)
+    const self = this
+    const el = self.el
+
+    if (el) {
+      let config = self.danmu.config
+      if (config) {
+        if (config.mouseControl) {
+          el.removeEventListener('mouseover', self.mouseoverFunWrapper, false)
+        }
+        if (config.mouseEnterControl) {
+          el.removeEventListener('mouseenter', self.mouseEnterFunWrapper, false)
+        }
       }
-      if (self.danmu.config && self.danmu.config.mouseEnterControl) {
-        self.el.removeEventListener('mouseenter', self.mouseEnterFunWrapper, false)
-      }
-      if (self.el.parentNode) {
-        self.el.parentNode.removeChild(self.el)
+      if (el.parentNode) {
+        el.parentNode.removeChild(el)
       }
       if (self.reuseDOM) {
-        self.domObj.unuse(self.el)
+        self.domObj.unuse(el)
       }
       self.el = null
     }
@@ -167,7 +180,7 @@ class Bullet extends BaseClass {
     if (!this.el) {
       return
     }
-    styleUtil(this.el, 'willChange', 'auto')
+    this.willChange()
     if (this.mode === 'scroll') {
       if (isFullscreen) {
         let pastDuration = (new Date().getTime() - self.moveTime) / 1000
@@ -236,7 +249,12 @@ class Bullet extends BaseClass {
     if (!this.el) return
     if (this.status === 'start') return
     this.status = 'start'
-    styleUtil(this.el, 'willChange', 'transform')
+
+    this.willChanges = ['transform', 'transition']
+    this.willChange()
+    styleUtil(this.el, 'backface-visibility', 'hidden')
+    styleUtil(this.el, 'perspective', '500em')
+
     function func() {
       if (self.el) {
         if (self.mode === 'scroll') {
@@ -248,7 +266,7 @@ class Bullet extends BaseClass {
               self.remove()
             } else {
               self.pauseMove(containerPos_)
-              if (self.danmu.bulletBtn.main.status !== 'paused') {
+              if (self.danmu.status !== 'paused') {
                 self.startMove(containerPos_)
               }
             }
@@ -258,7 +276,7 @@ class Bullet extends BaseClass {
               self.remove()
             } else {
               self.pauseMove(containerPos_)
-              if (self.danmu.bulletBtn.main.status !== 'paused') {
+              if (self.danmu.status !== 'paused') {
                 self.startMove(containerPos_)
               }
             }
@@ -274,7 +292,7 @@ class Bullet extends BaseClass {
         this.moveV = ((containerPos.height + this.height) / this.duration) * 1000
         let leftDuration = (self.el.getBoundingClientRect().bottom - containerPos.top) / this.moveV
         styleUtil(this.el, 'transition', `transform ${leftDuration}s linear 0s`)
-        this.startMoveTimer = setTimeout(function () {
+        this.reqStartMoveId = requestAnimationFrame(() => {
           if (self.el) {
             styleUtil(
               self.el,
@@ -286,14 +304,14 @@ class Bullet extends BaseClass {
             self.moveContainerHeight = containerPos.height
             self.removeTimer = setTimeout(func, leftDuration * 1000)
           }
-        }, 20)
+        })
       } else {
         let bulletPos = this.el.getBoundingClientRect()
         this.moveV = ((containerPos.width + this.width) / this.duration) * 1000
         let leftDuration = (bulletPos.right - containerPos.left) / this.moveV
         styleUtil(this.el, 'transition', `transform ${leftDuration}s linear 0s`)
         // this.el.style.left = bulletPos.left + 'px'
-        this.startMoveTimer = setTimeout(function () {
+        this.reqStartMoveId = requestAnimationFrame(() => {
           if (self.el) {
             let bulletPos = self.el.getBoundingClientRect()
             // self.el.style.left = bulletPos.left + 'px'
@@ -316,7 +334,7 @@ class Bullet extends BaseClass {
               self.remove()
             }
           }
-        }, 0)
+        })
       }
     } else {
       // this.el.style.width = `${this.width}px`
@@ -338,11 +356,14 @@ class Bullet extends BaseClass {
     if (this.removeTimer) {
       clearTimeout(this.removeTimer)
     }
-    if (this.startMoveTimer) {
-      clearTimeout(this.startMoveTimer)
+    if (this.reqStartMoveId) {
+      cancelAnimationFrame(this.reqStartMoveId)
+      this.reqStartMoveId = null
     }
     if (self.el && self.el.parentNode) {
-      styleUtil(self.el, 'willChange', 'auto')
+      this.willChanges = []
+      this.willChange()
+
       self.detach()
       if (this.options.el && this.options.el.nodeType === 1 && this.danmu.config.disableCopyDOM) {
         styleUtil(this.options.el, 'transform', 'none')

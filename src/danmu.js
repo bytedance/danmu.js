@@ -16,7 +16,7 @@ export class DanmuJs extends BaseClass {
     self.logger && self.logger.info(`danmu.js version: ${version}`)
 
     // configure
-    self.config = {
+    const config = (self.config = {
       overlap: false,
       area: {
         start: 0,
@@ -28,8 +28,8 @@ export class DanmuJs extends BaseClass {
       direction: 'r2l',
       needResizeObserver: false,
       channelSize: undefined
-    }
-    deepCopy(self.config, options)
+    })
+    deepCopy(config, options)
 
     // Add event subscription handler
     EventEmitter(self)
@@ -37,30 +37,31 @@ export class DanmuJs extends BaseClass {
     self.hideArr = []
     self.domObj = new RecyclableDomList()
 
-    self.config.comments.forEach((comment) => {
+    config.comments.forEach((comment) => {
       comment.duration = comment.duration ? comment.duration : 5000
       if (!comment.mode) {
         comment.mode = 'scroll'
       }
     })
-    if (self.config.container && self.config.container.nodeType === 1) {
-      self.container = self.config.container
-    } else {
+
+    self.container = config.container && config.container.nodeType === 1 ? config.container : null
+    if (!self.container) {
       // eslint-disable-next-line quotes
       self.emit('error', "container id can't be empty")
       return false
     }
-    if (self.config.containerStyle) {
-      let style = self.config.containerStyle
+    if (config.containerStyle) {
+      let style = config.containerStyle
       Object.keys(style).forEach(function (key) {
         self.container.style[key] = style[key]
       })
     }
-    self.live = self.config.live
-    self.player = self.config.player
-    self.direction = self.config.direction
+    self.live = config.live
+    self.player = config.player
+    self.direction = config.direction
     addClass(self.container, 'danmu')
     self.bulletBtn = new Control(self)
+    self.main = self.bulletBtn.main
     self.isReady = true
     self.emit('ready')
     this.logger && this.logger.info('ready')
@@ -68,7 +69,7 @@ export class DanmuJs extends BaseClass {
   }
 
   get status() {
-    return this.bulletBtn.main.status
+    return this.main.status
   }
 
   addResizeObserver() {
@@ -81,27 +82,27 @@ export class DanmuJs extends BaseClass {
 
   start() {
     this.logger && this.logger.info('start')
-    this.bulletBtn.main.start()
+    this.main.start()
   }
 
   pause() {
     this.logger && this.logger.info('pause')
-    this.bulletBtn.main.pause()
+    this.main.pause()
   }
 
   play() {
     this.logger && this.logger.info('play')
-    this.bulletBtn.main.play()
+    this.main.play()
   }
 
   stop() {
     this.logger && this.logger.info('stop')
-    this.bulletBtn.main.stop()
+    this.main.stop()
   }
 
   clear() {
     this.logger && this.logger.info('clear')
-    this.bulletBtn.main.clear()
+    this.main.clear()
   }
 
   destroy() {
@@ -139,13 +140,13 @@ export class DanmuJs extends BaseClass {
         }
       }
       if (comment.prior || comment.realTime) {
-        this.bulletBtn.main.data.unshift(comment)
+        this.main.data.unshift(comment)
         if (comment.realTime) {
-          this.bulletBtn.main.readData()
-          this.bulletBtn.main.dataHandle()
+          this.main.readData()
+          this.main.dataHandle()
         }
       } else {
-        this.bulletBtn.main.data.push(comment)
+        this.main.data.push(comment)
       }
     }
   }
@@ -154,7 +155,7 @@ export class DanmuJs extends BaseClass {
     this.logger && this.logger.info(`setCommentID: oldID ${oldID} newID ${newID}`)
     let containerPos_ = this.container.getBoundingClientRect()
     if (oldID && newID) {
-      this.bulletBtn.main.data.some((data) => {
+      this.main.data.some((data) => {
         if (data.id === oldID) {
           data.id = newID
           return true
@@ -162,11 +163,11 @@ export class DanmuJs extends BaseClass {
           return false
         }
       })
-      this.bulletBtn.main.queue.some((item) => {
+      this.main.queue.some((item) => {
         if (item.id === oldID) {
           item.id = newID
           item.pauseMove(containerPos_)
-          this.bulletBtn.main.status !== 'paused' && item.startMove(containerPos_)
+          this.main.status !== 'paused' && item.startMove(containerPos_)
           return true
         } else {
           return false
@@ -180,7 +181,7 @@ export class DanmuJs extends BaseClass {
     let containerPos_ = this.container.getBoundingClientRect()
     if (id && duration) {
       duration = duration ? duration : 5000
-      this.bulletBtn.main.data.some((data) => {
+      this.main.data.some((data) => {
         if (data.id === id) {
           data.duration = duration
           return true
@@ -188,11 +189,11 @@ export class DanmuJs extends BaseClass {
           return false
         }
       })
-      this.bulletBtn.main.queue.some((item) => {
+      this.main.queue.some((item) => {
         if (item.id === id) {
           item.duration = duration
           item.pauseMove(containerPos_)
-          this.bulletBtn.main.status !== 'paused' && item.startMove(containerPos_)
+          this.main.status !== 'paused' && item.startMove(containerPos_)
           return true
         } else {
           return false
@@ -205,7 +206,7 @@ export class DanmuJs extends BaseClass {
     this.logger && this.logger.info(`setCommentLike: id ${id} like ${like}`)
     let containerPos_ = this.container.getBoundingClientRect()
     if (id && like) {
-      this.bulletBtn.main.data.some((data) => {
+      this.main.data.some((data) => {
         if (data.id === id) {
           data.like = like
           return true
@@ -213,11 +214,11 @@ export class DanmuJs extends BaseClass {
           return false
         }
       })
-      this.bulletBtn.main.queue.some((item) => {
+      this.main.queue.some((item) => {
         if (item.id === id) {
           item.pauseMove(containerPos_)
           item.setLikeDom(like.el, like.style)
-          if (item.danmu.bulletBtn.main.status !== 'paused') {
+          if (item.danmu.main.status !== 'paused') {
             item.startMove(containerPos_)
           }
           return true
@@ -233,9 +234,9 @@ export class DanmuJs extends BaseClass {
     this.mouseControl = false
     let pos = this.container.getBoundingClientRect()
     if (id) {
-      this.bulletBtn.main.queue.some((item) => {
+      this.main.queue.some((item) => {
         if (item.id === id) {
-          if (item.danmu.bulletBtn.main.status !== 'paused') {
+          if (item.danmu.main.status !== 'paused') {
             item.startMove(pos, true)
           } else {
             item.status = 'paused'
@@ -253,7 +254,7 @@ export class DanmuJs extends BaseClass {
     this.mouseControl = true
     let pos = this.container.getBoundingClientRect()
     if (id) {
-      this.bulletBtn.main.queue.some((item) => {
+      this.main.queue.some((item) => {
         if (item.id === id) {
           item.status = 'forcedPause'
           item.pauseMove(pos)
@@ -271,7 +272,7 @@ export class DanmuJs extends BaseClass {
   removeComment(id) {
     this.logger && this.logger.info(`removeComment: id ${id}`)
     if (!id) return
-    this.bulletBtn.main.queue.some((item) => {
+    this.main.queue.some((item) => {
       if (item.id === id) {
         item.remove()
         return true
@@ -279,16 +280,37 @@ export class DanmuJs extends BaseClass {
         return false
       }
     })
-    this.bulletBtn.main.data = this.bulletBtn.main.data.filter((item) => {
+    this.main.data = this.main.data.filter((item) => {
       return item.id !== id
     })
   }
 
   updateComments(comments, isClear = true) {
     if (isClear) {
-      this.bulletBtn.main.data = []
+      this.main.data = []
     }
-    this.bulletBtn.main.data = this.bulletBtn.main.data.concat(comments)
+    this.main.data = this.main.data.concat(comments)
+  }
+
+  willChange() {
+    const { container, main } = this
+    // optimize setOpacity
+    container.style.willChange = 'opacity'
+
+    // optimize setAllDuration/setFontSize
+    main.willChanges.push('contents')
+    main.queue.forEach((item) => {
+      item.willChange()
+    })
+  }
+
+  stopWillChange() {
+    this.container.style.willChange = ''
+
+    this.main.willChanges.splice(0) // empty
+    this.main.queue.forEach((item) => {
+      item.willChange()
+    })
   }
 
   setAllDuration(mode = 'scroll', duration, force = true) {
@@ -297,18 +319,18 @@ export class DanmuJs extends BaseClass {
     if (duration) {
       duration = duration ? duration : 5000
       if (force) {
-        this.bulletBtn.main.forceDuration = duration
+        this.main.forceDuration = duration
       }
-      this.bulletBtn.main.data.forEach((data) => {
+      this.main.data.forEach((data) => {
         if (mode === data.mode) {
           data.duration = duration
         }
       })
-      this.bulletBtn.main.queue.forEach((item) => {
+      this.main.queue.forEach((item) => {
         if (mode === item.mode) {
           item.duration = duration
           item.pauseMove(containerPos_)
-          if (item.danmu.bulletBtn.main.status !== 'paused') {
+          if (this.main.status !== 'paused') {
             item.startMove(containerPos_)
           }
         }
@@ -325,12 +347,12 @@ export class DanmuJs extends BaseClass {
     this.logger && this.logger.info(`setFontSize: size ${size} channelSize ${channelSize}`)
     this.fontSize = `${size}px`
     if (size) {
-      this.bulletBtn.main.data.forEach((data) => {
+      this.main.data.forEach((data) => {
         if (data.style) {
           data.style.fontSize = this.fontSize
         }
       })
-      this.bulletBtn.main.queue.forEach((item) => {
+      this.main.queue.forEach((item) => {
         if (!item.options.style) {
           item.options.style = {}
         }
@@ -345,14 +367,14 @@ export class DanmuJs extends BaseClass {
     }
     if (channelSize) {
       this.config.channelSize = channelSize
-      this.bulletBtn.main.channel.resize(true)
+      this.main.channel.resize(true)
     }
   }
 
   setArea(area) {
     this.logger && this.logger.info(`setArea: area ${area}`)
     this.config.area = area
-    this.bulletBtn.main.channel.resize(true)
+    this.main.channel.resize(true)
   }
 
   hide(mode = 'scroll') {
@@ -360,7 +382,7 @@ export class DanmuJs extends BaseClass {
     if (this.hideArr.indexOf(mode) < 0) {
       this.hideArr.push(mode)
     }
-    let arr = this.bulletBtn.main.queue.filter((item) => mode === item.mode || (mode === 'color' && item.color))
+    let arr = this.main.queue.filter((item) => mode === item.mode || (mode === 'color' && item.color))
     arr.forEach((item) => item.remove())
   }
 
