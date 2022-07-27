@@ -236,7 +236,7 @@ class Bullet extends BaseClass {
       }
     }
   }
-  startMove(containerPos, force) {
+  startMove(containerPos, force, immediately = false) {
     this.logger && this.logger.info(`startMove #${this.options.txt || '[DOM Element]'}#`)
     let self = this
     if (!self.hasMove) {
@@ -304,35 +304,44 @@ class Bullet extends BaseClass {
           }
         })
       } else {
-        let bulletPos = this.el.getBoundingClientRect()
-        this.moveV = ((containerPos.width + this.width) / this.duration) * 1000
-        let leftDuration = (bulletPos.right - containerPos.left) / this.moveV
-        styleUtil(this.el, 'transition', `transform ${leftDuration}s linear 0s`)
-        // this.el.style.left = bulletPos.left + 'px'
-        this.reqStartMoveId = requestAnimationFrame(() => {
-          if (self.el) {
-            let bulletPos = self.el.getBoundingClientRect()
-            // self.el.style.left = bulletPos.left + 'px'
-            let v = (bulletPos.right - containerPos.left) / leftDuration
-            // console.log(`${self.id} 距离: ${bulletPos.right - containerPos.left}px 时间: ${leftDuration} 速度: ${v} 预定速度: ${self.moveV}`)
-            // console.log(`${self.id} translateX(-${bulletPos.right - containerPos.left}px) translateY(0px) translateZ(0px)`)
-
-            if (bulletPos.right > containerPos.left && v > self.moveV - 1 && v < self.moveV + 1) {
-              styleUtil(
-                self.el,
-                'transform',
-                `translateX(-${bulletPos.right - containerPos.left}px) translateY(0px) translateZ(0px)`
-              )
-              self.moveTime = new Date().getTime()
-              self.moveMoreS = bulletPos.left - containerPos.left
-              self.moveContainerWidth = containerPos.width
-              self.removeTimer = setTimeout(func, leftDuration * 1000)
-            } else {
-              self.status = 'end'
-              self.remove()
-            }
+        const reflow = () => {
+          if (!self.el) {
+            return
           }
-        })
+          self.moveV = ((containerPos.width + self.width) / self.duration) * 1000
+          const bulletPos = self.el.getBoundingClientRect()
+          const leftDuration = (bulletPos.right - containerPos.left) / self.moveV
+
+          styleUtil(self.el, 'transition', `transform ${leftDuration}s linear 0s`)
+
+          // self.el.style.left = bulletPos.left + 'px'
+          let v = (bulletPos.right - containerPos.left) / leftDuration
+          // console.log(`${self.id} 距离: ${bulletPos.right - containerPos.left}px 时间: ${leftDuration} 速度: ${v} 预定速度: ${self.moveV}`)
+          // console.log(`${self.id} translateX(-${bulletPos.right - containerPos.left}px) translateY(0px) translateZ(0px)`)
+
+          if (bulletPos.right > containerPos.left && v > self.moveV - 1 && v < self.moveV + 1) {
+            styleUtil(
+              self.el,
+              'transform',
+              `translateX(-${bulletPos.right - containerPos.left}px) translateY(0px) translateZ(0px)`
+            )
+            self.moveTime = new Date().getTime()
+            self.moveMoreS = bulletPos.left - containerPos.left
+            self.moveContainerWidth = containerPos.width
+            self.removeTimer = setTimeout(func, leftDuration * 1000)
+          } else {
+            self.status = 'end'
+            self.remove()
+          }
+        }
+
+        if (immediately) {
+          reflow()
+        } else {
+          this.reqStartMoveId = requestAnimationFrame(() => {
+            reflow()
+          })
+        }
       }
     } else {
       // this.el.style.width = `${this.width}px`

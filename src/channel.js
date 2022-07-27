@@ -57,17 +57,17 @@ class Channel extends BaseClass {
   }
   destroy() {
     this.logger && this.logger.info('destroy')
-    cancelAnimationFrame(this.resizeId)
     this.channels = []
     for (let k in this) {
       delete this[k]
     }
+    this._cancelResize()
   }
   addBullet(bullet) {
     // this.logger && this.logger.info(`addBullet ${bullet.options.txt || '[DOM Element]'}`)
     let self = this
     let danmu = this.danmu
-    let channels = this.channels  
+    let channels = this.channels
     let channelHeight, channelWidth, occupy
 
     if (self.direction === 'b2t') {
@@ -409,17 +409,24 @@ class Channel extends BaseClass {
       this.danmu.bulletBtn.main.playedData.push(bullet.options)
     }
   }
-  resize(isFullscreen = false) {
+
+  resizeSync(isFullscreen = false) {
+    this.resize(isFullscreen, true)
+  }
+
+  resize(isFullscreen = false, sync = false) {
     this.logger && this.logger.info('resize')
     let self = this
     if (self.resizing) {
       return
     }
     self.resizing = true
-    this.resizeId = requestAnimationFrame(() => {
+
+    function layout() {
       const { container, config, bulletBtn } = self.danmu
       let channelCount
 
+      self._cancelResize()
       self._updatePos()
 
       if (bulletBtn.main.data) {
@@ -499,7 +506,7 @@ class Channel extends BaseClass {
                 if (!item.resized) {
                   item.pauseMove(self.containerPos, isFullscreen)
                   if (item.danmu.bulletBtn.main.status !== 'paused') {
-                    item.startMove(self.containerPos)
+                    item.startMove(self.containerPos, false, sync)
                   }
                   item.resized = true
                 }
@@ -521,7 +528,7 @@ class Channel extends BaseClass {
               if (!item.resized) {
                 item.pauseMove(self.containerPos, isFullscreen)
                 if (item.danmu.bulletBtn.main.status !== 'paused') {
-                  item.startMove(self.containerPos)
+                  item.startMove(self.containerPos, false, sync)
                 }
                 item.resized = true
               }
@@ -582,7 +589,7 @@ class Channel extends BaseClass {
                   }
                   item.pauseMove(self.containerPos, isFullscreen)
                   if (item.danmu.bulletBtn.main.status !== 'paused') {
-                    item.startMove(self.containerPos)
+                    item.startMove(self.containerPos, false, sync)
                   }
                   if (!item.resized) {
                     item.resized = true
@@ -618,8 +625,26 @@ class Channel extends BaseClass {
         }
       }
       self.resizing = false
-    })
+    }
+
+    if (sync) {
+      layout()
+    } else {
+      this._cancelResize()
+      this.resizeId = requestAnimationFrame(layout)
+    }
   }
+
+  /**
+   * @private
+   */
+  _cancelResize() {
+    if (this.resizeId) {
+      cancelAnimationFrame(this.resizeId)
+      this.resizeId = null
+    }
+  }
+
   reset(isInit = false) {
     this.logger && this.logger.info('reset')
     const self = this
@@ -711,7 +736,7 @@ class Channel extends BaseClass {
         self.channelHeight = fontSize
       }
     }
-    
+
     if (isInit) {
       this.resetId = requestAnimationFrame(channelReset)
     } else {

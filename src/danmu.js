@@ -361,7 +361,13 @@ export class DanmuJs extends BaseClass {
     this.container.style.opacity = opacity
   }
 
-  setFontSize(size, channelSize) {
+  setFontSize(
+    size,
+    channelSize,
+    options = {
+      reflow: true
+    }
+  ) {
     this.logger && this.logger.info(`setFontSize: size ${size} channelSize ${channelSize}`)
     this.fontSize = `${size}px`
     if (size) {
@@ -385,14 +391,20 @@ export class DanmuJs extends BaseClass {
     }
     if (channelSize) {
       this.config.channelSize = channelSize
-      this.main.channel.resize(true)
+
+      if (options.reflow) {
+        this.main.channel.resizeSync(true)
+      }
     }
   }
 
   setArea(area) {
     this.logger && this.logger.info(`setArea: area ${area}`)
     this.config.area = area
-    this.main.channel.resize(true)
+
+    if (area.reflow !== false) {
+      this.main.channel.resizeSync(true)
+    }
   }
 
   hide(mode = 'scroll') {
