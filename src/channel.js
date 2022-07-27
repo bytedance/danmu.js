@@ -651,11 +651,17 @@ class Channel extends BaseClass {
         item.hasAttached = false
       })
     }
+
     function channelReset() {
       let channelCount
       let size = container.getBoundingClientRect()
       self.width = size.width
       self.height = size.height
+
+      if (self.resetId) {
+        cancelAnimationFrame(self.resetId)
+        self.resetId = null
+      }
 
       if (config.area) {
         const { lines, start, end } = config.area
@@ -705,8 +711,9 @@ class Channel extends BaseClass {
         self.channelHeight = fontSize
       }
     }
+    
     if (isInit) {
-      this.resetTimer = setTimeout(channelReset, 200)
+      this.resetId = requestAnimationFrame(channelReset)
     } else {
       channelReset()
     }

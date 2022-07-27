@@ -241,12 +241,20 @@ export class DanmuJs extends BaseClass {
 
   restartComment(id) {
     this.logger && this.logger.info(`restartComment: id ${id}`)
-    this.mouseControl = false
-    let pos = this.container.getBoundingClientRect()
+
     if (id) {
-      this.main.queue.some((item) => {
+      const self = this
+      const main = self.main
+      self.mouseControl = false
+
+      if (main.status === 'closed') {
+        return
+      }
+
+      const pos = self.container.getBoundingClientRect()
+      main.queue.some((item) => {
         if (item.id === id) {
-          if (item.danmu.main.status !== 'paused') {
+          if (main.status !== 'paused') {
             item.startMove(pos, true)
           } else {
             item.status = 'paused'

@@ -40,6 +40,10 @@ class Main extends BaseClass {
      */
     this.queue = [] // 等待播放的弹幕队列
     this.timer = null // 弹幕动画定时器句柄
+
+    /**
+     * @type {'normal'|'stop'}
+     */
     this.retryStatus = 'normal'
     this.interval = danmu.config.interval // 弹幕队列缓存间隔
     /**
@@ -130,7 +134,6 @@ class Main extends BaseClass {
     self._status = 'playing'
     self.queue = []
     self.container.innerHTML = ''
-    // this.channel.resetWithCb(self.init, self)
     self.channel.reset()
     self.init()
   }
@@ -139,9 +142,9 @@ class Main extends BaseClass {
     const self = this
     self._status = 'closed'
     self.retryStatus = 'stop'
-    self.channel.reset()
     self.queue = []
     self.container.innerHTML = ''
+    self.channel.reset()
   }
   clear() {
     this.logger && this.logger.info('clear')
@@ -151,6 +154,11 @@ class Main extends BaseClass {
     this.container.innerHTML = ''
   }
   play() {
+    if (this._status === 'closed') {
+      this.logger && this.logger.info('play ignored')
+      return
+    }
+
     this.logger && this.logger.info('play')
     this._status = 'playing'
     let channels = this.channel.channels
@@ -179,6 +187,11 @@ class Main extends BaseClass {
     }
   }
   pause() {
+    if (this._status === 'closed') {
+      this.logger && this.logger.info('pause ignored')
+      return
+    }
+
     this.logger && this.logger.info('pause')
     this._status = 'paused'
     let channels = this.channel.channels
