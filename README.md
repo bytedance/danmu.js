@@ -81,7 +81,12 @@
 ### Properties
 
 ```js
-player.danmu.status // 主进程运行状态 'idle' | 'paused' | 'playing' | 'closed'
+danmu.status // 主进程运行状态 'idle' | 'paused' | 'playing' | 'closed'
+danmu.state : {
+    status: danmu.status,
+    comments: Array<CommentData>, // 弹幕数据池
+    bullets: Array<Bullet> // 在轨弹幕数据
+}
 ```
 
 ### API
@@ -121,6 +126,9 @@ danmu.setCommentLike(id, {
     color: '#ff0000'
   }
 }) // 这是点赞样式，id 为 commentid
+
+player.danmu.willChange() // 用于浏览器提前做好对应的优化准备工作
+player.danmu.stopWillChange()
 ```
 
 ### Dev
