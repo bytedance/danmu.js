@@ -1,7 +1,18 @@
 import BaseClass from './baseClass'
 import Bullet from './bullet'
 import Channel from './channel'
-import { attachEventListener, formatTime } from './utils/util'
+import { attachEventListener } from './utils/util'
+
+/**
+ * @typedef {{
+ *  id: string
+ *  start: number
+ *  duration: number
+ *  prior: boolean
+ *  txt: string
+ *  mode: 'scroll' | 'top' | 'bottom'
+ * }} CommentData
+ */
 
 /**
  * [Main 弹幕主进程]
@@ -17,6 +28,10 @@ class Main extends BaseClass {
     this.danmu = danmu
     this.container = danmu.container
     this.channel = new Channel(danmu) // 弹幕轨道实例
+
+    /**
+     * @type {Array<CommentData>}
+     */
     this.data = [].concat(danmu.config.comments)
     this.playedData = []
 
@@ -25,9 +40,8 @@ class Main extends BaseClass {
      */
     this.queue = [] // 等待播放的弹幕队列
     this.timer = null // 弹幕动画定时器句柄
-    this.retryTimer = null // 弹幕更新重试定时器句柄
     this.retryStatus = 'normal'
-    this.interval = danmu.config.interval || 2000 // 弹幕队列缓存间隔
+    this.interval = danmu.config.interval // 弹幕队列缓存间隔
     /**
      * @type {Array<string>}
      */
@@ -89,7 +103,11 @@ class Main extends BaseClass {
     self.retryStatus = 'normal'
     self.data.sort((a, b) => a.start - b.start)
 
-    let dataHandle = function () {
+    function dataHandle() {
+      if (self.dataHandleTimer) {
+        clearTimeout(self.dataHandleTimer)
+        self.dataHandleTimer = null
+      }
       if (self._status === 'closed' && self.retryStatus === 'stop') {
         return
       }
@@ -103,9 +121,7 @@ class Main extends BaseClass {
         }, self.interval - 1000)
       }
     }
-    if (!self.retryTimer) {
-      dataHandle()
-    }
+    dataHandle()
   }
   // 启动弹幕渲染主进程
   start() {
@@ -122,7 +138,6 @@ class Main extends BaseClass {
     this.logger && this.logger.info('stop')
     const self = this
     self._status = 'closed'
-    self.retryTimer = null
     self.retryStatus = 'stop'
     self.channel.reset()
     self.queue = []
@@ -195,19 +210,18 @@ class Main extends BaseClass {
     }
   }
   readData() {
-    let self = this,
-      danmu = this.danmu
-    if (!danmu.isReady) return
-    let currentTime = 0
-    if (danmu.player && danmu.player.currentTime) {
-      currentTime = formatTime(danmu.player.currentTime)
-    }
-    let bullet,
+    if (!this.danmu.isReady) return
+
+    const self = this,
+      danmu = this.danmu,
+      player = danmu.player,
       interval = self.interval,
-      channel = self.channel,
-      result
-    let list
-    if (danmu.player) {
+      channel = self.channel
+    let result, bullet, list
+
+    if (player) {
+      const currentTime = player.currentTime ? Math.floor(player.currentTime * 1000) : 0
+
       list = self.data.filter((item) => {
         if (!item.start && self.danmu.hideArr.indexOf(item.mode) < 0) {
           if (!item.color || self.danmu.hideArr.indexOf('color') < 0) {
@@ -226,7 +240,6 @@ class Main extends BaseClass {
       }
     } else {
       list = self.data.splice(0, 1)
-      // self.data = []
       if (list.length === 0) list = self.playedData.splice(0, 1)
     }
 

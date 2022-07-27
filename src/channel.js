@@ -16,12 +16,8 @@ class Channel extends BaseClass {
     self.setLogger('channel')
     self.danmu = danmu
     self.reset(true)
-    this.direction = danmu.direction
-    this.containerPos = this.danmu.container.getBoundingClientRect()
-    this.containerWidth = this.containerPos.width
-    this.containerHeight = this.containerPos.height
-    this.containerLeft = this.containerPos.left
-    this.containerRight = this.containerPos.right
+    self.direction = danmu.direction
+    self._updatePos()
 
     attachEventListener(
       this.danmu,
@@ -43,23 +39,25 @@ class Channel extends BaseClass {
       this.danmu,
       'channel_resize',
       () => {
-        self.containerPos = self.danmu.container.getBoundingClientRect()
-        if (self.resizing) {
-          return
-        }
-        self.containerWidth = self.containerPos.width
-        self.containerHeight = self.containerPos.height
-        self.containerLeft = self.containerPos.left
-        self.containerRight = self.containerPos.right
         self.resize(true)
       },
       'destroy'
     )
   }
+  _updatePos() {
+    const pos = this.danmu.container.getBoundingClientRect()
+
+    this.containerPos = pos
+    this.containerWidth = pos.width
+    this.containerHeight = pos.height
+    this.containerTop = pos.top
+    this.containerBottom = pos.bottom
+    this.containerLeft = pos.left
+    this.containerRight = pos.right
+  }
   destroy() {
     this.logger && this.logger.info('destroy')
-    clearTimeout(this.resizeTimer)
-    // clearTimeout(this.resetTimer)
+    cancelAnimationFrame(this.resizeId)
     this.channels = []
     for (let k in this) {
       delete this[k]
@@ -69,7 +67,7 @@ class Channel extends BaseClass {
     // this.logger && this.logger.info(`addBullet ${bullet.options.txt || '[DOM Element]'}`)
     let self = this
     let danmu = this.danmu
-    let channels = this.channels
+    let channels = this.channels  
     let channelHeight, channelWidth, occupy
 
     if (self.direction === 'b2t') {
@@ -92,7 +90,7 @@ class Channel extends BaseClass {
         if (channels[i].queue[bullet.mode].some((item) => item.id === bullet.id)) {
           return {
             result: false,
-            message: `exsited, channelOrder=${i},danmu_id=${bullet.id}`
+            message: `exited, channelOrder=${i},danmu_id=${bullet.id}`
           }
         }
       }
@@ -110,17 +108,22 @@ class Channel extends BaseClass {
               break
             }
             channel.operating.scroll = true
-            let curBullet = channel.queue.scroll[0]
+
+            // 当前轨道 - 最后入轨弹幕
+            const curBullet = channel.queue.scroll[0]
+
             if (curBullet) {
               let curBulletPos = curBullet.el.getBoundingClientRect()
+
+              // 检测最后入轨弹幕是否已经完全飘入容器区域
               if (self.direction === 'b2t') {
-                if (curBulletPos.bottom > self.containerPos.bottom) {
+                if (curBulletPos.bottom >= self.containerPos.bottom) {
                   flag = false
                   channel.operating.scroll = false
                   break
                 }
               } else {
-                if (curBulletPos.right > self.containerPos.right) {
+                if (curBulletPos.right >= self.containerPos.right) {
                   flag = false
                   channel.operating.scroll = false
                   break
@@ -132,16 +135,14 @@ class Channel extends BaseClass {
               // Vnew * t < Widthplayer
               let curS, curV, curT, newS, newV, newT
               if (self.direction === 'b2t') {
-                curS = curBulletPos.top - self.containerPos.top + curBulletPos.height
-
-                curV = (self.containerPos.height + curBulletPos.height) / curBullet.duration
+                curS = curBulletPos.top - self.containerTop + curBulletPos.height
+                curV = (self.containerHeight + curBulletPos.height) / curBullet.duration
                 curT = curS / curV
 
-                newS = self.containerPos.height
-                newV = (self.containerPos.height + bullet.height) / bullet.duration
+                newS = self.containerHeight
+                newV = (self.containerHeight + bullet.height) / bullet.duration
               } else {
                 curS = curBulletPos.left - self.containerPos.left + curBulletPos.width
-
                 curV = (self.containerPos.width + curBulletPos.width) / curBullet.duration
                 curT = curS / curV
 
@@ -415,9 +416,11 @@ class Channel extends BaseClass {
       return
     }
     self.resizing = true
-    this.resizeTimer = setTimeout(() => {
+    this.resizeId = requestAnimationFrame(() => {
       const { container, config, bulletBtn } = self.danmu
       let channelCount
+
+      self._updatePos()
 
       if (bulletBtn.main.data) {
         bulletBtn.main.data.forEach((item) => {
@@ -428,9 +431,8 @@ class Channel extends BaseClass {
         })
       }
       self.logger && self.logger.info('resize导致所有轨道恢复正常使用')
-      let size = container.getBoundingClientRect()
-      self.width = size.width
-      self.height = size.height
+      self.width = self.containerWidth
+      self.height = self.containerHeight
 
       if (config.area) {
         const { lines, start, end } = config.area
@@ -616,7 +618,7 @@ class Channel extends BaseClass {
         }
       }
       self.resizing = false
-    }, 10)
+    })
   }
   reset(isInit = false) {
     this.logger && this.logger.info('reset')

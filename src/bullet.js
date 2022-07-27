@@ -107,25 +107,6 @@ class Bullet extends BaseClass {
       self.el.addEventListener('mouseenter', self.mouseEnterFunWrapper, false)
     }
   }
-  willChange() {
-    let val = this.danmu.main.willChanges.concat(this.willChanges).join()
-    styleUtil(this.el, 'willChange', val)
-  }
-  mouseoverFun(event) {
-    let self = this
-    if (
-      (self.danmu && self.danmu.mouseControl && self.danmu.config.mouseControlPause) ||
-      self.status === 'waiting' ||
-      self.status === 'end'
-    ) {
-      return
-    }
-    self.danmu &&
-      self.danmu.emit('bullet_hover', {
-        bullet: self,
-        event: event
-      })
-  }
   detach() {
     // this.logger && this.logger.info(`detach #${this.options.txt || '[DOM Element]'}#`)
     const self = this
@@ -150,6 +131,25 @@ class Bullet extends BaseClass {
       self.el = null
     }
     this.danmu.off('changeDirection', this.onChangeDirection)
+  }
+  willChange() {
+    let val = this.danmu.main.willChanges.concat(this.willChanges).join()
+    styleUtil(this.el, 'willChange', val)
+  }
+  mouseoverFun(event) {
+    let self = this
+    if (
+      (self.danmu && self.danmu.mouseControl && self.danmu.config.mouseControlPause) ||
+      self.status === 'waiting' ||
+      self.status === 'end'
+    ) {
+      return
+    }
+    self.danmu &&
+      self.danmu.emit('bullet_hover', {
+        bullet: self,
+        event: event
+      })
   }
   topInit() {
     this.logger && this.logger.info(`topInit #${this.options.txt || '[DOM Element]'}#`)
@@ -243,13 +243,11 @@ class Bullet extends BaseClass {
       self.danmu.emit('bullet_start', self)
       self.hasMove = true
     }
-    if (self.status === 'forcedPause' && !force) {
-      return
-    }
+    if (self.status === 'forcedPause' && !force) return
     if (!this.el) return
     if (this.status === 'start') return
-    this.status = 'start'
 
+    this.status = 'start'
     this.willChanges = ['transform', 'transition']
     this.willChange()
     styleUtil(this.el, 'backface-visibility', 'hidden')

@@ -112,12 +112,6 @@ export function copyDom(dom) {
   }
 }
 
-export function formatTime(time) {
-  let s = Math.floor(time)
-  let ms = time - s
-  return s * 1000 + ms
-}
-
 function offInDestroy(object, event, fn, offEvent) {
   function onDestroy() {
     object.off(event, fn)
