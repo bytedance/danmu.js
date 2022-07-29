@@ -38,6 +38,9 @@ export class DanmuJs extends BaseClass {
     self.hideArr = []
     self.domObj = new RecyclableDomList()
 
+    // freezed comment
+    self.freezeId = null
+
     config.comments.forEach((comment) => {
       comment.duration = comment.duration ? comment.duration : 5000
       if (!comment.mode) {
@@ -245,9 +248,11 @@ export class DanmuJs extends BaseClass {
     if (id) {
       const self = this
       const main = self.main
-      self.mouseControl = false
+
+      self._releaseCtrl(id)
 
       if (main.status === 'closed') {
+        // The main process has been stopped, there is no need to drive the barrage to run
         return
       }
 
@@ -267,12 +272,36 @@ export class DanmuJs extends BaseClass {
     }
   }
 
+  /**
+   * @private
+   */
+  _releaseCtrl(id) {
+    const self = this
+
+    if (self.freezeId && id == self.freezeId) {
+      self.mouseControl = false
+      self.freezeId = null
+    }
+  }
+
+  /**
+   * @private
+   */
+  _freezeCtrl(id) {
+    this.mouseControl = true
+    this.freezeId = id
+  }
+
   freezeComment(id) {
     this.logger && this.logger.info(`freezeComment: id ${id}`)
-    this.mouseControl = true
-    let pos = this.container.getBoundingClientRect()
+
     if (id) {
-      this.main.queue.some((item) => {
+      const self = this
+      const pos = self.container.getBoundingClientRect()
+
+      self._freezeCtrl(id)
+
+      self.main.queue.some((item) => {
         if (item.id === id) {
           item.status = 'forcedPause'
           item.pauseMove(pos)
@@ -289,18 +318,23 @@ export class DanmuJs extends BaseClass {
 
   removeComment(id) {
     this.logger && this.logger.info(`removeComment: id ${id}`)
-    if (!id) return
-    this.main.queue.some((item) => {
-      if (item.id === id) {
-        item.remove()
-        return true
-      } else {
-        return false
-      }
-    })
-    this.main.data = this.main.data.filter((item) => {
-      return item.id !== id
-    })
+
+    if (id) {
+      const self = this
+      self._releaseCtrl(id)
+
+      self.main.queue.some((item) => {
+        if (item.id === id) {
+          item.remove()
+          return true
+        } else {
+          return false
+        }
+      })
+      self.main.data = self.main.data.filter((item) => {
+        return item.id !== id
+      })
+    }
   }
 
   updateComments(comments, isClear = true) {
