@@ -1,6 +1,6 @@
 {
   "name": "danmu.js",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "HTML5 danmu (danmaku) plugin for any DOM element",
   "main": "./dist/index.js",
   "files": [
