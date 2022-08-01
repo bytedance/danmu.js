@@ -58,10 +58,12 @@ class Channel extends BaseClass {
   destroy() {
     this.logger && this.logger.info('destroy')
     this.channels = []
+    this._cancelResize()
+
+    // clear prop at end
     for (let k in this) {
       delete this[k]
     }
-    this._cancelResize()
   }
   addBullet(bullet) {
     // this.logger && this.logger.info(`addBullet ${bullet.options.txt || '[DOM Element]'}`)
