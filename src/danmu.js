@@ -28,6 +28,7 @@ export class DanmuJs extends BaseClass {
       direction: 'r2l',
       needResizeObserver: false,
       channelSize: undefined,
+      maxCommentsLength: undefined,
       interval: 2000
     })
     deepCopy(config, options)
@@ -337,11 +338,36 @@ export class DanmuJs extends BaseClass {
     }
   }
 
+  /**
+   * @param {Array<import('./main').CommentData>} comments
+   * @param {boolean} isClear
+   */
   updateComments(comments, isClear = true) {
-    if (isClear) {
-      this.main.data = []
+    const { config, main } = this
+
+    this.logger && this.logger.info(`updateComments: ${comments.length}, isClear ${isClear}`)
+
+    if (typeof isClear === 'boolean' && isClear) {
+      main.data = []
     }
-    this.main.data = this.main.data.concat(comments)
+    main.data = main.data.concat(comments)
+
+    // Support data pool to control watermark automatically
+    if (typeof config.maxCommentsLength === 'number' && main.data.length > config.maxCommentsLength) {
+      const deleteCount = main.data.length - config.maxCommentsLength
+      const priorComments = []
+
+      for (let i = 0, comment; i < deleteCount; i++) {
+        comment = main.data[i]
+        if (comment.prior && !comment._attached) {
+          priorComments.push(main.data[i])
+        }
+      }
+      main.data.splice(0, deleteCount)
+
+      // Keep high-priority comments data. 
+      main.data = priorComments.concat(main.data)
+    }
   }
 
   willChange() {

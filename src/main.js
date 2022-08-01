@@ -11,6 +11,7 @@ import { attachEventListener } from './utils/util'
  *  prior: boolean
  *  txt: string
  *  mode: 'scroll' | 'top' | 'bottom'
+ *  _attached: boolean // 内部属性，标记弹幕是否已经被入轨
  * }} CommentData
  */
 
@@ -94,7 +95,7 @@ class Main extends BaseClass {
     })
     self.data.some((item) => {
       if (item.id === rdata.bullet.id) {
-        item.hasAttached = false
+        item._attached = false
         return true
       } else {
         return false
@@ -230,7 +231,15 @@ class Main extends BaseClass {
       player = danmu.player,
       interval = self.interval,
       channel = self.channel
-    let result, bullet, list
+    let result,
+      /**
+       * @type {Bullet}
+       */
+      bullet,
+      /**
+       * @type {Array<CommentData>}
+       */
+      list
 
     if (player) {
       const currentTime = player.currentTime ? Math.floor(player.currentTime * 1000) : 0
@@ -263,9 +272,9 @@ class Main extends BaseClass {
         }
         bullet = new Bullet(danmu, item)
         if (bullet && !bullet.bulletCreateFail) {
-          if (!item.hasAttached) {
+          if (!item._attached) {
             bullet.attach()
-            item.hasAttached = true
+            item._attached = true
             result = channel.addBullet(bullet)
             if (result.result) {
               self.queue.push(bullet)
@@ -277,7 +286,7 @@ class Main extends BaseClass {
                 delete bullet[k]
               }
               bullet = null
-              item.hasAttached = false
+              item._attached = false
               if (item.noDiscard) {
                 if (item.prior) {
                   self.data.unshift(item)
@@ -292,7 +301,7 @@ class Main extends BaseClass {
               delete bullet[k]
             }
             bullet = null
-            item.hasAttached = false
+            item._attached = false
             if (item.noDiscard) {
               if (item.prior) {
                 self.data.unshift(item)
