@@ -1,29 +1,27 @@
+import { throttle } from './utils/util'
+
 class ResizeObserver {
-  constructor () {
+  constructor() {
     this.__handlers = []
     if (!window.ResizeObserver) {
       return
     }
     try {
-      this.observer = new window.ResizeObserver((entries) => {
-        const t = new Date().getTime()
-        if (t - this.timeStampe < 200) {
-          return
-        }
-        this.timeStampe = t
-        this.__trigger(entries)
-      })
-      this.timeStampe = new Date().getTime()
-    // eslint-disable-next-line no-empty
+      this.observer = new window.ResizeObserver(
+        throttle((entries) => {
+          this.__trigger(entries)
+        }, 100)
+      )
+      // eslint-disable-next-line no-empty
     } catch (err) {}
   }
 
-  addObserver (target, handler) {
+  addObserver(target, handler) {
     if (!this.observer) {
       return
     }
     this.observer && this.observer.observe(target)
-    const {__handlers} = this
+    const { __handlers } = this
     let index = -1
     for (let i = 0; i < __handlers.length; i++) {
       if (__handlers[i] && target === __handlers[i].target) {
@@ -40,7 +38,7 @@ class ResizeObserver {
     }
   }
 
-  unObserver (target) {
+  unObserver(target) {
     let i = -1
     this.__handlers.map((item, index) => {
       if (target === item.target) {
@@ -51,30 +49,31 @@ class ResizeObserver {
     i > -1 && this.__handlers.splice(i, 1)
   }
 
-  destroyObserver () {
+  destroyObserver() {
     this.observer && this.observer.disconnect()
     this.observer = null
     this.__handlers = null
   }
 
-  __runHandler (target) {
-    const {__handlers} = this
+  __runHandler(target) {
+    const { __handlers } = this
     for (let i = 0; i < __handlers.length; i++) {
       if (__handlers[i] && target === __handlers[i].target) {
-        __handlers[i].handler && __handlers[i].handler.map(handler => {
-          try {
-            handler()
-          } catch (error) {
-            console.error(error)
-          }
-        })
+        __handlers[i].handler &&
+          __handlers[i].handler.map((handler) => {
+            try {
+              handler()
+            } catch (error) {
+              console.error(error)
+            }
+          })
         break
       }
     }
   }
-  
-  __trigger (entries) {
-    entries.map(item => {
+
+  __trigger(entries) {
+    entries.map((item) => {
       this.__runHandler(item.target)
     })
   }
@@ -82,20 +81,16 @@ class ResizeObserver {
 
 const resizeObserver = new ResizeObserver()
 
-function addObserver (target, handler) {
+function addObserver(target, handler) {
   resizeObserver.addObserver(target, handler)
 }
 
-function unObserver (target, handler) {
+function unObserver(target, handler) {
   resizeObserver.unObserver(target, handler)
 }
 
-function destroyObserver (target, handler) {
+function destroyObserver(target, handler) {
   resizeObserver.destroyObserver(target, handler)
 }
 
-export {
-  addObserver,
-  unObserver,
-  destroyObserver
-}
+export { addObserver, unObserver, destroyObserver }

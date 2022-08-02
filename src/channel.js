@@ -58,7 +58,7 @@ class Channel extends BaseClass {
   destroy() {
     this.logger && this.logger.info('destroy')
     this.channels = []
-    this._cancelResize()
+    this._cancelResizeTimer()
 
     // clear prop at end
     for (let k in this) {
@@ -428,7 +428,7 @@ class Channel extends BaseClass {
       const { container, config, bulletBtn } = self.danmu
       let channelCount
 
-      self._cancelResize()
+      self._cancelResizeTimer()
       self._updatePos()
 
       if (bulletBtn.main.data) {
@@ -632,7 +632,7 @@ class Channel extends BaseClass {
     if (sync) {
       layout()
     } else {
-      this._cancelResize()
+      this._cancelResizeTimer()
       this.resizeId = requestAnimationFrame(layout)
     }
   }
@@ -640,7 +640,7 @@ class Channel extends BaseClass {
   /**
    * @private
    */
-  _cancelResize() {
+  _cancelResizeTimer() {
     if (this.resizeId) {
       cancelAnimationFrame(this.resizeId)
       this.resizeId = null

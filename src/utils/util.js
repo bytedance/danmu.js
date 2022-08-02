@@ -134,9 +134,9 @@ export function attachEventListener(object, event, fn, offEvent) {
 }
 
 /**
- * @param {HTMLElement} elem 
- * @param {string} name 
- * @param {string} value 
+ * @param {HTMLElement} elem
+ * @param {string} name
+ * @param {string} value
  */
 export function styleUtil(elem, name, value) {
   let style = elem.style
@@ -149,4 +149,18 @@ export function styleUtil(elem, name, value) {
 
 export function isNumber(val) {
   return typeof val === 'number' && !isNaN(val)
+}
+
+/**
+ * Simple throttle 
+ * @param {()=>void} func 
+ * @param {number} wait 
+ * @returns 
+ */
+export function throttle(func, wait) {
+  let timer = 0
+  return (...args) => {
+    clearTimeout(timer)
+    timer = setTimeout(() => func.apply(this, args), wait)
+  }
 }
