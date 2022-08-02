@@ -27,6 +27,7 @@ export class DanmuJs extends BaseClass {
       comments: [],
       direction: 'r2l',
       needResizeObserver: false,
+      dropStaleComments: false,
       channelSize: undefined,
       maxCommentsLength: undefined,
       interval: 2000
@@ -343,7 +344,9 @@ export class DanmuJs extends BaseClass {
    * @param {boolean} isClear
    */
   updateComments(comments, isClear = true) {
-    const { config, main } = this
+    const { config, main, player } = this
+    const priorComments = []
+    let deleteCount = 0
 
     this.logger && this.logger.info(`updateComments: ${comments.length}, isClear ${isClear}`)
 
@@ -351,11 +354,11 @@ export class DanmuJs extends BaseClass {
       main.data = []
     }
     main.data = main.data.concat(comments)
+    main.sortData()
 
     // Support data pool to control watermark automatically
     if (typeof config.maxCommentsLength === 'number' && main.data.length > config.maxCommentsLength) {
-      const deleteCount = main.data.length - config.maxCommentsLength
-      const priorComments = []
+      deleteCount = main.data.length - config.maxCommentsLength
 
       for (let i = 0, comment; i < deleteCount; i++) {
         comment = main.data[i]
@@ -363,10 +366,30 @@ export class DanmuJs extends BaseClass {
           priorComments.push(main.data[i])
         }
       }
-      main.data.splice(0, deleteCount)
+    } else if (config.dropStaleComments && player && player.currentTime) {
+      const currentTime = Math.floor(player.currentTime * 1000),
+        timePoint = currentTime - config.interval
 
-      // Keep high-priority comments data. 
-      main.data = priorComments.concat(main.data)
+      if (timePoint > 0) {
+        for (let i = 0, comment; i < main.data.length; i++) {
+          comment = main.data[i]
+          if (comment.prior && !comment._attached) {
+            priorComments.push(main.data[i])
+          }
+
+          if (comment.start > timePoint) {
+            deleteCount = i
+            break
+          }
+        }
+      }
+
+      if (deleteCount > 0) {
+        main.data.splice(0, deleteCount)
+
+        // Keep high-priority comments data.
+        main.data = priorComments.concat(main.data)
+      }
     }
   }
 

@@ -106,7 +106,8 @@ class Main extends BaseClass {
     const self = this
     self.logger && self.logger.info('init')
     self.retryStatus = 'normal'
-    self.data.sort((a, b) => a.start - b.start)
+
+    self.sortData()
 
     function dataHandle() {
       if (self.dataHandleTimer) {
@@ -313,6 +314,9 @@ class Main extends BaseClass {
         }
       })
     }
+  }
+  sortData() {
+    this.data.sort((prev, cur) => (prev.start || -1) - (cur.start || -1))
   }
 }
 
