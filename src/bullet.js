@@ -169,14 +169,15 @@ class Bullet extends BaseClass {
   pauseMove(containerPos, isFullscreen = false) {
     this.logger && this.logger.info(`pauseMove #${this.options.txt || '[DOM Element]'}#`)
     // console.log('pauseMove')
-    let self = this
-    if (this.status === 'paused') {
+    const self = this
+    if (self.status === 'paused') {
       return
     }
     if (self.status !== 'forcedPause') {
       this.status = 'paused'
     }
-    clearTimeout(self.removeTimer)
+    self._clearAsyncTimer()
+
     if (!this.el) {
       return
     }
@@ -359,14 +360,10 @@ class Bullet extends BaseClass {
   remove() {
     this.logger && this.logger.info(`remove #${this.options.txt || '[DOM Element]'}#`)
     // console.log('remove')
-    let self = this
-    if (this.removeTimer) {
-      clearTimeout(this.removeTimer)
-    }
-    if (this.reqStartMoveId) {
-      cancelAnimationFrame(this.reqStartMoveId)
-      this.reqStartMoveId = null
-    }
+    const self = this
+
+    self._clearAsyncTimer()
+
     if (self.el && self.el.parentNode) {
       this.willChanges = []
       this.willChange()
@@ -380,6 +377,21 @@ class Bullet extends BaseClass {
       })
     }
   }
+
+  /**
+   * @private
+   */
+  _clearAsyncTimer() {
+    if (this.removeTimer) {
+      clearTimeout(this.removeTimer)
+      this.removeTimer = null
+    }
+    if (this.reqStartMoveId) {
+      cancelAnimationFrame(this.reqStartMoveId)
+      this.reqStartMoveId = null
+    }
+  }
+
   setFontSize(size) {
     if (this.el) {
       this.el.style['fontSize'] = size
