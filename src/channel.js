@@ -17,7 +17,7 @@ class Channel extends BaseClass {
     self.danmu = danmu
     self.reset(true)
     self.direction = danmu.direction
-    self._updatePos()
+    self.updatePos()
 
     attachEventListener(
       this.danmu,
@@ -44,8 +44,8 @@ class Channel extends BaseClass {
       'destroy'
     )
   }
-  _updatePos() {
-    const pos = this.danmu.container.getBoundingClientRect()
+  updatePos() {
+    const pos = this.container.getBoundingClientRect()
 
     this.containerPos = pos
     this.containerWidth = pos.width
@@ -65,6 +65,10 @@ class Channel extends BaseClass {
       delete this[k]
     }
   }
+
+  /**
+   * @param {import('./bullet').Bullet} bullet 
+   */
   addBullet(bullet) {
     // this.logger && this.logger.info(`addBullet ${bullet.options.txt || '[DOM Element]'}`)
     let self = this
@@ -428,8 +432,8 @@ class Channel extends BaseClass {
       const { container, config, bulletBtn } = self.danmu
       let channelCount
 
+      self.updatePos()
       self._cancelResizeTimer()
-      self._updatePos()
 
       if (bulletBtn.main.data) {
         bulletBtn.main.data.forEach((item) => {
@@ -505,13 +509,13 @@ class Channel extends BaseClass {
             self.channels[i].queue[key].forEach((item) => {
               if (item.el) {
                 channels[i].queue[key].push(item)
-                if (!item.resized) {
-                  item.pauseMove(self.containerPos, isFullscreen)
-                  if (item.danmu.bulletBtn.main.status !== 'paused') {
-                    item.startMove(self.containerPos, false, sync)
-                  }
-                  item.resized = true
-                }
+                // if (!item.resized) {
+                //   item.pauseMove(isFullscreen)
+                //   if (item.danmu.bulletBtn.main.status !== 'paused') {
+                //     item.startMove(false, sync)
+                //   }
+                //   item.resized = true
+                // }
               }
             })
           })
@@ -527,13 +531,13 @@ class Channel extends BaseClass {
                 }
                 item.topInit()
               }
-              if (!item.resized) {
-                item.pauseMove(self.containerPos, isFullscreen)
-                if (item.danmu.bulletBtn.main.status !== 'paused') {
-                  item.startMove(self.containerPos, false, sync)
-                }
-                item.resized = true
-              }
+            //   if (!item.resized) {
+            //     item.pauseMove(isFullscreen)
+            //     if (item.danmu.bulletBtn.main.status !== 'paused') {
+            //       item.startMove(false, sync)
+            //     }
+            //     item.resized = true
+            //   }
             }
           })
         }
@@ -541,7 +545,6 @@ class Channel extends BaseClass {
           // eslint-disable-next-line no-extra-semi
           ;['scroll', 'top', 'bottom'].forEach((key) => {
             channels[i].queue[key].forEach((item) => {
-              // console.log('resized 重置:' + item)
               item.resized = false
             })
           })
@@ -589,13 +592,13 @@ class Channel extends BaseClass {
                       item.topInit()
                     }
                   }
-                  item.pauseMove(self.containerPos, isFullscreen)
-                  if (item.danmu.bulletBtn.main.status !== 'paused') {
-                    item.startMove(self.containerPos, false, sync)
-                  }
-                  if (!item.resized) {
-                    item.resized = true
-                  }
+                //   item.pauseMove(isFullscreen)
+                //   if (item.danmu.bulletBtn.main.status !== 'paused') {
+                //     item.startMove(false, sync)
+                //   }
+                //   if (!item.resized) {
+                //     item.resized = true
+                //   }
                 }
                 self.channels[num].queue[key].splice(index, 1)
               })
@@ -605,7 +608,6 @@ class Channel extends BaseClass {
         // for (let i = channels.length; i < self.channels.length; i++) {
         //   ['scroll', 'top', 'bottom'].forEach(key => {
         //     self.channels[i].queue[key].forEach(item => {
-        //       item.pauseMove(self.containerPos)
         //       item.remove()
         //     })
         //   })
@@ -614,12 +616,12 @@ class Channel extends BaseClass {
           // eslint-disable-next-line no-extra-semi
           ;['scroll', 'top', 'bottom'].forEach((key) => {
             channels[i].queue[key].forEach((item) => {
-              // console.log('resized 重置:' + item)
               item.resized = false
             })
           })
         }
         self.channels = channels
+        
         if (self.direction === 'b2t') {
           self.channelWidth = fontSize
         } else {
@@ -657,7 +659,6 @@ class Channel extends BaseClass {
     // bullet on waiting room
     if (bulletBtn && bulletBtn.main) {
       bulletBtn.main.queue.forEach((item) => {
-        item.pauseMove(self.containerPos)
         item.remove()
       })
     }
@@ -667,7 +668,6 @@ class Channel extends BaseClass {
       ;['scroll', 'top', 'bottom'].forEach((key) => {
         for (let i = 0; i < self.channels.length; i++) {
           self.channels[i].queue[key].forEach((item) => {
-            item.pauseMove(self.containerPos)
             item.remove()
           })
         }

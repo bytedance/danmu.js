@@ -50,6 +50,9 @@ export class DanmuJs extends BaseClass {
       }
     })
 
+    /**
+     * @type {HTMLElement}
+     */
     self.container = config.container && config.container.nodeType === 1 ? config.container : null
     if (!self.container) {
       // eslint-disable-next-line quotes
@@ -85,6 +88,10 @@ export class DanmuJs extends BaseClass {
       comments: main.data,
       bullets: main.queue
     }
+  }
+
+  get containerPos() {
+    return this.main.channel.containerPos
   }
 
   addResizeObserver() {
@@ -139,7 +146,6 @@ export class DanmuJs extends BaseClass {
     }
     if (comment && comment.id && comment.duration && (comment.el || comment.txt)) {
       comment.duration = comment.duration ? comment.duration : 5000
-      // console.log(comment.style)
       if (!comment.style) {
         comment.style = {
           opacity: undefined,
@@ -168,7 +174,6 @@ export class DanmuJs extends BaseClass {
 
   setCommentID(oldID, newID) {
     this.logger && this.logger.info(`setCommentID: oldID ${oldID} newID ${newID}`)
-    let containerPos_ = this.container.getBoundingClientRect()
     if (oldID && newID) {
       this.main.data.some((data) => {
         if (data.id === oldID) {
@@ -181,8 +186,8 @@ export class DanmuJs extends BaseClass {
       this.main.queue.some((item) => {
         if (item.id === oldID) {
           item.id = newID
-          item.pauseMove(containerPos_)
-          this.main.status !== 'paused' && item.startMove(containerPos_)
+          item.pauseMove()
+          this.main.status !== 'paused' && item.startMove()
           return true
         } else {
           return false
@@ -193,7 +198,7 @@ export class DanmuJs extends BaseClass {
 
   setCommentDuration(id, duration) {
     this.logger && this.logger.info(`setCommentDuration: id ${id} duration ${duration}`)
-    let containerPos_ = this.container.getBoundingClientRect()
+
     if (id && duration) {
       duration = duration ? duration : 5000
       this.main.data.some((data) => {
@@ -207,8 +212,8 @@ export class DanmuJs extends BaseClass {
       this.main.queue.some((item) => {
         if (item.id === id) {
           item.duration = duration
-          item.pauseMove(containerPos_)
-          this.main.status !== 'paused' && item.startMove(containerPos_)
+          item.pauseMove()
+          this.main.status !== 'paused' && item.startMove()
           return true
         } else {
           return false
@@ -219,7 +224,6 @@ export class DanmuJs extends BaseClass {
 
   setCommentLike(id, like) {
     this.logger && this.logger.info(`setCommentLike: id ${id} like ${like}`)
-    let containerPos_ = this.container.getBoundingClientRect()
     if (id && like) {
       this.main.data.some((data) => {
         if (data.id === id) {
@@ -231,10 +235,10 @@ export class DanmuJs extends BaseClass {
       })
       this.main.queue.some((item) => {
         if (item.id === id) {
-          item.pauseMove(containerPos_)
+          item.pauseMove()
           item.setLikeDom(like.el, like.style)
           if (item.danmu.main.status !== 'paused') {
-            item.startMove(containerPos_)
+            item.startMove()
           }
           return true
         } else {
@@ -258,11 +262,10 @@ export class DanmuJs extends BaseClass {
         return
       }
 
-      const pos = self.container.getBoundingClientRect()
       main.queue.some((item) => {
         if (item.id === id) {
           if (main.status !== 'paused') {
-            item.startMove(pos, true)
+            item.startMove(true)
           } else {
             item.status = 'paused'
           }
@@ -299,14 +302,13 @@ export class DanmuJs extends BaseClass {
 
     if (id) {
       const self = this
-      const pos = self.container.getBoundingClientRect()
 
       self._freezeCtrl(id)
 
       self.main.queue.some((item) => {
         if (item.id === id) {
           item.status = 'forcedPause'
-          item.pauseMove(pos)
+          item.pauseMove()
           if (item.el && item.el.style) {
             styleUtil(item.el, 'zIndex', 10)
           }
@@ -416,7 +418,6 @@ export class DanmuJs extends BaseClass {
 
   setAllDuration(mode = 'scroll', duration, force = true) {
     this.logger && this.logger.info(`setAllDuration: mode ${mode} duration ${duration} force ${force}`)
-    let containerPos_ = this.container.getBoundingClientRect()
     if (duration) {
       duration = duration ? duration : 5000
       if (force) {
@@ -430,9 +431,9 @@ export class DanmuJs extends BaseClass {
       this.main.queue.forEach((item) => {
         if (mode === item.mode) {
           item.duration = duration
-          item.pauseMove(containerPos_)
+          item.pauseMove()
           if (this.main.status !== 'paused') {
-            item.startMove(containerPos_)
+            item.startMove()
           }
         }
       })

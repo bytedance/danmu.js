@@ -164,20 +164,19 @@ class Main extends BaseClass {
     this.logger && this.logger.info('play')
     this._status = 'playing'
     let channels = this.channel.channels
-    let containerPos = this.danmu.container.getBoundingClientRect()
     if (channels && channels.length > 0) {
       // eslint-disable-next-line no-extra-semi
       ;['scroll', 'top', 'bottom'].forEach((key) => {
         // for (let i = 0; i < channels.length; i++) {
         //   channels[i].queue[key].forEach(item => {
         //     if(!item.resized) {
-        //       item.startMove(containerPos)
+        //       item.startMove()
         //       item.resized = true
         //     }
         //   })
         // }
         this.queue.forEach((item) => {
-          item.startMove(containerPos)
+          item.startMove()
           item.resized = true
         })
         for (let i = 0; i < channels.length; i++) {
@@ -197,29 +196,28 @@ class Main extends BaseClass {
     this.logger && this.logger.info('pause')
     this._status = 'paused'
     let channels = this.channel.channels
-    let containerPos = this.danmu.container.getBoundingClientRect()
     if (channels && channels.length > 0) {
       // ['scroll', 'top', 'bottom'].forEach( key => {
       //   for (let i = 0; i < channels.length; i++) {
       //     channels[i].queue[key].forEach(item => {
-      //       item.pauseMove(containerPos)
+      //       item.pauseMove()
       //     })
       //   }
       // })
       this.queue.forEach((item) => {
-        item.pauseMove(containerPos)
+        item.pauseMove()
       })
     }
   }
   dataHandle() {
-    let self = this
+    const self = this
     if (this._status === 'paused' || this._status === 'closed') {
       return
     }
     if (self.queue.length) {
       self.queue.forEach((item) => {
         if (item.status === 'waiting') {
-          item.startMove(self.channel.containerPos)
+          item.startMove()
         }
       })
     }
@@ -267,6 +265,9 @@ class Main extends BaseClass {
     }
 
     if (list.length > 0) {
+      // 提前更新轨道位置信息, 减少Bullet频繁读取容器dom信息
+      channel.updatePos()
+
       list.forEach((item) => {
         if (self.forceDuration && self.forceDuration != item.duration) {
           item.duration = self.forceDuration
