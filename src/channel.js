@@ -675,7 +675,7 @@ class Channel extends BaseClass {
     }
     if (bulletBtn && bulletBtn.main && bulletBtn.main.data) {
       bulletBtn.main.data.forEach((item) => {
-        item._attached = false
+        item.attached_ = false
       })
     }
 

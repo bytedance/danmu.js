@@ -364,7 +364,7 @@ export class DanmuJs extends BaseClass {
 
       for (let i = 0, comment; i < deleteCount; i++) {
         comment = main.data[i]
-        if (comment.prior && !comment._attached) {
+        if (comment.prior && !comment.attached_) {
           priorComments.push(main.data[i])
         }
       }
@@ -375,7 +375,7 @@ export class DanmuJs extends BaseClass {
       if (timePoint > 0) {
         for (let i = 0, comment; i < main.data.length; i++) {
           comment = main.data[i]
-          if (comment.prior && !comment._attached) {
+          if (comment.prior && !comment.attached_) {
             priorComments.push(main.data[i])
           }
 

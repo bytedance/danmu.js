@@ -11,7 +11,7 @@ import { attachEventListener } from './utils/util'
  *  prior: boolean
  *  txt: string
  *  mode: 'scroll' | 'top' | 'bottom'
- *  _attached: boolean // 内部属性，标记弹幕是否已经被入轨
+ *  attached_: boolean // 内部属性，标记弹幕是否已经被入轨
  * }} CommentData
  */
 
@@ -95,7 +95,7 @@ class Main extends BaseClass {
     })
     self.data.some((item) => {
       if (item.id === rdata.bullet.id) {
-        item._attached = false
+        item.attached_ = false
         return true
       } else {
         return false
@@ -274,9 +274,9 @@ class Main extends BaseClass {
         }
         bullet = new Bullet(danmu, item)
         if (bullet && !bullet.bulletCreateFail) {
-          if (!item._attached) {
+          if (!item.attached_) {
             bullet.attach()
-            item._attached = true
+            item.attached_ = true
             result = channel.addBullet(bullet)
             if (result.result) {
               self.queue.push(bullet)
@@ -288,7 +288,7 @@ class Main extends BaseClass {
                 delete bullet[k]
               }
               bullet = null
-              item._attached = false
+              item.attached_ = false
               if (item.noDiscard) {
                 if (item.prior) {
                   self.data.unshift(item)
@@ -303,7 +303,7 @@ class Main extends BaseClass {
               delete bullet[k]
             }
             bullet = null
-            item._attached = false
+            item.attached_ = false
             if (item.noDiscard) {
               if (item.prior) {
                 self.data.unshift(item)
