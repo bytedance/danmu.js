@@ -4,7 +4,7 @@ import BaseClass from './baseClass'
 import Control from './control'
 import RecyclableDomList from './domRecycle'
 import { addObserver, unObserver } from './resizeObserver'
-import { addClass, deepCopy, styleUtil } from './utils/util'
+import { addClass, deepCopy, isNumber, styleUtil } from './utils/util'
 
 export class DanmuJs extends BaseClass {
   constructor(options) {
@@ -416,6 +416,10 @@ export class DanmuJs extends BaseClass {
     })
   }
 
+  /**
+   * 设置所有弹幕播放时长
+   * @param {number} duration
+   */
   setAllDuration(mode = 'scroll', duration, force = true) {
     this.logger && this.logger.info(`setAllDuration: mode ${mode} duration ${duration} force ${force}`)
     if (duration) {
@@ -431,6 +435,25 @@ export class DanmuJs extends BaseClass {
       this.main.queue.forEach((item) => {
         if (mode === item.mode) {
           item.duration = duration
+          item.pauseMove()
+          if (this.main.status !== 'paused') {
+            item.startMove()
+          }
+        }
+      })
+    }
+  }
+
+  /**
+   * 设置弹幕播放速率，在弹幕播放速度上乘以一个系数，控制速度的变化
+   * @param {number} val
+   */
+  setPlayRate(mode = 'scroll', val) {
+    this.logger && this.logger.info(`setPlayRate: ${val}`)
+    if (isNumber(val) && val > 0) {
+      this.main.playRate = val
+      this.main.queue.forEach((item) => {
+        if (mode === item.mode) {
           item.pauseMove()
           if (this.main.status !== 'paused') {
             item.startMove()

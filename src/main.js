@@ -46,6 +46,12 @@ class Main extends BaseClass {
     this.timer = null // 弹幕动画定时器句柄
 
     /**
+     * 弹幕播放速率
+     * @type {number}
+     */
+    this.playRate = 1
+
+    /**
      * @type {'normal'|'stop'}
      */
     this.retryStatus = 'normal'

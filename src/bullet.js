@@ -22,7 +22,6 @@ export class Bullet extends BaseClass {
     this.danmu = danmu
     this.options = options
     this.duration = options.duration
-    this._moveV = options.moveV
     this.id = options.id
     this.container = danmu.container
     this.start = options.start
@@ -94,11 +93,19 @@ export class Bullet extends BaseClass {
     let v = self._moveV
 
     if (!v) {
-      if (self.elPos) {
-        const ctPos = self.danmu.containerPos
-        const distance = self.direction === 'b2t' ? ctPos.height + self.height : ctPos.width + self.width
+      if (self.options.moveV) {
+        v = self.options.moveV
+      } else {
+        if (self.elPos) {
+          const ctPos = self.danmu.containerPos
+          const distance = self.direction === 'b2t' ? ctPos.height + self.height : ctPos.width + self.width
 
-        v = (distance / self.duration) * 1000
+          v = (distance / self.duration) * 1000
+        }
+      }
+
+      if (v) {
+        v *= self.danmu.main.playRate
 
         // 固化速度，否则resize时外部获取当前弹幕时会重新计算速度，导致布局异常（重叠），同时提高性能。
         self._moveV = v
@@ -340,11 +347,10 @@ export class Bullet extends BaseClass {
         const bulletPos = self.el.getBoundingClientRect()
         const leftDistance = bulletPos.right - ctPos.left
         const leftDuration = leftDistance / self.moveV
-        const v = leftDistance / leftDuration
-
+        // const v = leftDistance / leftDuration * self.danmu.main.playRate
         // self.el.style.left = bulletPos.left + 'px'
 
-        if (bulletPos.right > ctPos.left && v > self.moveV - 1 && v < self.moveV + 1) {
+        if (bulletPos.right > ctPos.left) {
           styleUtil(self.el, 'transition', `transform ${leftDuration}s linear 0s`)
           styleUtil(self.el, 'transform', `translateX(-${leftDistance}px) translateY(0px) translateZ(0px)`)
 
