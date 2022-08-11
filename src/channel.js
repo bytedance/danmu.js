@@ -17,6 +17,7 @@ class Channel extends BaseClass {
     self.danmu = danmu
     self.reset(true)
     self.direction = danmu.direction
+    self.channels = []
     self.updatePos()
 
     attachEventListener(
@@ -39,7 +40,7 @@ class Channel extends BaseClass {
       this.danmu,
       'channel_resize',
       () => {
-        self.resize(true)
+        self.resize()
       },
       'destroy'
     )
@@ -57,7 +58,7 @@ class Channel extends BaseClass {
   }
   destroy() {
     this.logger && this.logger.info('destroy')
-    this.channels = []
+    this.channels.splice(0, this.channels.length)
     this._cancelResizeTimer()
 
     // clear prop at end
@@ -67,7 +68,11 @@ class Channel extends BaseClass {
   }
 
   /**
-   * @param {import('./bullet').Bullet} bullet 
+   * Feature:
+   * 1. 长弹幕速度较快，更容易出现追击问题，需要调整Offset
+   * 2. 需要按实时性RealTime展示的弹幕，则不能再用duration来计算速度，这样会产生追击重叠问题
+   *
+   * @param {import('./bullet').Bullet} bullet
    */
   addBullet(bullet) {
     // this.logger && this.logger.info(`addBullet ${bullet.options.txt || '[DOM Element]'}`)
@@ -121,7 +126,7 @@ class Channel extends BaseClass {
             if (curBullet) {
               let curBulletPos = curBullet.el.getBoundingClientRect()
 
-              // 检测最后入轨弹幕是否已经完全飘入容器区域
+              // 1. 检测最后入轨弹幕是否已经完全飘入容器区域
               if (self.direction === 'b2t') {
                 if (curBulletPos.bottom >= self.containerPos.bottom) {
                   flag = false
@@ -136,33 +141,39 @@ class Channel extends BaseClass {
                 }
               }
 
-              // Vcur * t + Scur已走 - Widthcur = Vnew * t
-              // t = (Scur已走 - Widthcur) / (Vnew - Vcur)
-              // Vnew * t < Widthplayer
-              let curS, curV, curT, newS, newV, newT
+              let curS,
+                curV = curBullet.moveV,
+                curT,
+                newV = bullet.moveV,
+                catchS
               if (self.direction === 'b2t') {
-                curS = curBulletPos.top - self.containerTop + curBulletPos.height
-                curV = (self.containerHeight + curBulletPos.height) / curBullet.duration
+                curS = curBulletPos.bottom - self.containerTop
                 curT = curS / curV
 
-                newS = self.containerHeight
-                newV = (self.containerHeight + bullet.height) / bullet.duration
+                catchS = self.containerHeight + bullet.random - curS
               } else {
-                curS = curBulletPos.left - self.containerPos.left + curBulletPos.width
-                curV = (self.containerPos.width + curBulletPos.width) / curBullet.duration
+                curS = curBulletPos.right - self.containerLeft
                 curT = curS / curV
 
-                newS = self.containerPos.width
-                newV = (self.containerPos.width + bullet.width) / bullet.duration
+                catchS = self.containerWidth + bullet.random - curS
               }
-              newT = newS / newV
-              if (!danmu.config.bOffset) {
-                danmu.config.bOffset = 0
-              }
-              if (curV < newV && curT + danmu.config.bOffset > newT) {
-                flag = false
-                channel.operating.scroll = false
-                break
+
+              // 2. 当前轨道内，新弹幕速度大于最后一个入轨弹幕速度，考虑碰撞问题
+              if (newV > curV) {
+                let catchT = catchS / (newV - curV)
+
+                if (!danmu.config.bOffset) {
+                  danmu.config.bOffset = 0
+                }
+
+                // 3. 相遇时间小于最后弹幕飘出时间
+                if (curT + danmu.config.bOffset >= catchT) {
+                  // 根据前一个弹幕剩余飘出时间，计算新弹幕需要增加的offset
+                  const offset = curT * newV - self.containerPos.width
+                  if (offset > 0) {
+                    bullet.updateOffset(offset + (5 + Math.ceil(10 * Math.random())) /* 防止最后过于接近 */)
+                  }
+                }
               }
             }
             channel.operating.scroll = false
@@ -416,11 +427,11 @@ class Channel extends BaseClass {
     }
   }
 
-  resizeSync(isFullscreen = false) {
-    this.resize(isFullscreen, true)
+  resizeSync() {
+    this.resize(true)
   }
 
-  resize(isFullscreen = false, sync = false) {
+  resize(sync = false) {
     this.logger && this.logger.info('resize')
     let self = this
     if (self.resizing) {
@@ -531,13 +542,13 @@ class Channel extends BaseClass {
                 }
                 item.topInit()
               }
-            //   if (!item.resized) {
-            //     item.pauseMove(isFullscreen)
-            //     if (item.danmu.bulletBtn.main.status !== 'paused') {
-            //       item.startMove(false, sync)
-            //     }
-            //     item.resized = true
-            //   }
+              //   if (!item.resized) {
+              //     item.pauseMove(isFullscreen)
+              //     if (item.danmu.bulletBtn.main.status !== 'paused') {
+              //       item.startMove(false, sync)
+              //     }
+              //     item.resized = true
+              //   }
             }
           })
         }
@@ -592,13 +603,13 @@ class Channel extends BaseClass {
                       item.topInit()
                     }
                   }
-                //   item.pauseMove(isFullscreen)
-                //   if (item.danmu.bulletBtn.main.status !== 'paused') {
-                //     item.startMove(false, sync)
-                //   }
-                //   if (!item.resized) {
-                //     item.resized = true
-                //   }
+                  //   item.pauseMove(isFullscreen)
+                  //   if (item.danmu.bulletBtn.main.status !== 'paused') {
+                  //     item.startMove(false, sync)
+                  //   }
+                  //   if (!item.resized) {
+                  //     item.resized = true
+                  //   }
                 }
                 self.channels[num].queue[key].splice(index, 1)
               })
@@ -621,7 +632,7 @@ class Channel extends BaseClass {
           })
         }
         self.channels = channels
-        
+
         if (self.direction === 'b2t') {
           self.channelWidth = fontSize
         } else {

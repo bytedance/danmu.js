@@ -477,7 +477,7 @@ export class DanmuJs extends BaseClass {
       this.config.channelSize = channelSize
 
       if (options.reflow) {
-        this.main.channel.resizeSync(true)
+        this.main.channel.resizeSync()
       }
     }
   }
@@ -487,7 +487,7 @@ export class DanmuJs extends BaseClass {
     this.config.area = area
 
     if (area.reflow !== false) {
-      this.main.channel.resizeSync(true)
+      this.main.channel.resizeSync()
     }
   }
 

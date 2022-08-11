@@ -3,6 +3,9 @@ import Bullet from './bullet'
 import Channel from './channel'
 import { attachEventListener } from './utils/util'
 
+// 单次尝试入轨弹幕数量越多，长任务及CPU耗时越多
+const MAX_TRY_COUNT = 2
+
 /**
  * @typedef {{
  *  id: string
@@ -72,9 +75,24 @@ class Main extends BaseClass {
     return this._status
   }
 
+  /**
+   * @private
+   */
+  _cancelDataHandleTimer() {
+    if (this.handleId) {
+      clearTimeout(this.handleId)
+      this.handleId = null
+    }
+
+    if (this.handleTimer) {
+      clearTimeout(this.handleTimer)
+      this.handleTimer = null
+    }
+  }
+
   destroy() {
     this.logger && this.logger.info('destroy')
-    clearTimeout(this.dataHandleTimer)
+    this._cancelDataHandleTimer()
     this.channel.destroy()
     this.data = []
     for (let k in this) {
@@ -110,11 +128,8 @@ class Main extends BaseClass {
     self.sortData()
 
     function dataHandle() {
-      if (self.dataHandleTimer) {
-        clearTimeout(self.dataHandleTimer)
-        self.dataHandleTimer = null
-      }
       if (self._status === 'closed' && self.retryStatus === 'stop') {
+        self._cancelDataHandleTimer()
         return
       }
       if (self._status === 'playing') {
@@ -122,9 +137,12 @@ class Main extends BaseClass {
         self.dataHandle()
       }
       if (self.retryStatus !== 'stop' || self._status === 'paused') {
-        self.dataHandleTimer = setTimeout(function () {
-          dataHandle()
-        }, self.interval - 1000)
+        self.handleTimer = setTimeout(() => {
+          // 在下一帧开始时进行绘制，最大程度减少卡顿
+          self.handleId = requestAnimationFrame(() => {
+            dataHandle()
+          })
+        }, 250)
       }
     }
     dataHandle()
@@ -250,6 +268,7 @@ class Main extends BaseClass {
           }
         }
         return (
+          !item.attached_ &&
           self.danmu.hideArr.indexOf(item.mode) < 0 &&
           (!item.color || self.danmu.hideArr.indexOf('color') < 0) &&
           item.start - interval <= currentTime &&
@@ -268,35 +287,25 @@ class Main extends BaseClass {
       // 提前更新轨道位置信息, 减少Bullet频繁读取容器dom信息
       channel.updatePos()
 
-      list.forEach((item) => {
+      let tryCount = MAX_TRY_COUNT
+
+      ListLoop: for (let i = 0, item; i < list.length; i++) {
+        item = list[i]
         if (self.forceDuration && self.forceDuration != item.duration) {
           item.duration = self.forceDuration
         }
         bullet = new Bullet(danmu, item)
         if (bullet && !bullet.bulletCreateFail) {
-          if (!item.attached_) {
-            bullet.attach()
-            item.attached_ = true
-            result = channel.addBullet(bullet)
-            if (result.result) {
-              self.queue.push(bullet)
-              self.nums++
-              bullet.topInit()
-            } else {
-              bullet.detach()
-              for (let k in bullet) {
-                delete bullet[k]
-              }
-              bullet = null
-              item.attached_ = false
-              if (item.noDiscard) {
-                if (item.prior) {
-                  self.data.unshift(item)
-                } else {
-                  self.data.push(item)
-                }
-              }
-            }
+          bullet.attach()
+          item.attached_ = true
+          result = channel.addBullet(bullet)
+
+          if (result.result) {
+            self.queue.push(bullet)
+            self.nums++
+            bullet.topInit()
+
+            tryCount = MAX_TRY_COUNT
           } else {
             bullet.detach()
             for (let k in bullet) {
@@ -311,9 +320,21 @@ class Main extends BaseClass {
                 self.data.push(item)
               }
             }
+
+            if (tryCount === 0) {
+              break ListLoop
+            } else {
+              tryCount--
+            }
+          }
+        } else {
+          if (tryCount === 0) {
+            break ListLoop
+          } else {
+            tryCount--
           }
         }
-      })
+      }
     }
   }
   sortData() {
