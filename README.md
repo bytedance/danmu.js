@@ -112,7 +112,8 @@ player.danmu.sendComment({
   }
 })
 player.danmu.setCommentDuration(id, duration) //按照id改变某一个弹幕的持续显示时间
-player.danmu.setAllDuration(mode, duration) //改变所有已加入队列弹幕的持续显示时间
+player.danmu.setAllDuration(mode, duration) // 改变所有已加入队列弹幕的持续显示时间。请不要在使用setPlayRate的同时使用该API
+player.danmu.setPlayRate(mode, 1) // 设置弹幕播放速率，在弹幕播放速度上乘以一个系数，控制速度的变化。请不要在使用setAllDuration的同时使用该API
 player.danmu.setCommentID(oldID, newID) //改变某一个弹幕的id
 player.danmu.hide(mode) //屏蔽某一类弹幕(参数可选值 scroll | top | bottom | color)
 player.danmu.show(mode) //显示某一类弹幕(参数可选值 scroll | top | bottom | color)
