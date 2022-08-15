@@ -4,7 +4,7 @@ import BaseClass from './baseClass'
 import Control from './control'
 import RecyclableDomList from './domRecycle'
 import { addObserver, unObserver } from './resizeObserver'
-import { addClass, deepCopy, styleUtil } from './utils/util'
+import { addClass, deepCopy, isNumber, styleUtil } from './utils/util'
 
 export class DanmuJs extends BaseClass {
   constructor(options) {
@@ -16,7 +16,7 @@ export class DanmuJs extends BaseClass {
     self.logger && self.logger.info(`danmu.js version: ${version}`)
 
     // configure
-    self.config = {
+    const config = (self.config = {
       overlap: false,
       area: {
         start: 0,
@@ -26,9 +26,13 @@ export class DanmuJs extends BaseClass {
       live: false,
       comments: [],
       direction: 'r2l',
-      needResizeObserver: false
-    }
-    deepCopy(self.config, options)
+      needResizeObserver: false,
+      dropStaleComments: false,
+      channelSize: undefined,
+      maxCommentsLength: undefined,
+      interval: 2000
+    })
+    deepCopy(config, options)
 
     // Add event subscription handler
     EventEmitter(self)
@@ -36,34 +40,58 @@ export class DanmuJs extends BaseClass {
     self.hideArr = []
     self.domObj = new RecyclableDomList()
 
-    self.config.comments.forEach((comment) => {
+    // freezed comment
+    self.freezeId = null
+
+    config.comments.forEach((comment) => {
       comment.duration = comment.duration ? comment.duration : 5000
       if (!comment.mode) {
         comment.mode = 'scroll'
       }
     })
-    if (self.config.container && self.config.container.nodeType === 1) {
-      self.container = self.config.container
-    } else {
+
+    /**
+     * @type {HTMLElement}
+     */
+    self.container = config.container && config.container.nodeType === 1 ? config.container : null
+    if (!self.container) {
       // eslint-disable-next-line quotes
       self.emit('error', "container id can't be empty")
       return false
     }
-    if (self.config.containerStyle) {
-      let style = self.config.containerStyle
+    if (config.containerStyle) {
+      let style = config.containerStyle
       Object.keys(style).forEach(function (key) {
         self.container.style[key] = style[key]
       })
     }
-    self.live = self.config.live
-    self.player = self.config.player
-    self.direction = self.config.direction
+    self.live = config.live
+    self.player = config.player
+    self.direction = config.direction
     addClass(self.container, 'danmu')
     self.bulletBtn = new Control(self)
+    self.main = self.bulletBtn.main
     self.isReady = true
     self.emit('ready')
     this.logger && this.logger.info('ready')
     this.addResizeObserver()
+  }
+
+  get status() {
+    return this.main.status
+  }
+
+  get state() {
+    const main = this.main
+    return {
+      status: main.status,
+      comments: main.data,
+      bullets: main.queue
+    }
+  }
+
+  get containerPos() {
+    return this.main.channel.containerPos
   }
 
   addResizeObserver() {
@@ -76,27 +104,27 @@ export class DanmuJs extends BaseClass {
 
   start() {
     this.logger && this.logger.info('start')
-    this.bulletBtn.main.start()
+    this.main.start()
   }
 
   pause() {
     this.logger && this.logger.info('pause')
-    this.bulletBtn.main.pause()
+    this.main.pause()
   }
 
   play() {
     this.logger && this.logger.info('play')
-    this.bulletBtn.main.play()
+    this.main.play()
   }
 
   stop() {
     this.logger && this.logger.info('stop')
-    this.bulletBtn.main.stop()
+    this.main.stop()
   }
 
   clear() {
     this.logger && this.logger.info('clear')
-    this.bulletBtn.main.clear()
+    this.main.clear()
   }
 
   destroy() {
@@ -118,7 +146,6 @@ export class DanmuJs extends BaseClass {
     }
     if (comment && comment.id && comment.duration && (comment.el || comment.txt)) {
       comment.duration = comment.duration ? comment.duration : 5000
-      // console.log(comment.style)
       if (!comment.style) {
         comment.style = {
           opacity: undefined,
@@ -134,22 +161,21 @@ export class DanmuJs extends BaseClass {
         }
       }
       if (comment.prior || comment.realTime) {
-        this.bulletBtn.main.data.unshift(comment)
+        this.main.data.unshift(comment)
         if (comment.realTime) {
-          this.bulletBtn.main.readData()
-          this.bulletBtn.main.dataHandle()
+          this.main.readData()
+          this.main.dataHandle()
         }
       } else {
-        this.bulletBtn.main.data.push(comment)
+        this.main.data.push(comment)
       }
     }
   }
 
   setCommentID(oldID, newID) {
     this.logger && this.logger.info(`setCommentID: oldID ${oldID} newID ${newID}`)
-    let containerPos_ = this.container.getBoundingClientRect()
     if (oldID && newID) {
-      this.bulletBtn.main.data.some((data) => {
+      this.main.data.some((data) => {
         if (data.id === oldID) {
           data.id = newID
           return true
@@ -157,11 +183,11 @@ export class DanmuJs extends BaseClass {
           return false
         }
       })
-      this.bulletBtn.main.queue.some((item) => {
+      this.main.queue.some((item) => {
         if (item.id === oldID) {
           item.id = newID
-          item.pauseMove(containerPos_)
-          this.bulletBtn.main.status !== 'paused' && item.startMove(containerPos_)
+          item.pauseMove()
+          this.main.status !== 'paused' && item.startMove()
           return true
         } else {
           return false
@@ -172,10 +198,10 @@ export class DanmuJs extends BaseClass {
 
   setCommentDuration(id, duration) {
     this.logger && this.logger.info(`setCommentDuration: id ${id} duration ${duration}`)
-    let containerPos_ = this.container.getBoundingClientRect()
+
     if (id && duration) {
       duration = duration ? duration : 5000
-      this.bulletBtn.main.data.some((data) => {
+      this.main.data.some((data) => {
         if (data.id === id) {
           data.duration = duration
           return true
@@ -183,11 +209,11 @@ export class DanmuJs extends BaseClass {
           return false
         }
       })
-      this.bulletBtn.main.queue.some((item) => {
+      this.main.queue.some((item) => {
         if (item.id === id) {
           item.duration = duration
-          item.pauseMove(containerPos_)
-          this.bulletBtn.main.status !== 'paused' && item.startMove(containerPos_)
+          item.pauseMove()
+          this.main.status !== 'paused' && item.startMove()
           return true
         } else {
           return false
@@ -198,9 +224,8 @@ export class DanmuJs extends BaseClass {
 
   setCommentLike(id, like) {
     this.logger && this.logger.info(`setCommentLike: id ${id} like ${like}`)
-    let containerPos_ = this.container.getBoundingClientRect()
     if (id && like) {
-      this.bulletBtn.main.data.some((data) => {
+      this.main.data.some((data) => {
         if (data.id === id) {
           data.like = like
           return true
@@ -208,12 +233,12 @@ export class DanmuJs extends BaseClass {
           return false
         }
       })
-      this.bulletBtn.main.queue.some((item) => {
+      this.main.queue.some((item) => {
         if (item.id === id) {
-          item.pauseMove(containerPos_)
+          item.pauseMove()
           item.setLikeDom(like.el, like.style)
-          if (item.danmu.bulletBtn.main.status !== 'paused') {
-            item.startMove(containerPos_)
+          if (item.danmu.main.status !== 'paused') {
+            item.startMove()
           }
           return true
         } else {
@@ -225,13 +250,22 @@ export class DanmuJs extends BaseClass {
 
   restartComment(id) {
     this.logger && this.logger.info(`restartComment: id ${id}`)
-    this.mouseControl = false
-    let pos = this.container.getBoundingClientRect()
+
     if (id) {
-      this.bulletBtn.main.queue.some((item) => {
+      const self = this
+      const main = self.main
+
+      self._releaseCtrl(id)
+
+      if (main.status === 'closed') {
+        // The main process has been stopped, there is no need to drive the barrage to run
+        return
+      }
+
+      main.queue.some((item) => {
         if (item.id === id) {
-          if (item.danmu.bulletBtn.main.status !== 'paused') {
-            item.startMove(pos, true)
+          if (main.status !== 'paused') {
+            item.startMove(true)
           } else {
             item.status = 'paused'
           }
@@ -243,15 +277,38 @@ export class DanmuJs extends BaseClass {
     }
   }
 
+  /**
+   * @private
+   */
+  _releaseCtrl(id) {
+    const self = this
+
+    if (self.freezeId && id == self.freezeId) {
+      self.mouseControl = false
+      self.freezeId = null
+    }
+  }
+
+  /**
+   * @private
+   */
+  _freezeCtrl(id) {
+    this.mouseControl = true
+    this.freezeId = id
+  }
+
   freezeComment(id) {
     this.logger && this.logger.info(`freezeComment: id ${id}`)
-    this.mouseControl = true
-    let pos = this.container.getBoundingClientRect()
+
     if (id) {
-      this.bulletBtn.main.queue.some((item) => {
+      const self = this
+
+      self._freezeCtrl(id)
+
+      self.main.queue.some((item) => {
         if (item.id === id) {
           item.status = 'forcedPause'
-          item.pauseMove(pos)
+          item.pauseMove()
           if (item.el && item.el.style) {
             styleUtil(item.el, 'zIndex', 10)
           }
@@ -265,46 +322,141 @@ export class DanmuJs extends BaseClass {
 
   removeComment(id) {
     this.logger && this.logger.info(`removeComment: id ${id}`)
-    if (!id) return
-    this.bulletBtn.main.queue.some((item) => {
-      if (item.id === id) {
-        item.remove()
-        return true
-      } else {
-        return false
-      }
-    })
-    this.bulletBtn.main.data = this.bulletBtn.main.data.filter((item) => {
-      return item.id !== id
-    })
-  }
 
-  updateComments(comments, isClear = true) {
-    if (isClear) {
-      this.bulletBtn.main.data = []
+    if (id) {
+      const self = this
+      self._releaseCtrl(id)
+
+      self.main.queue.some((item) => {
+        if (item.id === id) {
+          item.remove()
+          return true
+        } else {
+          return false
+        }
+      })
+      self.main.data = self.main.data.filter((item) => {
+        return item.id !== id
+      })
     }
-    this.bulletBtn.main.data = this.bulletBtn.main.data.concat(comments)
   }
 
+  /**
+   * @param {Array<import('./main').CommentData>} comments
+   * @param {boolean} isClear
+   */
+  updateComments(comments, isClear = true) {
+    const { config, main, player } = this
+    const priorComments = []
+    let deleteCount = 0
+
+    this.logger && this.logger.info(`updateComments: ${comments.length}, isClear ${isClear}`)
+
+    if (typeof isClear === 'boolean' && isClear) {
+      main.data = []
+    }
+    main.data = main.data.concat(comments)
+    main.sortData()
+
+    // Support data pool to control watermark automatically
+    if (typeof config.maxCommentsLength === 'number' && main.data.length > config.maxCommentsLength) {
+      deleteCount = main.data.length - config.maxCommentsLength
+
+      for (let i = 0, comment; i < deleteCount; i++) {
+        comment = main.data[i]
+        if (comment.prior && !comment.attached_) {
+          priorComments.push(main.data[i])
+        }
+      }
+    } else if (config.dropStaleComments && player && player.currentTime) {
+      const currentTime = Math.floor(player.currentTime * 1000),
+        timePoint = currentTime - config.interval
+
+      if (timePoint > 0) {
+        for (let i = 0, comment; i < main.data.length; i++) {
+          comment = main.data[i]
+          if (comment.prior && !comment.attached_) {
+            priorComments.push(main.data[i])
+          }
+
+          if (comment.start > timePoint) {
+            deleteCount = i
+            break
+          }
+        }
+      }
+
+      if (deleteCount > 0) {
+        main.data.splice(0, deleteCount)
+
+        // Keep high-priority comments data.
+        main.data = priorComments.concat(main.data)
+      }
+    }
+  }
+
+  willChange() {
+    const { container, main } = this
+    // optimize setOpacity
+    container.style.willChange = 'opacity'
+
+    // optimize setAllDuration/setFontSize
+    main.willChanges.push('contents')
+    main.queue.forEach((item) => {
+      item.willChange()
+    })
+  }
+
+  stopWillChange() {
+    this.container.style.willChange = ''
+
+    this.main.willChanges.splice(0) // empty
+    this.main.queue.forEach((item) => {
+      item.willChange()
+    })
+  }
+
+  /**
+   * 设置所有弹幕播放时长
+   * @param {number} duration
+   */
   setAllDuration(mode = 'scroll', duration, force = true) {
     this.logger && this.logger.info(`setAllDuration: mode ${mode} duration ${duration} force ${force}`)
-    let containerPos_ = this.container.getBoundingClientRect()
     if (duration) {
       duration = duration ? duration : 5000
       if (force) {
-        this.bulletBtn.main.forceDuration = duration
+        this.main.forceDuration = duration
       }
-      this.bulletBtn.main.data.forEach((data) => {
+      this.main.data.forEach((data) => {
         if (mode === data.mode) {
           data.duration = duration
         }
       })
-      this.bulletBtn.main.queue.forEach((item) => {
+      this.main.queue.forEach((item) => {
         if (mode === item.mode) {
           item.duration = duration
-          item.pauseMove(containerPos_)
-          if (item.danmu.bulletBtn.main.status !== 'paused') {
-            item.startMove(containerPos_)
+          item.pauseMove()
+          if (this.main.status !== 'paused') {
+            item.startMove()
+          }
+        }
+      })
+    }
+  }
+
+  /**
+   * 设置弹幕播放速率，在弹幕播放速度上乘以一个系数，控制速度的变化
+   * @param {number} val
+   */
+  setPlayRate(mode = 'scroll', val) {
+    this.logger && this.logger.info(`setPlayRate: ${val}`)
+    if (isNumber(val) && val > 0) {
+      this.main.playRate = val
+      this.main.queue.forEach((item) => {
+        if (mode === item.mode) {
+          item.pauseMove()
+          if (this.main.status !== 'paused') {
+            item.startMove()
           }
         }
       })
@@ -316,16 +468,22 @@ export class DanmuJs extends BaseClass {
     this.container.style.opacity = opacity
   }
 
-  setFontSize(size, channelSize) {
+  setFontSize(
+    size,
+    channelSize,
+    options = {
+      reflow: true
+    }
+  ) {
     this.logger && this.logger.info(`setFontSize: size ${size} channelSize ${channelSize}`)
     this.fontSize = `${size}px`
     if (size) {
-      this.bulletBtn.main.data.forEach((data) => {
+      this.main.data.forEach((data) => {
         if (data.style) {
           data.style.fontSize = this.fontSize
         }
       })
-      this.bulletBtn.main.queue.forEach((item) => {
+      this.main.queue.forEach((item) => {
         if (!item.options.style) {
           item.options.style = {}
         }
@@ -340,14 +498,20 @@ export class DanmuJs extends BaseClass {
     }
     if (channelSize) {
       this.config.channelSize = channelSize
-      this.bulletBtn.main.channel.resize(true)
+
+      if (options.reflow) {
+        this.main.channel.resizeSync()
+      }
     }
   }
 
   setArea(area) {
     this.logger && this.logger.info(`setArea: area ${area}`)
     this.config.area = area
-    this.bulletBtn.main.channel.resize(true)
+
+    if (area.reflow !== false) {
+      this.main.channel.resizeSync()
+    }
   }
 
   hide(mode = 'scroll') {
@@ -355,7 +519,7 @@ export class DanmuJs extends BaseClass {
     if (this.hideArr.indexOf(mode) < 0) {
       this.hideArr.push(mode)
     }
-    let arr = this.bulletBtn.main.queue.filter((item) => mode === item.mode || (mode === 'color' && item.color))
+    let arr = this.main.queue.filter((item) => mode === item.mode || (mode === 'color' && item.color))
     arr.forEach((item) => item.remove())
   }
 

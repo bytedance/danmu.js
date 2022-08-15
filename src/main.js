@@ -1,7 +1,22 @@
 import BaseClass from './baseClass'
 import Bullet from './bullet'
 import Channel from './channel'
-import { attachEventListener, formatTime } from './utils/util'
+import { attachEventListener } from './utils/util'
+
+// 单次尝试入轨弹幕数量越多，长任务及CPU耗时越多
+const MAX_TRY_COUNT = 2
+
+/**
+ * @typedef {{
+ *  id: string
+ *  start: number
+ *  duration: number
+ *  prior: boolean
+ *  txt: string
+ *  mode: 'scroll' | 'top' | 'bottom'
+ *  attached_: boolean // 内部属性，标记弹幕是否已经被入轨
+ * }} CommentData
+ */
 
 /**
  * [Main 弹幕主进程]
@@ -17,29 +32,73 @@ class Main extends BaseClass {
     this.danmu = danmu
     this.container = danmu.container
     this.channel = new Channel(danmu) // 弹幕轨道实例
+
+    /**
+     * @type {Array<CommentData>}
+     */
     this.data = [].concat(danmu.config.comments)
     this.playedData = []
+
+    /**
+     * @type {Array<Bullet>}
+     */
     this.queue = [] // 等待播放的弹幕队列
     this.timer = null // 弹幕动画定时器句柄
-    this.retryTimer = null // 弹幕更新重试定时器句柄
+
+    /**
+     * 弹幕播放速率
+     * @type {number}
+     */
+    this.playRate = 1
+
+    /**
+     * @type {'normal'|'stop'}
+     */
     this.retryStatus = 'normal'
-    this.interval = danmu.config.interval || 2000 // 弹幕队列缓存间隔
-    this.status = 'idle' // 当前弹幕正在闲置
+    this.interval = danmu.config.interval // 弹幕队列缓存间隔
+    /**
+     * @type {Array<string>}
+     */
+    this.willChanges = []
+    /**
+     * @type {'idle' | 'paused' | 'playing' | 'closed'}
+     */
+    this._status = 'idle' // 当前弹幕正在闲置
+
     attachEventListener(danmu, 'bullet_remove', this.updateQueue.bind(this), 'destroy')
-    let self = this
     attachEventListener(
-      this.danmu,
+      danmu,
       'changeDirection',
       (direction) => {
-        self.danmu.direction = direction
+        this.danmu.direction = direction
       },
       'destroy'
     )
     this.nums = 0
   }
+
+  get status() {
+    return this._status
+  }
+
+  /**
+   * @private
+   */
+  _cancelDataHandleTimer() {
+    if (this.handleId) {
+      clearTimeout(this.handleId)
+      this.handleId = null
+    }
+
+    if (this.handleTimer) {
+      clearTimeout(this.handleTimer)
+      this.handleTimer = null
+    }
+  }
+
   destroy() {
     this.logger && this.logger.info('destroy')
-    clearTimeout(this.dataHandleTimer)
+    this._cancelDataHandleTimer()
     this.channel.destroy()
     this.data = []
     for (let k in this) {
@@ -60,56 +119,58 @@ class Main extends BaseClass {
     })
     self.data.some((item) => {
       if (item.id === rdata.bullet.id) {
-        item.hasAttached = false
+        item.attached_ = false
         return true
       } else {
         return false
       }
     })
   }
-  init(bol, self) {
+  init() {
+    const self = this
     self.logger && self.logger.info('init')
-    if (!self) {
-      self = this
-    }
     self.retryStatus = 'normal'
-    self.data.sort((a, b) => a.start - b.start)
-    let dataHandle = function () {
-      if (self.status === 'closed' && self.retryStatus === 'stop') {
+
+    self.sortData()
+
+    function dataHandle() {
+      if (self._status === 'closed' && self.retryStatus === 'stop') {
+        self._cancelDataHandleTimer()
         return
       }
-      if (self.status === 'playing') {
+      if (self._status === 'playing') {
         self.readData()
         self.dataHandle()
       }
-      if (self.retryStatus !== 'stop' || self.status === 'paused') {
-        self.dataHandleTimer = setTimeout(function () {
-          dataHandle()
-        }, self.interval - 1000)
+      if (self.retryStatus !== 'stop' || self._status === 'paused') {
+        self.handleTimer = setTimeout(() => {
+          // 在下一帧开始时进行绘制，最大程度减少卡顿
+          self.handleId = requestAnimationFrame(() => {
+            dataHandle()
+          })
+        }, 250)
       }
     }
-    if (!self.retryTimer) {
-      dataHandle()
-    }
+    dataHandle()
   }
   // 启动弹幕渲染主进程
   start() {
     this.logger && this.logger.info('start')
-    let self = this
-    this.status = 'playing'
-    this.queue = []
-    this.container.innerHTML = ''
-    this.channel.resetWithCb(self.init, self)
+    const self = this
+    self._status = 'playing'
+    self.queue = []
+    self.container.innerHTML = ''
+    self.channel.reset()
+    self.init()
   }
   stop() {
     this.logger && this.logger.info('stop')
-    let self = this
-    this.status = 'closed'
-    self.retryTimer = null
+    const self = this
+    self._status = 'closed'
     self.retryStatus = 'stop'
-    self.channel.reset()
-    this.queue = []
+    self.queue = []
     self.container.innerHTML = ''
+    self.channel.reset()
   }
   clear() {
     this.logger && this.logger.info('clear')
@@ -119,23 +180,27 @@ class Main extends BaseClass {
     this.container.innerHTML = ''
   }
   play() {
+    if (this._status === 'closed') {
+      this.logger && this.logger.info('play ignored')
+      return
+    }
+
     this.logger && this.logger.info('play')
-    this.status = 'playing'
+    this._status = 'playing'
     let channels = this.channel.channels
-    let containerPos = this.danmu.container.getBoundingClientRect()
     if (channels && channels.length > 0) {
       // eslint-disable-next-line no-extra-semi
       ;['scroll', 'top', 'bottom'].forEach((key) => {
         // for (let i = 0; i < channels.length; i++) {
         //   channels[i].queue[key].forEach(item => {
         //     if(!item.resized) {
-        //       item.startMove(containerPos)
+        //       item.startMove()
         //       item.resized = true
         //     }
         //   })
         // }
         this.queue.forEach((item) => {
-          item.startMove(containerPos)
+          item.startMove()
           item.resized = true
         })
         for (let i = 0; i < channels.length; i++) {
@@ -147,51 +212,61 @@ class Main extends BaseClass {
     }
   }
   pause() {
+    if (this._status === 'closed') {
+      this.logger && this.logger.info('pause ignored')
+      return
+    }
+
     this.logger && this.logger.info('pause')
-    this.status = 'paused'
+    this._status = 'paused'
     let channels = this.channel.channels
-    let containerPos = this.danmu.container.getBoundingClientRect()
     if (channels && channels.length > 0) {
       // ['scroll', 'top', 'bottom'].forEach( key => {
       //   for (let i = 0; i < channels.length; i++) {
       //     channels[i].queue[key].forEach(item => {
-      //       item.pauseMove(containerPos)
+      //       item.pauseMove()
       //     })
       //   }
       // })
       this.queue.forEach((item) => {
-        item.pauseMove(containerPos)
+        item.pauseMove()
       })
     }
   }
   dataHandle() {
-    let self = this
-    if (this.status === 'paused' || this.status === 'closed') {
+    const self = this
+    if (this._status === 'paused' || this._status === 'closed') {
       return
     }
     if (self.queue.length) {
       self.queue.forEach((item) => {
         if (item.status === 'waiting') {
-          // item.status = 'start'
-          item.startMove(self.channel.containerPos)
+          item.startMove()
         }
       })
     }
   }
   readData() {
-    let self = this,
-      danmu = this.danmu
-    if (!danmu.isReady) return
-    let currentTime = 0
-    if (danmu.player && danmu.player.currentTime) {
-      currentTime = formatTime(danmu.player.currentTime)
-    }
-    let bullet,
+    if (!this.danmu.isReady) return
+
+    const self = this,
+      danmu = this.danmu,
+      player = danmu.player,
       interval = self.interval,
-      channel = self.channel,
-      result
-    let list
-    if (danmu.player) {
+      channel = self.channel
+    let result,
+      /**
+       * @type {Bullet}
+       */
+      bullet,
+      /**
+       * @type {Array<CommentData>}
+       */
+      list
+
+    if (player) {
+      const currentTime = player.currentTime ? Math.floor(player.currentTime * 1000) : 0
+
       list = self.data.filter((item) => {
         if (!item.start && self.danmu.hideArr.indexOf(item.mode) < 0) {
           if (!item.color || self.danmu.hideArr.indexOf('color') < 0) {
@@ -199,6 +274,7 @@ class Main extends BaseClass {
           }
         }
         return (
+          !item.attached_ &&
           self.danmu.hideArr.indexOf(item.mode) < 0 &&
           (!item.color || self.danmu.hideArr.indexOf('color') < 0) &&
           item.start - interval <= currentTime &&
@@ -210,47 +286,39 @@ class Main extends BaseClass {
       }
     } else {
       list = self.data.splice(0, 1)
-      // self.data = []
       if (list.length === 0) list = self.playedData.splice(0, 1)
     }
 
     if (list.length > 0) {
-      list.forEach((item) => {
+      // 提前更新轨道位置信息, 减少Bullet频繁读取容器dom信息
+      channel.updatePos()
+
+      let tryCount = MAX_TRY_COUNT
+
+      ListLoop: for (let i = 0, item; i < list.length; i++) {
+        item = list[i]
         if (self.forceDuration && self.forceDuration != item.duration) {
           item.duration = self.forceDuration
         }
         bullet = new Bullet(danmu, item)
         if (bullet && !bullet.bulletCreateFail) {
-          if (!item.hasAttached) {
-            bullet.attach()
-            item.hasAttached = true
-            result = channel.addBullet(bullet)
-            if (result.result) {
-              self.queue.push(bullet)
-              self.nums++
-              bullet.topInit()
-            } else {
-              bullet.detach()
-              for (let k in bullet) {
-                delete bullet[k]
-              }
-              bullet = null
-              item.hasAttached = false
-              if (item.noDiscard) {
-                if (item.prior) {
-                  self.data.unshift(item)
-                } else {
-                  self.data.push(item)
-                }
-              }
-            }
+          bullet.attach()
+          item.attached_ = true
+          result = channel.addBullet(bullet)
+
+          if (result.result) {
+            self.queue.push(bullet)
+            self.nums++
+            bullet.topInit()
+
+            tryCount = MAX_TRY_COUNT
           } else {
             bullet.detach()
             for (let k in bullet) {
               delete bullet[k]
             }
             bullet = null
-            item.hasAttached = false
+            item.attached_ = false
             if (item.noDiscard) {
               if (item.prior) {
                 self.data.unshift(item)
@@ -258,10 +326,25 @@ class Main extends BaseClass {
                 self.data.push(item)
               }
             }
+
+            if (tryCount === 0) {
+              break ListLoop
+            } else {
+              tryCount--
+            }
+          }
+        } else {
+          if (tryCount === 0) {
+            break ListLoop
+          } else {
+            tryCount--
           }
         }
-      })
+      }
     }
+  }
+  sortData() {
+    this.data.sort((prev, cur) => (prev.start || -1) - (cur.start || -1))
   }
 }
 

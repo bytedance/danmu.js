@@ -1,10 +1,10 @@
 export function createDom(el = 'div', tpl = '', attrs = {}, cname = '') {
-  let dom = document.createElement(el)
+  const dom = document.createElement(el)
   dom.className = cname
   dom.innerHTML = tpl
   Object.keys(attrs).forEach((item) => {
-    let key = item
-    let value = attrs[item]
+    const key = item
+    const value = attrs[item]
     if (el === 'video' || el === 'audio') {
       if (value) {
         dom.setAttribute(key, value)
@@ -44,7 +44,7 @@ export function removeClass(el, className) {
     })
   } else if (hasClass(el, className)) {
     className.split(/\s+/g).forEach((item) => {
-      let reg = new RegExp('(\\s|^)' + item + '(\\s|$)')
+      const reg = new RegExp('(\\s|^)' + item + '(\\s|$)')
       el.className = el.className.replace(reg, ' ')
     })
   }
@@ -99,7 +99,7 @@ export function typeOf(obj) {
 
 export function copyDom(dom) {
   if (dom && dom.nodeType === 1) {
-    let back = document.createElement(dom.tagName)
+    const back = document.createElement(dom.tagName)
     Array.prototype.forEach.call(dom.attributes, (node) => {
       back.setAttribute(node.name, node.value)
     })
@@ -110,12 +110,6 @@ export function copyDom(dom) {
   } else {
     return ''
   }
-}
-
-export function formatTime(time) {
-  let s = Math.floor(time)
-  let ms = time - s
-  return s * 1000 + ms
 }
 
 function offInDestroy(object, event, fn, offEvent) {
@@ -131,7 +125,7 @@ export function attachEventListener(object, event, fn, offEvent) {
     object.on(event, fn)
     offInDestroy(object, event, fn, offEvent)
   } else {
-    let _fn = (data) => {
+    const _fn = (data) => {
       fn(data)
       object.off(event, _fn)
     }
@@ -139,11 +133,34 @@ export function attachEventListener(object, event, fn, offEvent) {
   }
 }
 
+/**
+ * @param {HTMLElement} elem
+ * @param {string} name
+ * @param {string} value
+ */
 export function styleUtil(elem, name, value) {
-  let style = elem.style
+  const style = elem.style
   try {
     style[name] = value
   } catch (error) {
     style.setProperty(name, value)
+  }
+}
+
+export function isNumber(val) {
+  return typeof val === 'number' && !Number.isNaN(val)
+}
+
+/**
+ * Simple throttle 
+ * @param {()=>void} func 
+ * @param {number} wait 
+ * @returns 
+ */
+export function throttle(func, wait) {
+  let timer = 0
+  return (...args) => {
+    clearTimeout(timer)
+    timer = setTimeout(() => func.apply(this, args), wait)
   }
 }
