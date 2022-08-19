@@ -30,6 +30,7 @@ export class DanmuJs extends BaseClass {
       dropStaleComments: false,
       channelSize: undefined,
       maxCommentsLength: undefined,
+      bulletOffset: undefined,
       interval: 2000
     })
     deepCopy(config, options)

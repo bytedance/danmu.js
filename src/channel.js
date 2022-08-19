@@ -1,5 +1,5 @@
 import BaseClass from './baseClass'
-import { attachEventListener, isNumber } from './utils/util'
+import { attachEventListener, hasOwnProperty, isNumber } from './utils/util'
 import { validAreaLineRule } from './utils/validator'
 
 /**
@@ -62,8 +62,10 @@ class Channel extends BaseClass {
     this._cancelResizeTimer()
 
     // clear prop at end
-    for (let k in this) {
-      delete this[k]
+    for (const k in this) {
+      if (hasOwnProperty.call(this, k)) {
+        delete this[k]
+      }
     }
   }
 
@@ -76,9 +78,9 @@ class Channel extends BaseClass {
    */
   addBullet(bullet) {
     // this.logger && this.logger.info(`addBullet ${bullet.options.txt || '[DOM Element]'}`)
-    let self = this
-    let danmu = this.danmu
-    let channels = this.channels
+    const self = this
+    const danmu = this.danmu
+    const channels = this.channels
     let channelHeight, channelWidth, occupy
 
     if (self.direction === 'b2t') {
@@ -124,7 +126,7 @@ class Channel extends BaseClass {
             const curBullet = channel.queue.scroll[0]
 
             if (curBullet) {
-              let curBulletPos = curBullet.el.getBoundingClientRect()
+              const curBulletPos = curBullet.el.getBoundingClientRect()
 
               // 1. 检测最后入轨弹幕是否已经完全飘入容器区域
               if (self.direction === 'b2t') {
@@ -171,7 +173,7 @@ class Channel extends BaseClass {
                   // 根据前一个弹幕剩余飘出时间，计算新弹幕需要增加的offset
                   const offset = curT * newV - self.containerPos.width
                   if (offset > 0) {
-                    bullet.updateOffset(offset + (5 + Math.ceil(10 * Math.random())) /* 防止最后过于接近 */)
+                    bullet.updateOffset(offset + (1 + Math.ceil(5 * Math.random())) /* 防止最后过于接近 */)
                   }
                 }
               }

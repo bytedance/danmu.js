@@ -1,6 +1,6 @@
 import BaseClass from './baseClass'
-import { createDom } from './utils/util'
 import Main from './main'
+import { createDom, hasOwnProperty } from './utils/util'
 
 class Control extends BaseClass {
   /**
@@ -30,8 +30,10 @@ class Control extends BaseClass {
   destroy() {
     this.logger && this.logger.info('destroy')
     this.main.destroy()
-    for (let k in this) {
-      delete this[k]
+    for (const k in this) {
+      if (hasOwnProperty.call(this, k)) {
+        delete this[k]
+      }
     }
   }
 }

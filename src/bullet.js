@@ -1,5 +1,5 @@
 import BaseClass from './baseClass'
-import { copyDom, styleUtil } from './utils/util'
+import { copyDom, isNumber, styleUtil } from './utils/util'
 
 /**
  * [Bullet 弹幕构造类]
@@ -80,11 +80,14 @@ export class Bullet extends BaseClass {
     }
     this.status = 'waiting' // waiting,start,end
 
-    const containerPos = danmu.containerPos
-    let random = Math.floor(Math.random() * (containerPos.width / 10 > 100 ? 200 : containerPos.width / 10))
-    if (options.realTime) {
-      random = 0
+    let offset
+    if (isNumber(danmu.config.bulletOffset) && danmu.config.bulletOffset >= 0) {
+      offset = danmu.config.bulletOffset
+    } else {
+      const containerPos = danmu.containerPos
+      offset = containerPos.width / 10 > 100 ? 100 : containerPos.width / 10
     }
+    const random = options.realTime ? 0 : Math.floor(Math.random() * offset)
 
     this.updateOffset(random)
   }
@@ -162,7 +165,7 @@ export class Bullet extends BaseClass {
         el.parentNode.removeChild(el)
       }
       if (self.reuseDOM) {
-        self.domObj.unuse(el)
+        self.domObj.unused(el)
       }
       self.el = null
     }

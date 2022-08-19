@@ -1,7 +1,7 @@
 import BaseClass from './baseClass'
 import Bullet from './bullet'
 import Channel from './channel'
-import { attachEventListener } from './utils/util'
+import { attachEventListener, hasOwnProperty } from './utils/util'
 
 // 单次尝试入轨弹幕数量越多，长任务及CPU耗时越多
 const MAX_TRY_COUNT = 2
@@ -315,7 +315,9 @@ class Main extends BaseClass {
           } else {
             bullet.detach()
             for (let k in bullet) {
-              delete bullet[k]
+              if (hasOwnProperty.call(bullet, k)) {
+                delete bullet[k]
+              }
             }
             bullet = null
             item.attached_ = false
