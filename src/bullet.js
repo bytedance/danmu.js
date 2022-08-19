@@ -123,8 +123,10 @@ export class Bullet extends BaseClass {
   attach() {
     // this.logger && this.logger.info(`attach #${this.options.txt || '[DOM Element]'}#`)
     const self = this
-    self.container.appendChild(self.el)
-    self.elPos = self.el.getBoundingClientRect()
+    const el = self.el
+
+    self.container.appendChild(el)
+    self.elPos = el.getBoundingClientRect()
     if (self.direction === 'b2t') {
       self.width = self.elPos.height
       self.height = self.elPos.width
@@ -138,13 +140,15 @@ export class Bullet extends BaseClass {
     if (self.danmu.config) {
       if (self.danmu.config.mouseControl) {
         self.mouseoverFunWrapper = self.mouseoverFun.bind(self)
-        self.el.addEventListener('mouseover', self.mouseoverFunWrapper, false)
+        el.addEventListener('mouseover', self.mouseoverFunWrapper, false)
       }
       if (self.danmu.config.mouseEnterControl) {
         self.mouseEnterFunWrapper = self.mouseoverFun.bind(self)
-        self.el.addEventListener('mouseenter', self.mouseEnterFunWrapper, false)
+        el.addEventListener('mouseenter', self.mouseEnterFunWrapper, false)
       }
     }
+
+    el.addEventListener('transitionend', self._onTransitionEnd, false)
   }
   detach() {
     // this.logger && this.logger.info(`detach #${this.options.txt || '[DOM Element]'}#`)
@@ -161,6 +165,9 @@ export class Bullet extends BaseClass {
           el.removeEventListener('mouseenter', self.mouseEnterFunWrapper, false)
         }
       }
+
+      el.removeEventListener('transitionend', self._onTransitionEnd, false)
+
       if (el.parentNode) {
         el.parentNode.removeChild(el)
       }
@@ -192,6 +199,13 @@ export class Bullet extends BaseClass {
         event: event
       })
   }
+  /**
+   * @private
+   */
+  _onTransitionEnd() {
+    this.status = 'end'
+    this.remove()
+  }
   topInit() {
     this.logger && this.logger.info(`topInit #${this.options.txt || '[DOM Element]'}#`)
     if (this.direction === 'b2t') {
@@ -215,7 +229,6 @@ export class Bullet extends BaseClass {
     if (self.status !== 'forcedPause') {
       this.status = 'paused'
     }
-    self._clearAsyncTimer()
 
     // 将记忆速度删除，以备通过接口调整速度或duration时重计速度
     self._moveV = undefined
@@ -296,38 +309,6 @@ export class Bullet extends BaseClass {
     styleUtil(this.el, 'backface-visibility', 'hidden')
     styleUtil(this.el, 'perspective', '500em')
 
-    function func() {
-      if (self.el) {
-        if (self.mode === 'scroll') {
-          let containerPos_ = self.danmu.containerPos
-          let bulletPos = self.el.getBoundingClientRect()
-          if (self.direction === 'b2t') {
-            if (bulletPos && bulletPos.bottom <= containerPos_.top + 100) {
-              self.status = 'end'
-              self.remove()
-            } else {
-              self.pauseMove()
-              if (self.danmu.status !== 'paused') {
-                self.startMove()
-              }
-            }
-          } else {
-            if (bulletPos && bulletPos.right <= containerPos_.left + 100) {
-              self.status = 'end'
-              self.remove()
-            } else {
-              self.pauseMove()
-              if (self.danmu.status !== 'paused') {
-                self.startMove()
-              }
-            }
-          }
-        } else {
-          self.status = 'end'
-          self.remove()
-        }
-      }
-    }
     if (this.mode === 'scroll') {
       const ctPos = self.danmu.containerPos
 
@@ -342,7 +323,7 @@ export class Bullet extends BaseClass {
         self.moveTime = new Date().getTime()
         self.moveMoreS = self.el.getBoundingClientRect().top - ctPos.top
         self.moveContainerHeight = ctPos.height
-        self.removeTimer = setTimeout(func, leftDuration * 1000)
+        // self.removeTimer = setTimeout(func, leftDuration * 1000)
       } else {
         if (!self.el) {
           return
@@ -360,7 +341,6 @@ export class Bullet extends BaseClass {
           self.moveTime = new Date().getTime()
           self.moveMoreS = bulletPos.left - ctPos.left
           self.moveContainerWidth = ctPos.width
-          self.removeTimer = setTimeout(func, leftDuration * 1000)
         } else {
           self.status = 'end'
           self.remove()
@@ -372,8 +352,6 @@ export class Bullet extends BaseClass {
       if (!this.pastDuration) {
         this.pastDuration = 1
       }
-      let leftDuration = this.duration >= this.pastDuration ? this.duration - this.pastDuration : 0
-      this.removeTimer = setTimeout(func, leftDuration)
       this.startTime = new Date().getTime()
     }
   }
@@ -381,7 +359,6 @@ export class Bullet extends BaseClass {
     this.logger && this.logger.info(`remove #${this.options.txt || '[DOM Element]'}#`)
     const self = this
 
-    self._clearAsyncTimer()
     self.pauseMove()
 
     if (self.el && self.el.parentNode) {
@@ -395,16 +372,6 @@ export class Bullet extends BaseClass {
       self.danmu.emit('bullet_remove', {
         bullet: self
       })
-    }
-  }
-
-  /**
-   * @private
-   */
-  _clearAsyncTimer() {
-    if (this.removeTimer) {
-      clearTimeout(this.removeTimer)
-      this.removeTimer = null
     }
   }
 
