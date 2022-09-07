@@ -127,9 +127,6 @@ danmu.setCommentLike(id, {
     color: '#ff0000'
   }
 }) // 这是点赞样式，id 为 commentid
-
-player.danmu.willChange() // 用于浏览器提前做好对应的优化准备工作
-player.danmu.stopWillChange()
 ```
 
 ### Dev

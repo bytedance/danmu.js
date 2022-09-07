@@ -1,4 +1,4 @@
-import { styleUtil } from './utils/util'
+import { hasOwnProperty, styleUtil } from './utils/util'
 
 export default class RecyclableDOMList {
   constructor(options) {
@@ -26,7 +26,7 @@ export default class RecyclableDOMList {
     return firseIdle
   }
 
-  unuse(dom) {
+  unused(dom) {
     const idx = this.usingList.indexOf(dom)
     if (idx < 0) {
       return
@@ -56,7 +56,9 @@ export default class RecyclableDOMList {
       this.clearElementStyle(this.usingList[i])
     }
     for (let k in this) {
-      delete this[k]
+      if (hasOwnProperty.call(this, k)) {
+        delete this[k]
+      }
     }
   }
 

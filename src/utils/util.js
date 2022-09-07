@@ -164,3 +164,5 @@ export function throttle(func, wait) {
     timer = setTimeout(() => func.apply(this, args), wait)
   }
 }
+
+export const hasOwnProperty = Object.prototype.hasOwnProperty
