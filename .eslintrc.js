@@ -21,6 +21,7 @@ module.exports = {
     quotes: ['error', 'single'],
     semi: ['error', 'never'],
     'prefer-const': 'off',
-    eqeqeq: ["warn", "smart"]
+    eqeqeq: ['warn', 'smart'],
+    'guard-for-in': 'off'
   }
 }

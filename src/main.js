@@ -74,7 +74,6 @@ class Main extends BaseClass {
       },
       'destroy'
     )
-    this.nums = 0
   }
 
   get status() {
@@ -106,11 +105,11 @@ class Main extends BaseClass {
     }
   }
   // 在渲染队列中移除已经展示完的弹幕对象
-  updateQueue(rdata) {
+  updateQueue(data) {
     this.logger && this.logger.info('updateQueue')
     let self = this
     self.queue.some((item, index) => {
-      if (item.id === rdata.bullet.id) {
+      if (item.id === data.bullet.id) {
         self.queue.splice(index, 1)
         return true
       } else {
@@ -118,7 +117,7 @@ class Main extends BaseClass {
       }
     })
     self.data.some((item) => {
-      if (item.id === rdata.bullet.id) {
+      if (item.id === data.bullet.id) {
         item.attached_ = false
         return true
       } else {
@@ -297,7 +296,7 @@ class Main extends BaseClass {
 
       ListLoop: for (let i = 0, item; i < list.length; i++) {
         item = list[i]
-        if (self.forceDuration && self.forceDuration != item.duration) {
+        if (self.forceDuration && self.forceDuration !== item.duration) {
           item.duration = self.forceDuration
         }
         bullet = new Bullet(danmu, item)
@@ -308,7 +307,6 @@ class Main extends BaseClass {
 
           if (result.result) {
             self.queue.push(bullet)
-            self.nums++
             bullet.topInit()
 
             tryCount = MAX_TRY_COUNT
