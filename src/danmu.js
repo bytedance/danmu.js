@@ -284,7 +284,7 @@ export class DanmuJs extends BaseClass {
   _releaseCtrl(id) {
     const self = this
 
-    if (self.freezeId && id == self.freezeId) {
+    if (self.freezeId && id === self.freezeId) {
       self.mouseControl = false
       self.freezeId = null
     }
