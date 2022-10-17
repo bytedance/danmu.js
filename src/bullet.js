@@ -347,12 +347,19 @@ export class Bullet extends BaseClass {
         }
       }
     } else {
-      styleUtil(this.el, 'left', '50%')
-      styleUtil(this.el, 'margin', `0 0 0 -${this.width / 2}px`)
+      const newTimestamp = new Date().getTime()
+      const leftDuration =
+        (this.startTime && newTimestamp - this.startTime > this.duration
+          ? newTimestamp - this.startTime
+          : this.duration) / 1000
+      styleUtil(self.el, 'left', '50%')
+      styleUtil(self.el, 'margin', `0 0 0 -${this.width / 2}px`)
+      styleUtil(self.el, 'visibility', 'hidden')
+      styleUtil(self.el, 'transition', `visibility ${leftDuration}s 0s`)
       if (!this.pastDuration) {
         this.pastDuration = 1
       }
-      this.startTime = new Date().getTime()
+      this.startTime = newTimestamp
     }
   }
   remove() {
