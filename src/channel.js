@@ -15,6 +15,8 @@ class Channel extends BaseClass {
 
     self.setLogger('channel')
     self.danmu = danmu
+    self.width = 0
+    self.height = 0
     self.reset(true)
     self.direction = danmu.direction
     self.channels = []
@@ -45,17 +47,7 @@ class Channel extends BaseClass {
       'destroy'
     )
   }
-  updatePos() {
-    const pos = this.container.getBoundingClientRect()
 
-    this.containerPos = pos
-    this.containerWidth = pos.width
-    this.containerHeight = pos.height
-    this.containerTop = pos.top
-    this.containerBottom = pos.bottom
-    this.containerLeft = pos.left
-    this.containerRight = pos.right
-  }
   destroy() {
     this.logger && this.logger.info('destroy')
     this.channels.splice(0, this.channels.length)
@@ -67,6 +59,75 @@ class Channel extends BaseClass {
         delete this[k]
       }
     }
+  }
+
+  reset(isInit = false) {
+    this.logger && this.logger.info('reset')
+    const self = this
+    const { container, bulletBtn } = self.danmu
+
+    self.container = container
+
+    // bullet on waiting room
+    if (bulletBtn && bulletBtn.main) {
+      bulletBtn.main.queue.forEach((item) => {
+        item.remove()
+      })
+    }
+    // bullet on track
+    if (self.channels && self.channels.length > 0) {
+      // eslint-disable-next-line no-extra-semi
+      ;['scroll', 'top', 'bottom'].forEach((key) => {
+        for (let i = 0; i < self.channels.length; i++) {
+          self.channels[i].queue[key].forEach((item) => {
+            item.remove()
+          })
+        }
+      })
+    }
+    if (bulletBtn && bulletBtn.main && bulletBtn.main.data) {
+      bulletBtn.main.data.forEach((item) => {
+        item.attached_ = false
+      })
+    }
+
+    function channelReset() {
+      let size = container.getBoundingClientRect()
+      self.width = size.width
+      self.height = size.height
+
+      if (self.resetId) {
+        cancelAnimationFrame(self.resetId)
+        self.resetId = null
+      }
+
+      self._initChannels()
+    }
+
+    if (isInit) {
+      this.resetId = requestAnimationFrame(channelReset)
+    } else {
+      channelReset()
+    }
+  }
+
+  getRealOccupyArea() {
+    return {
+      width: this.width,
+      height: this.height
+    }
+  }
+
+  updatePos() {
+    const pos = this.container.getBoundingClientRect()
+
+    this.containerPos = pos
+    this.containerWidth = pos.width
+    this.containerHeight = pos.height
+    this.containerTop = pos.top
+    this.containerBottom = pos.bottom
+    this.containerLeft = pos.left
+    this.containerRight = pos.right
   }
 
   /**
@@ -433,6 +494,80 @@ class Channel extends BaseClass {
     this.resize(true)
   }
 
+  /**
+   * @private
+   */
+  _initChannels() {
+    const self = this
+    const { config } = self.danmu
+    const channelSize = config.channelSize || (/mobile/gi.test(navigator.userAgent) ? 10 : 12)
+    /** @type {number} */
+    let channelCount
+
+    if (config.area) {
+      const { lines, start, end } = config.area
+      if (validAreaLineRule(lines)) {
+        channelCount = lines
+
+        if (self.direction === 'b2t') {
+          self.width = channelCount * channelSize
+        } else {
+          self.height = channelCount * channelSize
+        }
+      } else {
+        if (start >= 0 && end >= start) {
+          const modulus = end - start
+          if (self.direction === 'b2t') {
+            self.width = Math.floor(self.width * modulus)
+          } else {
+            self.height = Math.floor(self.height * modulus)
+          }
+        }
+      }
+    }
+
+    if (!isNumber(channelCount)) {
+      if (self.direction === 'b2t') {
+        channelCount = Math.floor(self.width / channelSize)
+      } else {
+        channelCount = Math.floor(self.height / channelSize)
+      }
+    }
+
+    let channels = []
+    for (let i = 0; i < channelCount; i++) {
+      channels[i] = {
+        id: i,
+        queue: {
+          scroll: [],
+          top: [],
+          bottom: []
+        },
+        operating: {
+          scroll: false,
+          top: false,
+          bottom: false
+        },
+        bookId: {}
+      }
+    }
+
+    self.channelCount = channelCount
+    self.channels = channels
+    self.channelDistance = channelSize
+    if (self.direction === 'b2t') {
+      self.channelWidth = channelSize
+    } else {
+      self.channelHeight = channelSize
+    }
+
+    return {
+      fontSize: channelSize,
+      channelCount,
+      channels
+    }
+  }
+
   resize(sync = false) {
     this.logger && this.logger.info('resize')
     let self = this
@@ -442,9 +577,9 @@ class Channel extends BaseClass {
     self.resizing = true
 
     function layout() {
-      const { container, config, bulletBtn } = self.danmu
-      let channelCount
+      const { container, bulletBtn } = self.danmu
 
+      self.container = container
       self.updatePos()
       self._cancelResizeTimer()
 
@@ -460,48 +595,8 @@ class Channel extends BaseClass {
       self.width = self.containerWidth
       self.height = self.containerHeight
 
-      if (config.area) {
-        const { lines, start, end } = config.area
-        if (validAreaLineRule(lines)) {
-          channelCount = lines
-        } else {
-          if (start >= 0 && end >= start) {
-            if (self.direction === 'b2t') {
-              self.width = self.width * (end - start)
-            } else {
-              self.height = self.height * (end - start)
-            }
-          }
-        }
-      }
-      self.container = container
-      let fontSize = config.channelSize || (/mobile/gi.test(navigator.userAgent) ? 10 : 12)
+      const { fontSize, channels } = self._initChannels()
 
-      if (!isNumber(channelCount)) {
-        if (self.direction === 'b2t') {
-          channelCount = Math.floor(self.width / fontSize)
-        } else {
-          channelCount = Math.floor(self.height / fontSize)
-        }
-      }
-
-      let channels = []
-      for (let i = 0; i < channelCount; i++) {
-        channels[i] = {
-          id: i,
-          queue: {
-            scroll: [],
-            top: [],
-            bottom: []
-          },
-          operating: {
-            scroll: false,
-            top: false,
-            bottom: false
-          },
-          bookId: {}
-        }
-      }
       if (self.channels && self.channels.length <= channels.length) {
         for (let i = 0; i < self.channels.length; i++) {
           channels[i] = {
@@ -659,103 +754,6 @@ class Channel extends BaseClass {
     if (this.resizeId) {
       cancelAnimationFrame(this.resizeId)
       this.resizeId = null
-    }
-  }
-
-  reset(isInit = false) {
-    this.logger && this.logger.info('reset')
-    const self = this
-    const { container, bulletBtn, config } = self.danmu
-
-    self.container = container
-
-    // bullet on waiting room
-    if (bulletBtn && bulletBtn.main) {
-      bulletBtn.main.queue.forEach((item) => {
-        item.remove()
-      })
-    }
-    // bullet on track
-    if (self.channels && self.channels.length > 0) {
-      // eslint-disable-next-line no-extra-semi
-      ;['scroll', 'top', 'bottom'].forEach((key) => {
-        for (let i = 0; i < self.channels.length; i++) {
-          self.channels[i].queue[key].forEach((item) => {
-            item.remove()
-          })
-        }
-      })
-    }
-    if (bulletBtn && bulletBtn.main && bulletBtn.main.data) {
-      bulletBtn.main.data.forEach((item) => {
-        item.attached_ = false
-      })
-    }
-
-    function channelReset() {
-      let channelCount
-      let size = container.getBoundingClientRect()
-      self.width = size.width
-      self.height = size.height
-
-      if (self.resetId) {
-        cancelAnimationFrame(self.resetId)
-        self.resetId = null
-      }
-
-      if (config.area) {
-        const { lines, start, end } = config.area
-        if (validAreaLineRule(lines)) {
-          channelCount = lines
-        } else {
-          if (start >= 0 && end >= start) {
-            if (self.direction === 'b2t') {
-              self.width = self.width * (end - start)
-            } else {
-              self.height = self.height * (end - start)
-            }
-          }
-        }
-      }
-      let fontSize = config.channelSize || (/mobile/gi.test(navigator.userAgent) ? 10 : 12)
-
-      if (!isNumber(channelCount)) {
-        if (self.direction === 'b2t') {
-          channelCount = Math.floor(self.width / fontSize)
-        } else {
-          channelCount = Math.floor(self.height / fontSize)
-        }
-      }
-
-      let channels = []
-      for (let i = 0; i < channelCount; i++) {
-        channels[i] = {
-          id: i,
-          queue: {
-            scroll: [],
-            top: [],
-            bottom: []
-          },
-          operating: {
-            scroll: false,
-            top: false,
-            bottom: false
-          },
-          bookId: {}
-        }
-      }
-      self.channels = channels
-      if (self.direction === 'b2t') {
-        self.channelWidth = fontSize
-      } else {
-        self.channelHeight = fontSize
-      }
-    }
-
-    if (isInit) {
-      this.resetId = requestAnimationFrame(channelReset)
-    } else {
-      channelReset()
     }
   }
 }

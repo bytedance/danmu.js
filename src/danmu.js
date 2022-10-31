@@ -87,7 +87,8 @@ export class DanmuJs extends BaseClass {
     return {
       status: main.status,
       comments: main.data,
-      bullets: main.queue
+      bullets: main.queue,
+      displayArea: main.channel.getRealOccupyArea()
     }
   }
 

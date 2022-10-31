@@ -85,7 +85,8 @@ danmu.status // 主进程运行状态 'idle' | 'paused' | 'playing' | 'closed'
 danmu.state : {
     status: danmu.status,
     comments: Array<CommentData>, // 弹幕数据池
-    bullets: Array<Bullet> // 在轨弹幕数据
+    bullets: Array<Bullet>, // 在轨弹幕数据
+    displayArea: { width: number, height: number } // 弹幕显示区域状态
 }
 ```
 
