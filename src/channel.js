@@ -576,37 +576,35 @@ class Channel extends BaseClass {
     }
     self.resizing = true
 
-    function updateChannelsIncludes(channels) {
-      const fontSize = self.channelDistance
-      for (let i = 0; i < self.channels.length; i++) {
-        channels[i] = {
-          id: i,
-          queue: {
-            scroll: [],
-            top: [],
-            bottom: []
-          },
-          operating: {
-            scroll: false,
-            top: false,
-            bottom: false
-          },
-          bookId: {}
-        }
-        ;['scroll', 'top'].forEach((key) => {
-          self.channels[i].queue[key].forEach((item) => {
+    function setItem(channels, i) {
+      channels[i] = {
+        id: i,
+        queue: {
+          scroll: [],
+          top: [],
+          bottom: []
+        },
+        operating: {
+          scroll: false,
+          top: false,
+          bottom: false
+        },
+        bookId: {}
+      }
+    }
+
+    function updateChannelsLower(channels, fontSize) {
+      function updateTopScrollQueue(i) {
+        const items = ['scroll', 'top']
+        items.forEach((key_) => {
+          self.channels[i].queue[key_].forEach((item) => {
             if (item.el) {
-              channels[i].queue[key].push(item)
-              // if (!item.resized) {
-              //   item.pauseMove(isFullscreen)
-              //   if (item.danmu.bulletBtn.main.status !== 'paused') {
-              //     item.startMove(false, sync)
-              //   }
-              //   item.resized = true
-              // }
+              channels[i].queue[key_].push(item)
             }
           })
         })
+      }
+      function updateBottomQueue(i) {
         self.channels[i].queue['bottom'].forEach((item) => {
           if (item.el) {
             channels[i + channels.length - self.channels.length].queue['bottom'].push(item)
@@ -619,19 +617,19 @@ class Channel extends BaseClass {
               }
               item.topInit()
             }
-            //   if (!item.resized) {
-            //     item.pauseMove(isFullscreen)
-            //     if (item.danmu.bulletBtn.main.status !== 'paused') {
-            //       item.startMove(false, sync)
-            //     }
-            //     item.resized = true
-            //   }
           }
         })
       }
+
+      for (let i = 0; i < self.channels.length; i++) {
+        setItem(channels, i)
+        updateTopScrollQueue(i)
+        updateBottomQueue(i)
+      }
+
       for (let i = 0; i < channels.length; i++) {
-        // eslint-disable-next-line no-extra-semi
-        ;['scroll', 'top', 'bottom'].forEach((key) => {
+        const items = ['scroll', 'top', 'bottom']
+        items.forEach((key) => {
           channels[i].queue[key].forEach((item) => {
             item.resized = false
           })
@@ -645,24 +643,13 @@ class Channel extends BaseClass {
       }
     }
 
-    function updateChannelsBeyond(channels) {
-      const fontSize = self.channelDistance
+    function updateChannelsGreater(channels, fontSize) {
+      const items = ['scroll', 'top', 'bottom']
+
       for (let i = 0; i < channels.length; i++) {
-        channels[i] = {
-          id: i,
-          queue: {
-            scroll: [],
-            top: [],
-            bottom: []
-          },
-          operating: {
-            scroll: false,
-            top: false,
-            bottom: false
-          },
-          bookId: {}
-        }
-        ;['scroll', 'top', 'bottom'].forEach((key) => {
+        setItem(channels, i)
+
+        items.forEach((key) => {
           if (key === 'top' && i > Math.floor(channels.length / 2)) {
             //
           } else if (key === 'bottom' && i <= Math.floor(channels.length / 2)) {
@@ -670,42 +657,28 @@ class Channel extends BaseClass {
           } else {
             let num = key === 'bottom' ? i - channels.length + self.channels.length : i
             self.channels[num].queue[key].forEach((item, index) => {
-              if (item.el) {
-                channels[i].queue[key].push(item)
-                if (key === 'bottom') {
-                  if (item.channel_id[0] + item.channel_id[1] - 1 === num) {
-                    let channel_id = [].concat(item.channel_id)
-                    item.channel_id = [channel_id[0] - self.channels.length + channels.length, channel_id[1]]
-                    item.top = item.channel_id[0] * fontSize
-                    if (self.danmu.config.area && self.danmu.config.area.start) {
-                      item.top += self.containerHeight * self.danmu.config.area.start
-                    }
-                    item.topInit()
+              if (!item.el) {
+                return
+              }
+              channels[i].queue[key].push(item)
+              if (key === 'bottom') {
+                if (item.channel_id[0] + item.channel_id[1] - 1 === num) {
+                  let channel_id = [].concat(item.channel_id)
+                  item.channel_id = [channel_id[0] - self.channels.length + channels.length, channel_id[1]]
+                  item.top = item.channel_id[0] * fontSize
+                  if (self.danmu.config.area && self.danmu.config.area.start) {
+                    item.top += self.containerHeight * self.danmu.config.area.start
                   }
+                  item.topInit()
                 }
-                //   item.pauseMove(isFullscreen)
-                //   if (item.danmu.bulletBtn.main.status !== 'paused') {
-                //     item.startMove(false, sync)
-                //   }
-                //   if (!item.resized) {
-                //     item.resized = true
-                //   }
               }
               self.channels[num].queue[key].splice(index, 1)
             })
           }
         })
       }
-      // for (let i = channels.length; i < self.channels.length; i++) {
-      //   ['scroll', 'top', 'bottom'].forEach(key => {
-      //     self.channels[i].queue[key].forEach(item => {
-      //       item.remove()
-      //     })
-      //   })
-      // }
       for (let i = 0; i < channels.length; i++) {
-        // eslint-disable-next-line no-extra-semi
-        ;['scroll', 'top', 'bottom'].forEach((key) => {
+        items.forEach((key) => {
           channels[i].queue[key].forEach((item) => {
             item.resized = false
           })
@@ -719,7 +692,7 @@ class Channel extends BaseClass {
         self.channelHeight = fontSize
       }
     }
-    
+
     function layout() {
       const { container, bulletBtn } = self.danmu
 
@@ -741,10 +714,12 @@ class Channel extends BaseClass {
 
       const { fontSize, channels } = self._initChannels()
 
-      if (self.channels && self.channels.length <= channels.length) {
-        updateChannelsIncludes(channels, fontSize)
-      } else if (self.channels && self.channels.length > channels.length) {
-        updateChannelsBeyond(channels)
+      if (self.channels) {
+        if (self.channels.length <= channels.length) {
+          updateChannelsLower(channels, fontSize)
+        } else {
+          updateChannelsGreater(channels, fontSize)
+        }
       }
       self.resizing = false
     }
