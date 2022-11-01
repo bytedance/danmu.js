@@ -25,15 +25,6 @@
     "live commenting",
     "HTML5"
   ],
-  "babel": {
-    "presets": [
-      "es2015"
-    ],
-    "plugins": [
-      "add-module-exports",
-      "babel-plugin-bulk-import"
-    ]
-  },
   "dependencies": {
     "event-emitter": "^0.3.5"
   },

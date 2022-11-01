@@ -148,6 +148,7 @@ export class Bullet extends BaseClass {
       }
     }
 
+    self._onTransitionEnd = self._onTransitionEnd.bind(self)
     el.addEventListener('transitionend', self._onTransitionEnd, false)
   }
   detach() {

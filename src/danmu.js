@@ -143,9 +143,13 @@ export class DanmuJs extends BaseClass {
 
   sendComment(comment) {
     this.logger && this.logger.info(`sendComment: ${comment.txt || '[DOM Element]'}`)
+    const { main } = this
+
+    // Set a default bullet show time
     if (!comment.duration) {
       comment.duration = 15000
     }
+
     if (comment && comment.id && comment.duration && (comment.el || comment.txt)) {
       comment.duration = comment.duration ? comment.duration : 5000
       if (!comment.style) {
@@ -163,14 +167,16 @@ export class DanmuJs extends BaseClass {
         }
       }
       if (comment.prior || comment.realTime) {
-        this.main.data.unshift(comment)
+        main.data.unshift(comment)
         if (comment.realTime) {
-          this.main.readData()
-          this.main.dataHandle()
+          main.readData()
+          main.dataHandle()
         }
       } else {
-        this.main.data.push(comment)
+        main.data.push(comment)
       }
+
+      main.keepPoolWatermark()
     }
   }
 
@@ -348,53 +354,14 @@ export class DanmuJs extends BaseClass {
    * @param {boolean} isClear
    */
   updateComments(comments, isClear = true) {
-    const { config, main, player } = this
-    const priorComments = []
-    let deleteCount = 0
-
     this.logger && this.logger.info(`updateComments: ${comments.length}, isClear ${isClear}`)
-
+    const { main } = this
     if (typeof isClear === 'boolean' && isClear) {
       main.data = []
     }
     main.data = main.data.concat(comments)
     main.sortData()
-
-    // Support data pool to control watermark automatically
-    if (typeof config.maxCommentsLength === 'number' && main.data.length > config.maxCommentsLength) {
-      deleteCount = main.data.length - config.maxCommentsLength
-
-      for (let i = 0, comment; i < deleteCount; i++) {
-        comment = main.data[i]
-        if (comment.prior && !comment.attached_) {
-          priorComments.push(main.data[i])
-        }
-      }
-    } else if (config.dropStaleComments && player && player.currentTime) {
-      const currentTime = Math.floor(player.currentTime * 1000),
-        timePoint = currentTime - config.interval
-
-      if (timePoint > 0) {
-        for (let i = 0, comment; i < main.data.length; i++) {
-          comment = main.data[i]
-          if (comment.prior && !comment.attached_) {
-            priorComments.push(main.data[i])
-          }
-
-          if (comment.start > timePoint) {
-            deleteCount = i
-            break
-          }
-        }
-      }
-
-      if (deleteCount > 0) {
-        main.data.splice(0, deleteCount)
-
-        // Keep high-priority comments data.
-        main.data = priorComments.concat(main.data)
-      }
-    }
+    main.keepPoolWatermark()
   }
 
   willChange() {
