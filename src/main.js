@@ -127,7 +127,6 @@ class Main extends BaseClass {
   }
   init() {
     const self = this
-    self.logger && self.logger.info('init')
     self.retryStatus = 'normal'
 
     self.sortData()
@@ -345,6 +344,49 @@ class Main extends BaseClass {
   }
   sortData() {
     this.data.sort((prev, cur) => (prev.start || -1) - (cur.start || -1))
+  }
+
+  keepPoolWatermark() {
+    const { config, player } = this.danmu
+    const { data } = this
+    const priorComments = []
+    let deleteCount = 0
+
+    // Support data pool to control watermark automatically
+    if (typeof config.maxCommentsLength === 'number' && data.length > config.maxCommentsLength) {
+      deleteCount = data.length - config.maxCommentsLength
+
+      for (let i = 0, comment; i < deleteCount; i++) {
+        comment = data[i]
+        if (comment.prior && !comment.attached_) {
+          priorComments.push(data[i])
+        }
+      }
+    } else if (config.dropStaleComments && player && player.currentTime) {
+      const currentTime = Math.floor(player.currentTime * 1000),
+        timePoint = currentTime - config.interval
+
+      if (timePoint > 0) {
+        for (let i = 0, comment; i < data.length; i++) {
+          comment = data[i]
+          if (comment.prior && !comment.attached_) {
+            priorComments.push(data[i])
+          }
+
+          if (comment.start > timePoint) {
+            deleteCount = i
+            break
+          }
+        }
+      }
+    }
+
+    if (deleteCount > 0) {
+      data.splice(0, deleteCount)
+
+      // Keep high-priority comments data.
+      this.data = priorComments.concat(data)
+    }
   }
 }
 

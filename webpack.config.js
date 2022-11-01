@@ -13,7 +13,11 @@ const commonConfig = {
       {
         test: /\.js$/,
         loader: 'babel-loader',
-        exclude: /node_modules/
+        exclude: /node_modules/,
+        options: {
+          presets: ['es2015'],
+          plugins: ['add-module-exports', 'babel-plugin-bulk-import']
+        }
       },
       {
         test: /\.scss$/,
@@ -34,9 +38,9 @@ const commonConfig = {
   },
   plugins: [
     new webpack.DefinePlugin({
-      __VERSION__: JSON.stringify(version),
+      __VERSION__: JSON.stringify(version)
     }),
-    new webpack.BannerPlugin("Built @" + new Date().toUTCString()),
+    new webpack.BannerPlugin('Built @' + new Date().toUTCString())
     // new BundleAnalyzerPlugin()
   ],
   optimization: {
