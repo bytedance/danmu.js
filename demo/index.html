@@ -160,7 +160,8 @@
         area: {
           start: 0,
           end: 1
-        }
+        },
+        dropStaleComments: true
       })
       // danmu.on('bullet_pause', function (data) {
       //   console.log(data)
@@ -200,7 +201,7 @@
           let el = document.createElement('div')
           el.innerHTML = '哈哈哈哈哈哈哈哈哈66' + id
           danmu.sendComment({
-            duration: 5000,
+            duration: 10000,
             id: '' + id,
             // prior: id % 20 === 0,
             //   realTime: true,
@@ -245,6 +246,8 @@
           //   //   }
           //   // }
           // })
+
+          console.log(danmu.state)
         }, 100)
       }
 
