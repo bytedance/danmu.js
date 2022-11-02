@@ -101,7 +101,15 @@ class Channel extends BaseClass {
         self.resetId = null
       }
 
-      self._initChannels()
+      const { channelSize, channelCount, channels } = self._initChannels()
+
+      self.channelCount = channelCount
+      self.channels = channels
+      if (self.direction === 'b2t') {
+        self.channelWidth = channelSize
+      } else {
+        self.channelHeight = channelSize
+      }
     }
 
     if (isInit) {
@@ -552,17 +560,8 @@ class Channel extends BaseClass {
       }
     }
 
-    self.channelCount = channelCount
-    self.channels = channels
-    self.channelDistance = channelSize
-    if (self.direction === 'b2t') {
-      self.channelWidth = channelSize
-    } else {
-      self.channelHeight = channelSize
-    }
-
     return {
-      fontSize: channelSize,
+      channelSize,
       channelCount,
       channels
     }
@@ -712,13 +711,13 @@ class Channel extends BaseClass {
       self.width = self.containerWidth
       self.height = self.containerHeight
 
-      const { fontSize, channels } = self._initChannels()
+      const { channelSize, channels } = self._initChannels()
 
       if (self.channels) {
         if (self.channels.length <= channels.length) {
-          updateChannelsLower(channels, fontSize)
+          updateChannelsLower(channels, channelSize)
         } else {
-          updateChannelsGreater(channels, fontSize)
+          updateChannelsGreater(channels, channelSize)
         }
       }
       self.resizing = false
