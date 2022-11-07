@@ -12,6 +12,7 @@ const MAX_TRY_COUNT = 2
  *  start: number
  *  duration: number
  *  prior: boolean
+ *  score?: number // 积分越高，越容易展示
  *  txt: string
  *  mode: 'scroll' | 'top' | 'bottom'
  *  attached_: boolean // 内部属性，标记弹幕是否已经被入轨
@@ -245,13 +246,9 @@ class Main extends BaseClass {
     }
   }
   readData() {
-    if (!this.danmu.isReady) return
-
-    const self = this,
-      danmu = this.danmu,
-      player = danmu.player,
-      interval = self.interval,
-      channel = self.channel
+    const self = this
+    const { danmu, interval, channel } = self,
+      player = danmu.player
     let result,
       /**
        * @type {Bullet}
@@ -262,23 +259,31 @@ class Main extends BaseClass {
        */
       list
 
+    if (!danmu.isReady) return
+
     if (player) {
       const currentTime = player.currentTime ? Math.floor(player.currentTime * 1000) : 0
 
       list = self.data.filter((item) => {
-        if (!item.start && self.danmu.hideArr.indexOf(item.mode) < 0) {
-          if (!item.color || self.danmu.hideArr.indexOf('color') < 0) {
+        if (!item.start && danmu.hideArr.indexOf(item.mode) < 0) {
+          if (!item.color || danmu.hideArr.indexOf('color') < 0) {
             item.start = currentTime
           }
         }
         return (
           !item.attached_ &&
-          self.danmu.hideArr.indexOf(item.mode) < 0 &&
-          (!item.color || self.danmu.hideArr.indexOf('color') < 0) &&
+          danmu.hideArr.indexOf(item.mode) < 0 &&
+          (!item.color || danmu.hideArr.indexOf('color') < 0) &&
           item.start - interval <= currentTime &&
           currentTime <= item.start + interval
         )
       })
+
+      if (danmu.config.highScorePriority) {
+        // 高积分弹幕优先展示
+        list.sort((prev, cur) => (cur.prior && !prev.prior) || (cur.score || -1) - (prev.score || -1))
+      }
+
       if (danmu.live) {
         self.data = []
       }

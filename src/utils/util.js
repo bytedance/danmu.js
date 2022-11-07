@@ -1,3 +1,5 @@
+export const hasOwnProperty = Object.prototype.hasOwnProperty
+
 export function createDom(el = 'div', tpl = '', attrs = {}, cname = '') {
   const dom = document.createElement(el)
   dom.className = cname
@@ -152,10 +154,10 @@ export function isNumber(val) {
 }
 
 /**
- * Simple throttle 
- * @param {()=>void} func 
- * @param {number} wait 
- * @returns 
+ * Simple throttle
+ * @param {() => void} func
+ * @param {number} wait
+ * @returns
  */
 export function throttle(func, wait) {
   let timer = 0
@@ -164,5 +166,3 @@ export function throttle(func, wait) {
     timer = setTimeout(() => func.apply(this, args), wait)
   }
 }
-
-export const hasOwnProperty = Object.prototype.hasOwnProperty

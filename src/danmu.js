@@ -31,7 +31,8 @@ export class DanmuJs extends BaseClass {
       channelSize: undefined,
       maxCommentsLength: undefined,
       bulletOffset: undefined,
-      interval: 2000
+      interval: 2000,
+      highScorePriority: true // 高积分优先展示
     })
     deepCopy(config, options)
 
@@ -141,6 +142,9 @@ export class DanmuJs extends BaseClass {
     this.emit('destroy')
   }
 
+  /**
+   * @param {import('./main').CommentData} comment 
+   */
   sendComment(comment) {
     this.logger && this.logger.info(`sendComment: ${comment.txt || '[DOM Element]'}`)
     const { main } = this
