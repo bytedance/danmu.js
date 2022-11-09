@@ -343,6 +343,7 @@ class Channel extends BaseClass {
           }
         }
         bullet.channel_id = [pos, occupy]
+        bullet.el.setAttribute('data-line-index', pos + 1)
 
         if (self.direction === 'b2t') {
           bullet.top = pos * channelWidth

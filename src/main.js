@@ -190,14 +190,6 @@ class Main extends BaseClass {
     if (channels && channels.length > 0) {
       // eslint-disable-next-line no-extra-semi
       ;['scroll', 'top', 'bottom'].forEach((key) => {
-        // for (let i = 0; i < channels.length; i++) {
-        //   channels[i].queue[key].forEach(item => {
-        //     if(!item.resized) {
-        //       item.startMove()
-        //       item.resized = true
-        //     }
-        //   })
-        // }
         this.queue.forEach((item) => {
           item.startMove()
           item.resized = true
