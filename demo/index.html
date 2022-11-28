@@ -153,7 +153,7 @@
             }
           }
         ],
-        disableCopyDOM: true,
+        // disableCopyDOM: false,
         mouseControl: true, // 打开鼠标控制, 打开后可监听到 bullet_hover 事件。danmu.on('bullet_hover', function (data) {})
         mouseControlPause: true, // 鼠标触摸暂停。mouseControl: true 生效
         //   channelSize: 24,
@@ -191,21 +191,21 @@
         // });
         // resizeObserver.observe(document.getElementById('vs'));
 
-        danmu.start()
+        if (danmu) {
+            danmu.start()
+        }
         // danmu.resize()
         setInterval(function () {
           // console.log(player.currentTime+1)
           let currentTime = player.currentTime
           id++
           // console.log('sendComment: ', id);
-          let el = document.createElement('div')
-          el.innerHTML = '哈哈哈哈哈哈哈哈哈66' + id
           danmu.sendComment({
             duration: 10000,
             id: '' + id,
             // prior: id % 20 === 0,
             //   realTime: true,
-            el,
+            txt: '哈哈哈哈哈哈哈哈哈66' + id,
             // realTime: true,
             // start: 1000*currentTime,
             // txt: '哈哈哈哈哈哈哈哈哈123' + id, //弹幕文字内容
@@ -247,7 +247,7 @@
           //   // }
           // })
 
-          console.log(danmu.state)
+        //   console.log(danmu.state)
         }, 100)
       }
 

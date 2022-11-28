@@ -58,10 +58,6 @@ class Main extends BaseClass {
     this.retryStatus = 'normal'
     this.interval = danmu.config.interval // 弹幕队列缓存间隔
     /**
-     * @type {Array<string>}
-     */
-    this.willChanges = []
-    /**
      * @type {'idle' | 'paused' | 'playing' | 'closed'}
      */
     this._status = 'idle' // 当前弹幕正在闲置
@@ -156,6 +152,11 @@ class Main extends BaseClass {
   start() {
     this.logger && this.logger.info('start')
     const self = this
+
+    if (self._status === 'playing') {
+      return
+    }
+
     self._status = 'playing'
     self.queue = []
     self.container.innerHTML = ''
@@ -165,6 +166,11 @@ class Main extends BaseClass {
   stop() {
     this.logger && this.logger.info('stop')
     const self = this
+
+    if (self._status === 'closed') {
+      return
+    }
+
     self._status = 'closed'
     self.retryStatus = 'stop'
     self.queue = []

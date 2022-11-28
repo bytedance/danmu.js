@@ -368,27 +368,6 @@ export class DanmuJs extends BaseClass {
     main.keepPoolWatermark()
   }
 
-  willChange() {
-    const { container, main } = this
-    // optimize setOpacity
-    container.style.willChange = 'opacity'
-
-    // optimize setAllDuration/setFontSize
-    main.willChanges.push('contents')
-    main.queue.forEach((item) => {
-      item.willChange()
-    })
-  }
-
-  stopWillChange() {
-    this.container.style.willChange = ''
-
-    this.main.willChanges.splice(0) // empty
-    this.main.queue.forEach((item) => {
-      item.willChange()
-    })
-  }
-
   /**
    * 设置所有弹幕播放时长
    * @param {number} duration

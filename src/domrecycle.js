@@ -32,9 +32,10 @@ export default class RecyclableDOMList {
       return
     }
     this.usingList.splice(idx, 1)
-    dom.innerHTML = ''
-    dom.textcontent = ''
-    this.clearElementStyle(dom)
+    // dom.innerHTML = ''
+    // dom.textcontent = ''
+    // this.clearElementStyle(dom)
+    dom.style.opacity = 0
     this.idleList.push(dom)
   }
 

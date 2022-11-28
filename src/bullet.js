@@ -1,5 +1,5 @@
 import BaseClass from './baseClass'
-import { copyDom, isNumber, styleUtil } from './utils/util'
+import { copyDom, isNumber, styleUtil, styleCSSText } from './utils/util'
 
 /**
  * [Bullet 弹幕构造类]
@@ -17,6 +17,8 @@ export class Bullet extends BaseClass {
      * @type {HTMLElement}
      */
     let el
+    let cssText = ''
+    let style = options.style || {}
 
     this.setLogger('bullet')
     this.danmu = danmu
@@ -31,7 +33,6 @@ export class Bullet extends BaseClass {
     this.bookChannelId = options.bookChannelId
     this.direction = danmu.direction
     this.reuseDOM = true
-    this.willChanges = []
     this.domObj = danmu.domObj
 
     if (options.el && options.el.nodeType === 1) {
@@ -49,22 +50,31 @@ export class Bullet extends BaseClass {
         }
         el.appendChild(copyDOM)
       }
-      // el = copyDom(options.el)
     } else {
       el = this.domObj.use()
-      // el = document.createElement('div')
       el.textContent = options.txt
     }
     this.onChangeDirection = (direction) => {
       self.direction = direction
     }
     this.danmu.on('changeDirection', this.onChangeDirection)
-    if (options.style) {
-      let style = options.style
-      Object.keys(style).forEach(function (key) {
-        styleUtil(el, key, style[key])
-      })
+
+    let offset
+    if (isNumber(danmu.config.bulletOffset) && danmu.config.bulletOffset >= 0) {
+      offset = danmu.config.bulletOffset
+    } else {
+      const containerPos = danmu.containerPos
+      offset = containerPos.width / 10 > 100 ? 100 : containerPos.width / 10
     }
+    const random = options.realTime ? 0 : Math.floor(Math.random() * offset)
+    const left = this.updateOffset(random, true)
+
+    style.left = left
+    Object.keys(style).forEach(function (key) {
+      cssText += `${key}:${style[key]};`
+    })
+    styleCSSText(el, cssText)
+
     if (options.mode === 'top' || options.mode === 'bottom') {
       this.mode = options.mode
     } else {
@@ -79,17 +89,6 @@ export class Bullet extends BaseClass {
       this.setLikeDom(options.like.el, options.like.style)
     }
     this.status = 'waiting' // waiting,start,end
-
-    let offset
-    if (isNumber(danmu.config.bulletOffset) && danmu.config.bulletOffset >= 0) {
-      offset = danmu.config.bulletOffset
-    } else {
-      const containerPos = danmu.containerPos
-      offset = containerPos.width / 10 > 100 ? 100 : containerPos.width / 10
-    }
-    const random = options.realTime ? 0 : Math.floor(Math.random() * offset)
-
-    this.updateOffset(random)
   }
   get moveV() {
     const self = this
@@ -116,16 +115,24 @@ export class Bullet extends BaseClass {
     }
     return v
   }
-  updateOffset(val) {
+  updateOffset(val, dryRun = false) {
     this.random = val
-    styleUtil(this.el, 'left', this.danmu.containerPos.width + val + 'px')
+    const left = this.danmu.containerPos.width + val + 'px'
+
+    if (!dryRun) {
+      styleUtil(this.el, 'left', this.danmu.containerPos.width + val + 'px')
+    }
+
+    return left
   }
   attach() {
     // this.logger && this.logger.info(`attach #${this.options.txt || '[DOM Element]'}#`)
     const self = this
     const el = self.el
 
-    self.container.appendChild(el)
+    if (!self.container.contains(el)) {
+      self.container.appendChild(el)
+    }
     self.elPos = el.getBoundingClientRect()
     if (self.direction === 'b2t') {
       self.width = self.elPos.height
@@ -169,21 +176,19 @@ export class Bullet extends BaseClass {
 
       el.removeEventListener('transitionend', self._onTransitionEnd, false)
 
-      if (el.parentNode) {
-        el.parentNode.removeChild(el)
-      }
       if (self.reuseDOM) {
         self.domObj.unused(el)
+      } else {
+        if (el.parentNode) {
+          el.parentNode.removeChild(el)
+        }
       }
+
       self.el = null
     }
 
     self.elPos = undefined
     self.danmu.off('changeDirection', this.onChangeDirection)
-  }
-  willChange() {
-    let val = this.danmu.main.willChanges.concat(this.willChanges).join()
-    styleUtil(this.el, 'willChange', val)
   }
   mouseoverFun(event) {
     let self = this
@@ -205,7 +210,7 @@ export class Bullet extends BaseClass {
    */
   _onTransitionEnd() {
     this.status = 'end'
-    this.remove()
+    this.remove(false)
   }
   topInit() {
     this.logger && this.logger.info(`topInit #${this.options.txt || '[DOM Element]'}#`)
@@ -237,7 +242,6 @@ export class Bullet extends BaseClass {
     if (!this.el) {
       return
     }
-    this.willChange()
     if (this.mode === 'scroll') {
       const ctPos = self.danmu.containerPos
       if (isFullscreen) {
@@ -305,8 +309,6 @@ export class Bullet extends BaseClass {
     if (this.status === 'start') return
 
     this.status = 'start'
-    this.willChanges = ['transform', 'transition']
-    this.willChange()
     styleUtil(this.el, 'backface-visibility', 'hidden')
     styleUtil(this.el, 'perspective', '500em')
 
@@ -363,16 +365,15 @@ export class Bullet extends BaseClass {
       this.startTime = newTimestamp
     }
   }
-  remove() {
+  remove(needPause = true) {
     this.logger && this.logger.info(`remove #${this.options.txt || '[DOM Element]'}#`)
     const self = this
 
-    self.pauseMove()
+    if (needPause) {
+      self.pauseMove()
+    }
 
     if (self.el && self.el.parentNode) {
-      this.willChanges = []
-      this.willChange()
-
       self.detach()
       if (this.options.el && this.options.el.nodeType === 1 && this.danmu.config.disableCopyDOM) {
         styleUtil(this.options.el, 'transform', 'none')
