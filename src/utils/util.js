@@ -1,3 +1,5 @@
+export const hasOwnProperty = Object.prototype.hasOwnProperty
+
 export function createDom(el = 'div', tpl = '', attrs = {}, cname = '') {
   const dom = document.createElement(el)
   dom.className = cname
@@ -147,15 +149,27 @@ export function styleUtil(elem, name, value) {
   }
 }
 
+/**
+ * @param {HTMLElement} elem
+ * @param {string} value
+ */
+ export function styleCSSText(elem, value) {
+    const style = elem.style
+    try {
+      style.cssText = value
+    } catch (error) {
+    }
+  }
+
 export function isNumber(val) {
   return typeof val === 'number' && !Number.isNaN(val)
 }
 
 /**
- * Simple throttle 
- * @param {()=>void} func 
- * @param {number} wait 
- * @returns 
+ * Simple throttle
+ * @param {() => void} func
+ * @param {number} wait
+ * @returns
  */
 export function throttle(func, wait) {
   let timer = 0
@@ -164,5 +178,3 @@ export function throttle(func, wait) {
     timer = setTimeout(() => func.apply(this, args), wait)
   }
 }
-
-export const hasOwnProperty = Object.prototype.hasOwnProperty

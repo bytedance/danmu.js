@@ -31,7 +31,8 @@ export class DanmuJs extends BaseClass {
       channelSize: undefined,
       maxCommentsLength: undefined,
       bulletOffset: undefined,
-      interval: 2000
+      interval: 2000,
+      highScorePriority: true // 高积分优先展示
     })
     deepCopy(config, options)
 
@@ -141,6 +142,9 @@ export class DanmuJs extends BaseClass {
     this.emit('destroy')
   }
 
+  /**
+   * @param {import('./main').CommentData} comment 
+   */
   sendComment(comment) {
     this.logger && this.logger.info(`sendComment: ${comment.txt || '[DOM Element]'}`)
     const { main } = this
@@ -362,27 +366,6 @@ export class DanmuJs extends BaseClass {
     main.data = main.data.concat(comments)
     main.sortData()
     main.keepPoolWatermark()
-  }
-
-  willChange() {
-    const { container, main } = this
-    // optimize setOpacity
-    container.style.willChange = 'opacity'
-
-    // optimize setAllDuration/setFontSize
-    main.willChanges.push('contents')
-    main.queue.forEach((item) => {
-      item.willChange()
-    })
-  }
-
-  stopWillChange() {
-    this.container.style.willChange = ''
-
-    this.main.willChanges.splice(0) // empty
-    this.main.queue.forEach((item) => {
-      item.willChange()
-    })
   }
 
   /**
