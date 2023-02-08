@@ -37,16 +37,22 @@ export class Bullet extends BaseClass {
 
     if (options.el && options.el.nodeType === 1) {
       if (options.el.parentNode) return { bulletCreateFail: true }
-      if (danmu.config.disableCopyDOM) {
-        el = options.el
+      if (danmu.config.disableCopyDOM || options.disableCopyDOM) {
         this.reuseDOM = false
+        el = options.el
       } else {
-        el = this.domObj.use()
         let copyDOM = copyDom(options.el)
         if (options.eventListeners && options.eventListeners.length > 0) {
           options.eventListeners.forEach((eventListener) => {
             copyDOM.addEventListener(eventListener.event, eventListener.listener, eventListener.useCapture || false)
           })
+        }
+        el = this.domObj.use()
+        if (el.childNodes.length > 0) {
+          el.innerHTML = ''
+        }
+        if (el.textContent) {
+          el.textContent = ''
         }
         el.appendChild(copyDOM)
       }
