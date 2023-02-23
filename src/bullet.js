@@ -76,8 +76,11 @@ export class Bullet extends BaseClass {
     const left = this.updateOffset(random, true)
 
     style.left = left
-    Object.keys(style).forEach(function (key) {
-      cssText += `${key}:${style[key]};`
+    Object.keys(style).forEach((key) => {
+        const bbqKey = key.replace(/[A-Z]/g, (val) => {
+        return '-' + val.toLowerCase()
+      })
+      cssText += `${bbqKey}:${style[key]};`
     })
     styleCSSText(el, cssText)
 
