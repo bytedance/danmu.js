@@ -13,7 +13,9 @@ const MAX_TRY_COUNT = 2
  *  duration: number
  *  prior: boolean
  *  score?: number // 积分越高，越容易展示
- *  txt: string
+ *  txt?: string
+ *  el?: HTMLElement
+ *  onElDestroy?: Function
  *  mode: 'scroll' | 'top' | 'bottom'
  *  attached_: boolean // 内部属性，标记弹幕是否已经被入轨
  * }} CommentData
@@ -96,6 +98,7 @@ class Main extends BaseClass {
     this.logger && this.logger.info('destroy')
     this._cancelDataHandleTimer()
     this.channel.destroy()
+    this.dataElHandle(this.data)
     this.data = []
     for (let k in this) {
       delete this[k]
@@ -180,6 +183,7 @@ class Main extends BaseClass {
   clear() {
     this.logger && this.logger.info('clear')
     this.channel.reset()
+    this.dataElHandle(this.data)
     this.data = []
     this.queue = []
     this.container.innerHTML = ''
@@ -283,6 +287,7 @@ class Main extends BaseClass {
       }
 
       if (danmu.live) {
+        self.dataElHandle(this.data)
         self.data = []
       }
     } else {
@@ -385,10 +390,39 @@ class Main extends BaseClass {
     }
 
     if (deleteCount > 0) {
+      this.dataElHandle(data, 0, deleteCount)
       data.splice(0, deleteCount)
 
       // Keep high-priority comments data.
       this.data = priorComments.concat(data)
+    }
+  }
+
+  /**
+   * El maybe bound events or refs, use this to clean
+   * @param {Array<CommentData>} queue
+   * @param {number?} start
+   * @param {number?} end - not including end
+   */
+  dataElHandle(queue, start = 0, end) {
+    if (Number.isNaN(end)) {
+      end = queue.length
+    } else {
+      if (end > queue.length) {
+        throw `dataElHandle invalid range: ${start}-${end}`
+      }
+    }
+
+    for (let i = start; i < end; i++) {
+      let item = queue[i]
+      if (item && typeof item.onElDestroy === 'function') {
+        try {
+          item.onElDestroy(item)
+          item.onElDestroy = null
+        } catch (e) {
+          console.error('danmu onElDestroy fail:', e)
+        }
+      }
     }
   }
 }
