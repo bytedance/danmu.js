@@ -400,22 +400,24 @@ class Main extends BaseClass {
 
   /**
    * El maybe bound events or refs, use this to clean
-   * @param {Array<CommentData>} queue
+   * @param {Array<CommentData>} comments
    * @param {number?} start
    * @param {number?} end - not including end
    */
-  dataElHandle(queue, start = 0, end) {
+  dataElHandle(comments, start = 0, end) {
+    const bulletIds = this.queue.map((item) => item.id)
+    
     if (Number.isNaN(end)) {
-      end = queue.length
+      end = comments.length
     } else {
-      if (end > queue.length) {
+      if (end > comments.length) {
         throw `dataElHandle invalid range: ${start}-${end}`
       }
     }
 
     for (let i = start; i < end; i++) {
-      let item = queue[i]
-      if (item && typeof item.onElDestroy === 'function') {
+      let item = comments[i]
+      if (item && typeof item.onElDestroy === 'function' && bulletIds.indexOf(item.id) === -1) {
         try {
           item.onElDestroy(item)
           item.onElDestroy = null
