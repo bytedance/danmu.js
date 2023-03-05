@@ -65,14 +65,6 @@ class Main extends BaseClass {
     this._status = 'idle' // 当前弹幕正在闲置
 
     attachEventListener(danmu, 'bullet_remove', this.updateQueue.bind(this), 'destroy')
-    attachEventListener(
-      danmu,
-      'changeDirection',
-      (direction) => {
-        this.danmu.direction = direction
-      },
-      'destroy'
-    )
   }
 
   get status() {

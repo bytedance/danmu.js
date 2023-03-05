@@ -10,9 +10,6 @@ export class Bullet extends BaseClass {
    */
   constructor(danmu, options) {
     super()
-    // this.logger && this.logger.info('options.moveV', options.moveV)
-    const self = this
-
     /**
      * @type {HTMLElement}
      */
@@ -21,6 +18,8 @@ export class Bullet extends BaseClass {
     let style = options.style || {}
 
     this.setLogger('bullet')
+    // this.logger && this.logger.info('options.moveV', options.moveV)
+
     this.danmu = danmu
     this.options = options
     this.duration = options.duration
@@ -31,7 +30,6 @@ export class Bullet extends BaseClass {
     this.realTime = options.realTime
     this.color = options.color
     this.bookChannelId = options.bookChannelId
-    this.direction = danmu.direction
     this.reuseDOM = true
     this.domObj = danmu.domObj
 
@@ -60,10 +58,6 @@ export class Bullet extends BaseClass {
       el = this.domObj.use()
       el.textContent = options.txt
     }
-    this.onChangeDirection = (direction) => {
-      self.direction = direction
-    }
-    this.danmu.on('changeDirection', this.onChangeDirection)
 
     let offset
     if (isNumber(danmu.config.bulletOffset) && danmu.config.bulletOffset >= 0) {
@@ -77,7 +71,7 @@ export class Bullet extends BaseClass {
 
     style.left = left
     Object.keys(style).forEach((key) => {
-        const bbqKey = key.replace(/[A-Z]/g, (val) => {
+      const bbqKey = key.replace(/[A-Z]/g, (val) => {
         return '-' + val.toLowerCase()
       })
       cssText += `${bbqKey}:${style[key]};`
@@ -124,6 +118,10 @@ export class Bullet extends BaseClass {
     }
     return v
   }
+  get direction() {
+    return this.danmu.direction
+  }
+
   updateOffset(val, dryRun = false) {
     this.random = val
     const left = this.danmu.containerPos.width + val + 'px'
@@ -197,7 +195,6 @@ export class Bullet extends BaseClass {
     }
 
     self.elPos = undefined
-    self.danmu.off('changeDirection', this.onChangeDirection)
   }
   mouseoverFun(event) {
     let self = this
