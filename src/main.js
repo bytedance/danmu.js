@@ -65,6 +65,11 @@ class Main extends BaseClass {
     this._status = 'idle' // 当前弹幕正在闲置
 
     attachEventListener(danmu, 'bullet_remove', this.updateQueue.bind(this), 'destroy')
+
+    if (danmu.config.mouseControl || danmu.config.mouseEnterControl) {
+      this._onMouseover = this._onMouseover.bind(this)
+      this.container.addEventListener('mouseover', this._onMouseover, false)
+    }
   }
 
   get status() {
@@ -398,7 +403,7 @@ class Main extends BaseClass {
    */
   dataElHandle(comments, start = 0, end) {
     const bulletIds = this.queue.map((item) => item.id)
-    
+
     if (Number.isNaN(end)) {
       end = comments.length
     } else {
@@ -416,6 +421,37 @@ class Main extends BaseClass {
         } catch (e) {
           console.error('danmu onElDestroy fail:', e)
         }
+      }
+    }
+  }
+
+  /**
+   * @param {MouseEvent} e
+   * @private
+   */
+  _onMouseover(e) {
+    const target = e.target || e.srcElement
+    const { danmu, queue } = this
+    let bullet
+
+    if (!danmu || (danmu.mouseControl && danmu.config.mouseControlPause)) {
+      return
+    }
+
+    for (let i = 0; i < queue.length; i++) {
+      bullet = queue[i]
+      if (bullet && bullet.el === target) {
+        break
+      }
+      bullet = undefined
+    }
+
+    if (bullet) {
+      if (bullet.status !== 'waiting' && bullet.status !== 'end') {
+        danmu.emit('bullet_hover', {
+          bullet: bullet,
+          event: e
+        })
       }
     }
   }

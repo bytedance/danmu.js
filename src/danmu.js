@@ -66,10 +66,10 @@ export class DanmuJs extends BaseClass {
         this.container.style[key] = style[key]
       })
     }
+    addClass(this.container, 'danmu')
     this.live = config.live
     this.player = config.player
     this.direction = config.direction
-    addClass(this.container, 'danmu')
     this.bulletBtn = new Control(this)
     this.main = this.bulletBtn.main
     this.isReady = true
@@ -179,6 +179,7 @@ export class DanmuJs extends BaseClass {
         main.data.push(comment)
       }
 
+      main.sortData()
       main.keepPoolWatermark()
     }
   }
@@ -348,7 +349,7 @@ export class DanmuJs extends BaseClass {
       })
       self.main.data = self.main.data.filter((item) => {
         const keepIt = item.id !== id
-        
+
         if (!keepIt) {
           self.main.dataElHandle([item])
         }
@@ -489,7 +490,7 @@ export class DanmuJs extends BaseClass {
   }
 
   /**
-   * @param {'r2l'|'b2t'} direction 
+   * @param {'r2l'|'b2t'} direction
    */
   setDirection(direction = 'r2l') {
     this.logger && this.logger.info(`setDirection: direction ${direction}`)
