@@ -67,8 +67,8 @@ class Main extends BaseClass {
     attachEventListener(danmu, 'bullet_remove', this.updateQueue.bind(this), 'destroy')
 
     if (danmu.config.mouseControl || danmu.config.mouseEnterControl) {
-      this._onMouseover = this._onMouseover.bind(this)
-      this.container.addEventListener('mouseover', this._onMouseover, false)
+      this._onMouseoverEventProxy = this._onMouseover.bind(this)
+      this.container.addEventListener('mouseover', this._onMouseoverEventProxy, false)
     }
   }
 
@@ -94,6 +94,9 @@ class Main extends BaseClass {
   destroy() {
     this.logger && this.logger.info('destroy')
     this._cancelDataHandleTimer()
+    if (this._onMouseoverEventProxy && this.container) {
+      this.container.removeEventListener('mouseover', this._onMouseoverEventProxy, false)
+    }
     this.channel.destroy()
     this.dataElHandle(this.data)
     this.data = []
@@ -438,12 +441,12 @@ class Main extends BaseClass {
       return
     }
 
-    for (let i = 0; i < queue.length; i++) {
-      bullet = queue[i]
-      if (bullet && bullet.el === target) {
+    for (let i = 0, item; i < queue.length; i++) {
+      item = queue[i]
+      if (item && item.el && (item.el === target || item.el.contains(target))) {
+        bullet = item
         break
       }
-      bullet = undefined
     }
 
     if (bullet) {
