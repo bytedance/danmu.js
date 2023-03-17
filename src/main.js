@@ -13,7 +13,9 @@ const MAX_TRY_COUNT = 2
  *  duration: number
  *  prior: boolean
  *  score?: number // 积分越高，越容易展示
- *  txt: string
+ *  txt?: string
+ *  el?: HTMLElement
+ *  onElDestroy?: Function
  *  mode: 'scroll' | 'top' | 'bottom'
  *  attached_: boolean // 内部属性，标记弹幕是否已经被入轨
  * }} CommentData
@@ -63,14 +65,11 @@ class Main extends BaseClass {
     this._status = 'idle' // 当前弹幕正在闲置
 
     attachEventListener(danmu, 'bullet_remove', this.updateQueue.bind(this), 'destroy')
-    attachEventListener(
-      danmu,
-      'changeDirection',
-      (direction) => {
-        this.danmu.direction = direction
-      },
-      'destroy'
-    )
+
+    if (danmu.config.mouseControl || danmu.config.mouseEnterControl) {
+      this._onMouseoverEventProxy = this._onMouseover.bind(this)
+      this.container.addEventListener('mouseover', this._onMouseoverEventProxy, false)
+    }
   }
 
   get status() {
@@ -95,7 +94,11 @@ class Main extends BaseClass {
   destroy() {
     this.logger && this.logger.info('destroy')
     this._cancelDataHandleTimer()
+    if (this._onMouseoverEventProxy && this.container) {
+      this.container.removeEventListener('mouseover', this._onMouseoverEventProxy, false)
+    }
     this.channel.destroy()
+    this.dataElHandle(this.data)
     this.data = []
     for (let k in this) {
       delete this[k]
@@ -180,6 +183,7 @@ class Main extends BaseClass {
   clear() {
     this.logger && this.logger.info('clear')
     this.channel.reset()
+    this.dataElHandle(this.data)
     this.data = []
     this.queue = []
     this.container.innerHTML = ''
@@ -283,6 +287,7 @@ class Main extends BaseClass {
       }
 
       if (danmu.live) {
+        self.dataElHandle(this.data)
         self.data = []
       }
     } else {
@@ -385,10 +390,72 @@ class Main extends BaseClass {
     }
 
     if (deleteCount > 0) {
+      this.dataElHandle(data, 0, deleteCount)
       data.splice(0, deleteCount)
 
       // Keep high-priority comments data.
       this.data = priorComments.concat(data)
+    }
+  }
+
+  /**
+   * El maybe bound events or refs, use this to clean
+   * @param {Array<CommentData>} comments
+   * @param {number?} start
+   * @param {number?} end - not including end
+   */
+  dataElHandle(comments, start = 0, end) {
+    const bulletIds = this.queue.map((item) => item.id)
+
+    if (Number.isNaN(end)) {
+      end = comments.length
+    } else {
+      if (end > comments.length) {
+        throw `dataElHandle invalid range: ${start}-${end}`
+      }
+    }
+
+    for (let i = start; i < end; i++) {
+      let item = comments[i]
+      if (item && typeof item.onElDestroy === 'function' && bulletIds.indexOf(item.id) === -1) {
+        try {
+          item.onElDestroy(item)
+          item.onElDestroy = null
+        } catch (e) {
+          console.error('danmu onElDestroy fail:', e)
+        }
+      }
+    }
+  }
+
+  /**
+   * @param {MouseEvent} e
+   * @private
+   */
+  _onMouseover(e) {
+    const target = e.target || e.srcElement
+    const { danmu, queue } = this
+    let bullet
+
+    if (!danmu || (danmu.mouseControl && danmu.config.mouseControlPause)) {
+      return
+    }
+
+    for (let i = 0, item; i < queue.length; i++) {
+      item = queue[i]
+      if (item && item.el && (item.el === target || item.el.contains(target))) {
+        bullet = item
+        break
+      }
+    }
+
+    if (bullet) {
+      if (bullet.status !== 'waiting' && bullet.status !== 'end') {
+        danmu.emit('bullet_hover', {
+          bullet: bullet,
+          event: e
+        })
+      }
     }
   }
 }

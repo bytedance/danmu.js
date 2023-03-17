@@ -9,14 +9,13 @@ import { addClass, deepCopy, isNumber, styleUtil } from './utils/util'
 export class DanmuJs extends BaseClass {
   constructor(options) {
     super()
-    const self = this
 
     // logger
-    self.setLogger('danmu')
-    self.logger && self.logger.info(`danmu.js version: ${version}`)
+    this.setLogger('danmu')
+    this.logger && this.logger.info(`danmu.js version: ${version}`)
 
     // configure
-    const config = (self.config = {
+    const config = (this.config = {
       overlap: false,
       area: {
         start: 0,
@@ -37,13 +36,13 @@ export class DanmuJs extends BaseClass {
     deepCopy(config, options)
 
     // Add event subscription handler
-    EventEmitter(self)
+    EventEmitter(this)
 
-    self.hideArr = []
-    self.domObj = new RecyclableDomList()
+    this.hideArr = []
+    this.domObj = new RecyclableDomList()
 
     // freezed comment
-    self.freezeId = null
+    this.freezeId = null
 
     config.comments.forEach((comment) => {
       comment.duration = comment.duration ? comment.duration : 5000
@@ -55,26 +54,26 @@ export class DanmuJs extends BaseClass {
     /**
      * @type {HTMLElement}
      */
-    self.container = config.container && config.container.nodeType === 1 ? config.container : null
-    if (!self.container) {
+    this.container = config.container && config.container.nodeType === 1 ? config.container : null
+    if (!this.container) {
       // eslint-disable-next-line quotes
-      self.emit('error', "container id can't be empty")
+      this.emit('error', "container id can't be empty")
       return false
     }
     if (config.containerStyle) {
       let style = config.containerStyle
       Object.keys(style).forEach(function (key) {
-        self.container.style[key] = style[key]
+        this.container.style[key] = style[key]
       })
     }
-    self.live = config.live
-    self.player = config.player
-    self.direction = config.direction
-    addClass(self.container, 'danmu')
-    self.bulletBtn = new Control(self)
-    self.main = self.bulletBtn.main
-    self.isReady = true
-    self.emit('ready')
+    addClass(this.container, 'danmu')
+    this.live = config.live
+    this.player = config.player
+    this.direction = config.direction
+    this.bulletBtn = new Control(this)
+    this.main = this.bulletBtn.main
+    this.isReady = true
+    this.emit('ready')
     this.logger && this.logger.info('ready')
     this.addResizeObserver()
   }
@@ -143,7 +142,7 @@ export class DanmuJs extends BaseClass {
   }
 
   /**
-   * @param {import('./main').CommentData} comment 
+   * @param {import('./main').CommentData} comment
    */
   sendComment(comment) {
     this.logger && this.logger.info(`sendComment: ${comment.txt || '[DOM Element]'}`)
@@ -180,6 +179,7 @@ export class DanmuJs extends BaseClass {
         main.data.push(comment)
       }
 
+      main.sortData()
       main.keepPoolWatermark()
     }
   }
@@ -348,7 +348,12 @@ export class DanmuJs extends BaseClass {
         }
       })
       self.main.data = self.main.data.filter((item) => {
-        return item.id !== id
+        const keepIt = item.id !== id
+
+        if (!keepIt) {
+          self.main.dataElHandle([item])
+        }
+        return keepIt
       })
     }
   }
@@ -361,6 +366,7 @@ export class DanmuJs extends BaseClass {
     this.logger && this.logger.info(`updateComments: ${comments.length}, isClear ${isClear}`)
     const { main } = this
     if (typeof isClear === 'boolean' && isClear) {
+      main.dataElHandle(main.data)
       main.data = []
     }
     main.data = main.data.concat(comments)
@@ -483,8 +489,13 @@ export class DanmuJs extends BaseClass {
     }
   }
 
+  /**
+   * @param {'r2l'|'b2t'} direction
+   */
   setDirection(direction = 'r2l') {
     this.logger && this.logger.info(`setDirection: direction ${direction}`)
+    this.direction = direction
+    // this.main.channel.resize()
     this.emit('changeDirection', direction)
   }
 

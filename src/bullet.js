@@ -3,6 +3,10 @@ import { copyDom, isNumber, styleUtil, styleCSSText } from './utils/util'
 
 /**
  * [Bullet 弹幕构造类]
+ * 
+ * @description 
+ *  1. Bullet不一定上屏，不要在构造器内直接绑定事件，因此外部处理事件的时机很不确定，很容易产生内存泄漏；
+ *     如果确实需要事件绑定，可以在attach内绑定，detach内卸载，这样事件绑定只在屏中弹幕，不会引起太多内存增长
  */
 export class Bullet extends BaseClass {
   /**
@@ -10,9 +14,6 @@ export class Bullet extends BaseClass {
    */
   constructor(danmu, options) {
     super()
-    // this.logger && this.logger.info('options.moveV', options.moveV)
-    const self = this
-
     /**
      * @type {HTMLElement}
      */
@@ -21,6 +22,8 @@ export class Bullet extends BaseClass {
     let style = options.style || {}
 
     this.setLogger('bullet')
+    // this.logger && this.logger.info('options.moveV', options.moveV)
+
     this.danmu = danmu
     this.options = options
     this.duration = options.duration
@@ -31,7 +34,6 @@ export class Bullet extends BaseClass {
     this.realTime = options.realTime
     this.color = options.color
     this.bookChannelId = options.bookChannelId
-    this.direction = danmu.direction
     this.reuseDOM = true
     this.domObj = danmu.domObj
 
@@ -60,10 +62,6 @@ export class Bullet extends BaseClass {
       el = this.domObj.use()
       el.textContent = options.txt
     }
-    this.onChangeDirection = (direction) => {
-      self.direction = direction
-    }
-    this.danmu.on('changeDirection', this.onChangeDirection)
 
     let offset
     if (isNumber(danmu.config.bulletOffset) && danmu.config.bulletOffset >= 0) {
@@ -76,8 +74,11 @@ export class Bullet extends BaseClass {
     const left = this.updateOffset(random, true)
 
     style.left = left
-    Object.keys(style).forEach(function (key) {
-      cssText += `${key}:${style[key]};`
+    Object.keys(style).forEach((key) => {
+      const bbqKey = key.replace(/[A-Z]/g, (val) => {
+        return '-' + val.toLowerCase()
+      })
+      cssText += `${bbqKey}:${style[key]};`
     })
     styleCSSText(el, cssText)
 
@@ -121,6 +122,10 @@ export class Bullet extends BaseClass {
     }
     return v
   }
+  get direction() {
+    return this.danmu.direction
+  }
+
   updateOffset(val, dryRun = false) {
     this.random = val
     const left = this.danmu.containerPos.width + val + 'px'
@@ -150,16 +155,16 @@ export class Bullet extends BaseClass {
     if (self.moveV) {
       self.duration = ((self.danmu.containerPos.width + self.random + self.width) / self.moveV) * 1000
     }
-    if (self.danmu.config) {
-      if (self.danmu.config.mouseControl) {
-        self.mouseoverFunWrapper = self.mouseoverFun.bind(self)
-        el.addEventListener('mouseover', self.mouseoverFunWrapper, false)
-      }
-      if (self.danmu.config.mouseEnterControl) {
-        self.mouseEnterFunWrapper = self.mouseoverFun.bind(self)
-        el.addEventListener('mouseenter', self.mouseEnterFunWrapper, false)
-      }
-    }
+    // if (self.danmu.config) {
+    //   if (self.danmu.config.mouseControl) {
+    //     self.mouseoverFunWrapper = self.mouseoverFun.bind(self)
+    //     el.addEventListener('mouseover', self.mouseoverFunWrapper, false)
+    //   }
+    //   if (self.danmu.config.mouseEnterControl) {
+    //     self.mouseEnterFunWrapper = self.mouseoverFun.bind(self)
+    //     el.addEventListener('mouseenter', self.mouseEnterFunWrapper, false)
+    //   }
+    // }
 
     self._onTransitionEnd = self._onTransitionEnd.bind(self)
     el.addEventListener('transitionend', self._onTransitionEnd, false)
@@ -170,15 +175,15 @@ export class Bullet extends BaseClass {
     const el = self.el
 
     if (el) {
-      let config = self.danmu.config
-      if (config) {
-        if (config.mouseControl) {
-          el.removeEventListener('mouseover', self.mouseoverFunWrapper, false)
-        }
-        if (config.mouseEnterControl) {
-          el.removeEventListener('mouseenter', self.mouseEnterFunWrapper, false)
-        }
-      }
+    //   let config = self.danmu.config
+    //   if (config) {
+    //     if (config.mouseControl) {
+    //       el.removeEventListener('mouseover', self.mouseoverFunWrapper, false)
+    //     }
+    //     if (config.mouseEnterControl) {
+    //       el.removeEventListener('mouseenter', self.mouseEnterFunWrapper, false)
+    //     }
+    //   }
 
       el.removeEventListener('transitionend', self._onTransitionEnd, false)
 
@@ -194,23 +199,22 @@ export class Bullet extends BaseClass {
     }
 
     self.elPos = undefined
-    self.danmu.off('changeDirection', this.onChangeDirection)
   }
-  mouseoverFun(event) {
-    let self = this
-    if (
-      (self.danmu && self.danmu.mouseControl && self.danmu.config.mouseControlPause) ||
-      self.status === 'waiting' ||
-      self.status === 'end'
-    ) {
-      return
-    }
-    self.danmu &&
-      self.danmu.emit('bullet_hover', {
-        bullet: self,
-        event: event
-      })
-  }
+//   mouseoverFun(event) {
+//     let self = this
+//     if (
+//       (self.danmu && self.danmu.mouseControl && self.danmu.config.mouseControlPause) ||
+//       self.status === 'waiting' ||
+//       self.status === 'end'
+//     ) {
+//       return
+//     }
+//     self.danmu &&
+//       self.danmu.emit('bullet_hover', {
+//         bullet: self,
+//         event: event
+//       })
+//   }
   /**
    * @private
    */

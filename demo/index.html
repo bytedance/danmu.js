@@ -192,7 +192,7 @@
         // resizeObserver.observe(document.getElementById('vs'));
 
         if (danmu) {
-            danmu.start()
+          danmu.start()
         }
         // danmu.resize()
         setInterval(function () {
@@ -211,13 +211,19 @@
             // prior: id % 20 === 0,
             //   realTime: true,
             // txt,
+            start: player.currentTime * 1000,
             el,
+            disableCopyDOM: true,
+            onElDestroy: (item) => {
+              console.log('hidden:', item.el.innerHTML, item.id, item.start, player.currentTime * 1000)
+              item.el.innerHTML = ''
+            },
             // realTime: true,
             // start: 1000*currentTime,
             // txt: '哈哈哈哈哈哈哈哈哈123' + id, //弹幕文字内容
             style: {
               color: id % 20 === 0 ? '#f00' : '#000',
-              fontSize: '15px'
+              fontSize: '32px'
               //   // padding: '5px 12px',
               //   fontSize: '25px',
               //   lineHeight: 1.125
@@ -253,8 +259,8 @@
           //   // }
           // })
 
-        //   console.log(danmu.state)
-        }, 100)
+          //   console.log(danmu.state)
+        }, 5000)
       }
 
       function play() {

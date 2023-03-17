@@ -18,7 +18,6 @@ class Channel extends BaseClass {
     self.width = 0
     self.height = 0
     self.reset(true)
-    self.direction = danmu.direction
     self.channels = []
     self.updatePos()
 
@@ -32,20 +31,16 @@ class Channel extends BaseClass {
     )
     attachEventListener(
       this.danmu,
-      'changeDirection',
-      (direction) => {
-        self.direction = direction
-      },
-      'destroy'
-    )
-    attachEventListener(
-      this.danmu,
       'channel_resize',
       () => {
         self.resize()
       },
       'destroy'
     )
+  }
+
+  get direction() {
+    return this.danmu.direction
   }
 
   destroy() {
