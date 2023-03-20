@@ -7,18 +7,7 @@ import { attachEventListener, hasOwnProperty } from './utils/util'
 const MAX_TRY_COUNT = 2
 
 /**
- * @typedef {{
- *  id: string
- *  start: number
- *  duration: number
- *  prior: boolean
- *  score?: number // 积分越高，越容易展示
- *  txt?: string
- *  el?: HTMLElement
- *  onElDestroy?: Function
- *  mode: 'scroll' | 'top' | 'bottom'
- *  attached_: boolean // 内部属性，标记弹幕是否已经被入轨
- * }} CommentData
+ * @typedef {import('./baseClass').CommentData} CommentData
  */
 
 /**

@@ -4,7 +4,14 @@ import BaseClass from './baseClass'
 import Control from './control'
 import RecyclableDomList from './domRecycle'
 import { addObserver, unObserver } from './resizeObserver'
-import { addClass, deepCopy, isNumber, styleUtil } from './utils/util'
+import { addClass, deepCopy, isNumber, styleUtil, typeOf } from './utils/util'
+
+/**
+ * @typedef {import('./baseClass').CommentData} CommentData
+ */
+/**
+ * @typedef {import('./baseClass').InternalHooks} InternalHooks
+ */
 
 export class DanmuJs extends BaseClass {
   constructor(options) {
@@ -38,8 +45,13 @@ export class DanmuJs extends BaseClass {
     // Add event subscription handler
     EventEmitter(this)
 
+    /**
+     * @type {InternalHooks}
+     */
+    this.internalHooks = {}
+
     this.hideArr = []
-    this.domObj = new RecyclableDomList()
+    this.recycler = new RecyclableDomList()
 
     // freezed comment
     this.freezeId = null
@@ -96,6 +108,21 @@ export class DanmuJs extends BaseClass {
     return this.main.channel.containerPos
   }
 
+  /**
+   * @param {InternalHooks} options
+   */
+  hooks(options) {
+    if (typeOf(options) === 'Object') {
+      const hookKeys = Object.keys(this.internalHooks)
+
+      for (let key in options) {
+        if (options[key] && hookKeys.indexOf(key) > -1) {
+          this.internalHooks[key] = options[key]
+        }
+      }
+    }
+  }
+
   addResizeObserver() {
     this.config.needResizeObserver &&
       addObserver(this.container, () => {
@@ -134,7 +161,7 @@ export class DanmuJs extends BaseClass {
     this.logger && this.logger.info('destroy')
     this.stop()
     this.bulletBtn.destroy()
-    this.domObj.destroy()
+    this.recycler.destroy()
     for (let k in this) {
       delete this[k]
     }
@@ -142,7 +169,7 @@ export class DanmuJs extends BaseClass {
   }
 
   /**
-   * @param {import('./main').CommentData} comment
+   * @param {CommentData} comment
    */
   sendComment(comment) {
     this.logger && this.logger.info(`sendComment: ${comment.txt || '[DOM Element]'}`)
@@ -359,7 +386,7 @@ export class DanmuJs extends BaseClass {
   }
 
   /**
-   * @param {Array<import('./main').CommentData>} comments
+   * @param {Array<CommentData>} comments
    * @param {boolean} isClear
    */
   updateComments(comments, isClear = true) {
