@@ -165,23 +165,10 @@ export class Bullet extends BaseClass {
     if (self.moveV) {
       self.duration = ((self.danmu.containerPos.width + self.random + self.width) / self.moveV) * 1000
     }
-    // if (self.danmu.config) {
-    //   if (self.danmu.config.mouseControl) {
-    //     self.mouseoverFunWrapper = self.mouseoverFun.bind(self)
-    //     el.addEventListener('mouseover', self.mouseoverFunWrapper, false)
-    //   }
-    //   if (self.danmu.config.mouseEnterControl) {
-    //     self.mouseEnterFunWrapper = self.mouseoverFun.bind(self)
-    //     el.addEventListener('mouseenter', self.mouseEnterFunWrapper, false)
-    //   }
-    // }
 
     if (internalHooks.onBulletAttach) {
       internalHooks.onBulletAttach(options)
     }
-
-    self._onTransitionEnd = self._onTransitionEnd.bind(self)
-    el.addEventListener('transitionend', self._onTransitionEnd, false)
   }
   detach() {
     // this.logger && this.logger.info(`detach #${this.options.txt || '[DOM Element]'}#`)
@@ -190,8 +177,6 @@ export class Bullet extends BaseClass {
     const { internalHooks } = danmu
 
     if (el) {
-      el.removeEventListener('transitionend', self._onTransitionEnd, false)
-
       if (self.reuseDOM) {
         self.recycler.unused(el)
       } else {
@@ -208,13 +193,6 @@ export class Bullet extends BaseClass {
     if (internalHooks.onBulletDetach) {
       internalHooks.onBulletDetach(options, el)
     }
-  }
-  /**
-   * @private
-   */
-  _onTransitionEnd() {
-    this.status = 'end'
-    this.remove(false)
   }
   topInit() {
     this.logger && this.logger.info(`topInit #${this.options.txt || '[DOM Element]'}#`)
