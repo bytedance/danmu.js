@@ -1,11 +1,11 @@
 import BaseClass from './baseClass'
-import { copyDom, isNumber, styleUtil, styleCSSText } from './utils/util'
+import { copyDom, isFunction, isNumber, styleCSSText, styleUtil } from './utils/util'
 
 /**
  * [Bullet 弹幕构造类]
  *
  * @description
- *  1. Bullet内事件需要在attach内绑定，detach内卸载。这样事件绑定只限定在屏中弹幕，不会引起内存泄漏
+ *  1. 几乎所有事件都可以被代理（包括CSS事件），Bullet内不要进行事件绑定。所有事件绑定均在main层处理
  */
 export class Bullet extends BaseClass {
   /**
@@ -15,7 +15,7 @@ export class Bullet extends BaseClass {
   constructor(danmu, options = {}) {
     super()
 
-    const { container, recycler, config, internalHooks } = danmu
+    const { container, recycler, config, globalHooks } = danmu
     /**
      * @type {HTMLElement}
      */
@@ -30,45 +30,70 @@ export class Bullet extends BaseClass {
     this.duration = options.duration
     this.id = options.id
     this.container = container
+    /** @type {'scroll' | 'top' | 'bottom'} */
+    this.mode = undefined
     this.start = options.start
     this.prior = options.prior
     this.realTime = options.realTime
     this.color = options.color
     this.bookChannelId = options.bookChannelId
     this.reuseDOM = true
+    this.noCopyEl = !!(config.disableCopyDOM || options.disableCopyDOM)
     this.recycler = recycler
+    this.hooks = {
+      // Bullet内只记录一个离屏 hook，这个钩子使用起来很容易产生副作用，需要业务侧严格管理比如闭包清理
+      bulletDetached: () => {}
+    }
 
-    if (typeof internalHooks.onBulletElCreate === 'function') {
-      el = internalHooks.onBulletElCreate(options)
-    } else if (options.el) {
-      if (typeof options.el === 'function') {
-        el = options.el(options)
-      } else if (options.el.nodeType === 1) {
-        if (options.el.parentNode) return { bulletCreateFail: true }
-        if (config.disableCopyDOM || options.disableCopyDOM) {
-          this.reuseDOM = false
-          el = options.el
-        } else {
-          let copyDOM = copyDom(options.el)
-          if (options.eventListeners && options.eventListeners.length > 0) {
-            options.eventListeners.forEach((eventListener) => {
-              copyDOM.addEventListener(eventListener.event, eventListener.listener, eventListener.useCapture || false)
-            })
+    if (options.el || options.elLazyInit) {
+      if (this.noCopyEl) {
+        this.reuseDOM = false
+      }
+
+      if (options.elLazyInit) {
+        if (isFunction(globalHooks.bulletCreateEl)) {
+          try {
+            const result = globalHooks.bulletCreateEl(options)
+
+            if (result instanceof HTMLElement) {
+              el = result
+            } else {
+              el = result.el
+
+              if (isFunction(result.bulletDetached)) {
+                this.hooks.bulletDetached = result.bulletDetached
+              }
+            }
+          } catch (e) {}
+        }
+      } else {
+        if (options.el.nodeType === 1 && !options.el.parentNode) {
+          if (this.reuseDOM) {
+            let copyDOM = copyDom(options.el)
+            if (options.eventListeners && options.eventListeners.length > 0) {
+              options.eventListeners.forEach((eventListener) => {
+                copyDOM.addEventListener(eventListener.event, eventListener.listener, eventListener.useCapture || false)
+              })
+            }
+            el = this.recycler.use()
+            if (el.childNodes.length > 0) {
+              el.innerHTML = ''
+            }
+            if (el.textContent) {
+              el.textContent = ''
+            }
+            el.appendChild(copyDOM)
+          } else {
+            el = options.el
           }
-          el = this.recycler.use()
-          if (el.childNodes.length > 0) {
-            el.innerHTML = ''
-          }
-          if (el.textContent) {
-            el.textContent = ''
-          }
-          el.appendChild(copyDOM)
         }
       }
     } else if (typeof options.txt === 'string') {
       el = this.recycler.use()
       el.textContent = options.txt
-    } else {
+    }
+
+    if (!el) {
       return { bulletCreateFail: true }
     }
 
@@ -149,7 +174,11 @@ export class Bullet extends BaseClass {
     // this.logger && this.logger.info(`attach #${this.options.txt || '[DOM Element]'}#`)
     const self = this
     const { el, danmu, options } = self
-    const { internalHooks } = danmu
+    const { globalHooks } = danmu
+
+    if (globalHooks.bulletAttaching) {
+      globalHooks.bulletAttaching(options)
+    }
 
     if (!self.container.contains(el)) {
       self.container.appendChild(el)
@@ -166,17 +195,22 @@ export class Bullet extends BaseClass {
       self.duration = ((self.danmu.containerPos.width + self.random + self.width) / self.moveV) * 1000
     }
 
-    if (internalHooks.onBulletAttach) {
-      internalHooks.onBulletAttach(options)
+    if (globalHooks.bulletAttached) {
+      globalHooks.bulletAttached(options, el)
     }
   }
   detach() {
     // this.logger && this.logger.info(`detach #${this.options.txt || '[DOM Element]'}#`)
     const self = this
-    const { el, danmu, options } = self
-    const { internalHooks } = danmu
+    const { el, danmu, options, hooks } = self
+    const { globalHooks } = danmu
 
     if (el) {
+      // run hooks
+      if (globalHooks.bulletDetaching) {
+        globalHooks.bulletDetaching(options)
+      }
+
       if (self.reuseDOM) {
         self.recycler.unused(el)
       } else {
@@ -185,14 +219,19 @@ export class Bullet extends BaseClass {
         }
       }
 
+      // run hooks
+      if (hooks.bulletDetached) {
+        hooks.bulletDetached(options, el)
+        delete hooks.bulletDetached
+      }
+      if (globalHooks.bulletDetached) {
+        globalHooks.bulletDetached(options, el)
+      }
+
       self.el = null
     }
 
     self.elPos = undefined
-
-    if (internalHooks.onBulletDetach) {
-      internalHooks.onBulletDetach(options, el)
-    }
   }
   topInit() {
     this.logger && this.logger.info(`topInit #${this.options.txt || '[DOM Element]'}#`)
@@ -357,7 +396,7 @@ export class Bullet extends BaseClass {
 
     if (self.el && self.el.parentNode) {
       self.detach()
-      if (this.options.el && this.options.el.nodeType === 1 && this.danmu.config.disableCopyDOM) {
+      if (this.options.el && this.options.el.nodeType === 1 && this.noCopyEl) {
         styleUtil(this.options.el, 'transform', 'none')
       }
       self.danmu.emit('bullet_remove', {

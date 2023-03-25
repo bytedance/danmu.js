@@ -4,13 +4,13 @@ import BaseClass from './baseClass'
 import Control from './control'
 import RecyclableDomList from './domRecycle'
 import { addObserver, unObserver } from './resizeObserver'
-import { addClass, deepCopy, isNumber, styleUtil, typeOf } from './utils/util'
+import { addClass, deepCopy, isNumber, styleUtil } from './utils/util'
 
 /**
  * @typedef {import('./baseClass').CommentData} CommentData
  */
 /**
- * @typedef {import('./baseClass').InternalHooks} InternalHooks
+ * @typedef {import('./baseClass').GlobalHooks} GlobalHooks
  */
 
 export class DanmuJs extends BaseClass {
@@ -29,6 +29,7 @@ export class DanmuJs extends BaseClass {
         end: 1,
         lines: undefined
       },
+      hooks: undefined,
       live: false,
       comments: [],
       direction: 'r2l',
@@ -46,9 +47,12 @@ export class DanmuJs extends BaseClass {
     EventEmitter(this)
 
     /**
-     * @type {InternalHooks}
+     * @type {GlobalHooks}
      */
-    this.internalHooks = {}
+    this.globalHooks = {}
+    if (config.hooks) {
+      this.hooks(config.hooks)
+    }
 
     this.hideArr = []
     this.recycler = new RecyclableDomList()
@@ -109,18 +113,10 @@ export class DanmuJs extends BaseClass {
   }
 
   /**
-   * @param {InternalHooks} options
+   * @param {GlobalHooks} options
    */
   hooks(options) {
-    if (typeOf(options) === 'Object') {
-      const hookKeys = Object.keys(this.internalHooks)
-
-      for (let key in options) {
-        if (options[key] && hookKeys.indexOf(key) > -1) {
-          this.internalHooks[key] = options[key]
-        }
-      }
-    }
+    deepCopy(this.globalHooks, options)
   }
 
   addResizeObserver() {
@@ -172,15 +168,17 @@ export class DanmuJs extends BaseClass {
    * @param {CommentData} comment
    */
   sendComment(comment) {
-    this.logger && this.logger.info(`sendComment: ${comment.txt || '[DOM Element]'}`)
-    const { main } = this
+    const { main, logger } = this
+    logger && logger.info(`sendComment: ${comment.txt || '[DOM Element]'}`)
+
+    if (!main) return
 
     // Set a default bullet show time
     if (!comment.duration) {
       comment.duration = 15000
     }
 
-    if (comment && comment.id && comment.duration && (comment.el || comment.txt)) {
+    if (comment && comment.id && comment.duration && (comment.el || comment.elLazyInit || comment.txt)) {
       comment.duration = comment.duration ? comment.duration : 5000
       if (!comment.style) {
         comment.style = {
