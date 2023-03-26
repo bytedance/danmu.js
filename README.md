@@ -71,8 +71,9 @@
     channelSize: 40, // 轨道大小
     mouseControl: true, // 打开鼠标控制, 打开后可监听到 bullet_hover 事件。danmu.on('bullet_hover', function (data) {})
     mouseControlPause: false, // 鼠标触摸暂停。mouseControl: true 生效
-    //bOffset: 1000, //可调节弹幕横向间隔（毫秒）
-    defaultOff: true //开启此项后弹幕不会初始化，默认初始化弹幕
+    //bOffset: 1000, // 可调节弹幕横向间隔（毫秒）
+    defaultOff: true, // 开启此项后弹幕不会初始化，默认初始化弹幕
+    chaseEffect: true // 开启滚动弹幕追逐效果, 默认为true
   })
   ```
 
@@ -93,11 +94,13 @@ danmu.state : {
 ### API
 
 ```js
-player.danmu.start() //弹幕初始化并播放(内部默认已调用)
-player.danmu.pause() //弹幕暂停
-player.danmu.play() //弹幕继续播放
-player.danmu.stop() //弹幕停止并消失
-player.danmu.sendComment({
+danmu.start() //弹幕初始化并播放(内部默认已调用)
+danmu.pause() //弹幕暂停
+danmu.play() //弹幕继续播放
+danmu.stop() //弹幕停止并消失
+
+// 单条更新弹幕数据，适合在用户发送弹幕时调用
+danmu.sendComment({
   //发送弹幕
   duration: 15000,
   id: 'id',
@@ -112,15 +115,35 @@ player.danmu.sendComment({
     backgroundColor: 'rgba(255, 255, 255, 0.1)'
   }
 })
-player.danmu.setCommentDuration(id, duration) //按照id改变某一个弹幕的持续显示时间
-player.danmu.setAllDuration(mode, duration) // 改变所有弹幕的持续显示时间，包括已加入队列弹幕
-player.danmu.setPlayRate(mode, 1) // 设置弹幕播放速率，在弹幕播放速度上乘以一个系数，控制速度的变化。支持有不同显示时长弹幕的需求
-player.danmu.setCommentID(oldID, newID) //改变某一个弹幕的id
-player.danmu.hide(mode) //屏蔽某一类弹幕(参数可选值 scroll | top | bottom | color)
-player.danmu.show(mode) //显示某一类弹幕(参数可选值 scroll | top | bottom | color)
-player.danmu.setArea(area) // 修改弹幕显示区域, 参考上方config中area的配置
-player.danmu.setOpacity(opacity) // 设置透明度
-player.danmu.setFontSize(size, channelSize) // 设置样式 size 为字体大小 channelSize 如果不需要修改轨道大小则无需传入 channelSize
+
+// 批量更新弹幕数据，适合在从接口中获取到批量数据时调用
+danmu.updateComments([
+  {
+    duration: 15000,
+    id: 'id',
+    start: 3000, //不提供该项则立即发送
+    txt: '弹幕内容',
+    style: {
+      color: '#ff9500',
+      fontSize: '20px',
+      border: 'solid 1px #ff9500',
+      borderRadius: '50px',
+      padding: '5px 11px',
+      backgroundColor: 'rgba(255, 255, 255, 0.1)'
+    }
+  },
+  ...
+])
+
+danmu.setCommentDuration(id, duration) //按照id改变某一个弹幕的持续显示时间
+danmu.setAllDuration(mode, duration) // 改变所有弹幕的持续显示时间，包括已加入队列弹幕
+danmu.setPlayRate(mode, 1) // 设置弹幕播放速率，在弹幕播放速度上乘以一个系数，控制速度的变化。支持有不同显示时长弹幕的需求
+danmu.setCommentID(oldID, newID) //改变某一个弹幕的id
+danmu.hide(mode) //屏蔽某一类弹幕(参数可选值 scroll | top | bottom | color)
+danmu.show(mode) //显示某一类弹幕(参数可选值 scroll | top | bottom | color)
+danmu.setArea(area) // 修改弹幕显示区域, 参考上方config中area的配置
+danmu.setOpacity(opacity) // 设置透明度
+danmu.setFontSize(size, channelSize) // 设置样式 size 为字体大小 channelSize 如果不需要修改轨道大小则无需传入 channelSize
 danmu.setCommentLike(id, {
   el: likeDOM,
   style: {
