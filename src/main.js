@@ -4,7 +4,7 @@ import Channel from './channel'
 import { hasOwnProperty } from './utils/util'
 
 // 单次尝试入轨弹幕数量越多，长任务及CPU耗时越多
-const MAX_TRY_COUNT = 2
+const MAX_TRY_COUNT = 0
 
 /**
  * @typedef {import('./baseClass').CommentData} CommentData
@@ -357,7 +357,7 @@ class Main extends BaseClass {
       if (list.length === 0) list = self.playedData.splice(0, 1)
     }
 
-    if (list.length > 0) {
+    if (list.length > 0 && channel.checkAvailableTrack(list[0].mode)) {
       // 提前更新轨道位置信息, 减少Bullet频繁读取容器dom信息
       channel.updatePos()
 

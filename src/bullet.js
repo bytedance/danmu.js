@@ -14,24 +14,18 @@ export class Bullet extends BaseClass {
    */
   constructor(danmu, options = {}) {
     super()
-
-    const { container, recycler, config, globalHooks } = danmu
-    /**
-     * @type {HTMLElement}
-     */
-    let el
-    let cssText = ''
-    let style = options.style || {}
+    const { container, recycler, config } = danmu
 
     this.setLogger('bullet')
     // this.logger && this.logger.info('options.moveV', options.moveV)
     this.danmu = danmu
     this.options = options
+    /** @type {number} - milliseconds */
     this.duration = options.duration
     this.id = options.id
     this.container = container
     /** @type {'scroll' | 'top' | 'bottom'} */
-    this.mode = undefined
+    this.mode = options.mode === 'top' || options.mode === 'bottom' ? options.mode : 'scroll'
     this.start = options.start
     this.prior = options.prior
     this.realTime = options.realTime
@@ -40,10 +34,84 @@ export class Bullet extends BaseClass {
     this.reuseDOM = true
     this.noCopyEl = !!(config.disableCopyDOM || options.disableCopyDOM)
     this.recycler = recycler
+    /** 
+     * @type {number} - seconds
+     * @private
+     */
+    this._fullySlideInScreenDuration = undefined
+    /**
+     * @type {number} - milliseconds
+     * @private
+     */
+    this._lastMoveTime = undefined
     this.hooks = {
       // Bullet内只记录一个离屏 hook，这个钩子使用起来很容易产生副作用，需要业务侧严格管理比如闭包清理
       bulletDetached: () => {}
     }
+    /** @type {'waiting'|'start'|'end'} */
+    this.status = 'waiting'
+
+    if (!options.elLazyInit) {
+      return this._makeEl()
+    }
+  }
+  get moveV() {
+    const self = this
+    let v = self._moveV
+
+    if (!v) {
+      if (self.options.moveV) {
+        v = self.options.moveV
+      } else {
+        if (self.elPos) {
+          const ctPos = self.danmu.containerPos
+          const distance = self.direction === 'b2t' ? ctPos.height + self.height : ctPos.width + self.width
+
+          v = (distance / self.duration) * 1000
+        }
+      }
+
+      if (v) {
+        v *= self.danmu.main.playRate
+
+        // 固化速度，否则resize时外部获取当前弹幕时会重新计算速度，导致布局异常（重叠），同时提高性能。
+        self._moveV = v
+      }
+    }
+    return v
+  }
+  get direction() {
+    return this.danmu.direction
+  }
+  get fullySlideIntoScreen() {
+    const self = this
+    let flag = true
+
+    if (self.mode === 'scroll' && self._lastMoveTime && self._fullySlideInScreenDuration > 0) {
+      const now = new Date().getTime()
+      const diff = (now - self._lastMoveTime) / 1000
+
+      if (diff >= self._fullySlideInScreenDuration) {
+        flag = true
+      } else {
+        flag = false
+      }
+    }
+    return flag
+  }
+
+  /**
+   * @private
+   */
+  _makeEl() {
+    const { danmu, options } = this
+    const { config, globalHooks } = danmu
+    /**
+     * @type {HTMLElement}
+     */
+    let el
+    let cssText = ''
+    let style = options.style || {}
 
     if (options.el || options.elLazyInit) {
       if (this.noCopyEl) {
@@ -116,12 +184,6 @@ export class Bullet extends BaseClass {
     })
     styleCSSText(el, cssText)
 
-    if (options.mode === 'top' || options.mode === 'bottom') {
-      this.mode = options.mode
-    } else {
-      this.mode = 'scroll'
-    }
-
     /**
      * @type {HTMLElement}
      */
@@ -129,35 +191,6 @@ export class Bullet extends BaseClass {
     if (options.like && options.like.el) {
       this.setLikeDom(options.like.el, options.like.style)
     }
-    this.status = 'waiting' // waiting,start,end
-  }
-  get moveV() {
-    const self = this
-    let v = self._moveV
-
-    if (!v) {
-      if (self.options.moveV) {
-        v = self.options.moveV
-      } else {
-        if (self.elPos) {
-          const ctPos = self.danmu.containerPos
-          const distance = self.direction === 'b2t' ? ctPos.height + self.height : ctPos.width + self.width
-
-          v = (distance / self.duration) * 1000
-        }
-      }
-
-      if (v) {
-        v *= self.danmu.main.playRate
-
-        // 固化速度，否则resize时外部获取当前弹幕时会重新计算速度，导致布局异常（重叠），同时提高性能。
-        self._moveV = v
-      }
-    }
-    return v
-  }
-  get direction() {
-    return this.danmu.direction
   }
 
   updateOffset(val, dryRun = false) {
@@ -173,7 +206,12 @@ export class Bullet extends BaseClass {
   attach() {
     // this.logger && this.logger.info(`attach #${this.options.txt || '[DOM Element]'}#`)
     const self = this
-    const { el, danmu, options } = self
+
+    if (self.options.elLazyInit && !self.el) {
+      self._makeEl()
+    }
+
+    const { danmu, options, el } = self
     const { globalHooks } = danmu
 
     if (globalHooks.bulletAttaching) {
@@ -266,7 +304,7 @@ export class Bullet extends BaseClass {
     if (this.mode === 'scroll') {
       const ctPos = self.danmu.containerPos
       if (isFullscreen) {
-        let pastDuration = (new Date().getTime() - self.moveTime) / 1000
+        let pastDuration = (new Date().getTime() - self._lastMoveTime) / 1000
         let pastS = pastDuration * this.moveV
         let ratio = 0
         let nowS = 0
@@ -335,34 +373,35 @@ export class Bullet extends BaseClass {
 
     if (this.mode === 'scroll') {
       const ctPos = self.danmu.containerPos
+      if (!self.el) {
+        return
+      }
+      const bulletPos = self.el.getBoundingClientRect()
+      let fullyMovedToScreenDistance
 
       if (this.direction === 'b2t') {
-        let leftDuration = (self.el.getBoundingClientRect().bottom - ctPos.top) / this.moveV
+        fullyMovedToScreenDistance = bulletPos.bottom - ctPos.bottom
+
+        let leftDuration = (bulletPos.bottom - ctPos.top) / this.moveV
         styleUtil(self.el, 'transition', `transform ${leftDuration}s linear 0s`)
         styleUtil(
           self.el,
           'transform',
           `translateX(-${self.top}px) translateY(-${self.height}px) translateZ(0px) rotate(90deg)`
         )
-        self.moveTime = new Date().getTime()
-        self.moveMoreS = self.el.getBoundingClientRect().top - ctPos.top
+        self._lastMoveTime = new Date().getTime()
+        self.moveMoreS = bulletPos.top - ctPos.top
         self.moveContainerHeight = ctPos.height
-        // self.removeTimer = setTimeout(func, leftDuration * 1000)
       } else {
-        if (!self.el) {
-          return
-        }
-        const bulletPos = self.el.getBoundingClientRect()
+        fullyMovedToScreenDistance = bulletPos.right - ctPos.right
         const leftDistance = bulletPos.right - ctPos.left
         const leftDuration = leftDistance / self.moveV
-        // const v = leftDistance / leftDuration * self.danmu.main.playRate
-        // self.el.style.left = bulletPos.left + 'px'
 
         if (bulletPos.right > ctPos.left) {
           styleUtil(self.el, 'transition', `transform ${leftDuration}s linear 0s`)
           styleUtil(self.el, 'transform', `translateX(-${leftDistance}px) translateY(0px) translateZ(0px)`)
 
-          self.moveTime = new Date().getTime()
+          self._lastMoveTime = new Date().getTime()
           self.moveMoreS = bulletPos.left - ctPos.left
           self.moveContainerWidth = ctPos.width
         } else {
@@ -370,6 +409,8 @@ export class Bullet extends BaseClass {
           self.remove()
         }
       }
+
+      self._fullySlideInScreenDuration = fullyMovedToScreenDistance / self.moveV
     } else {
       const newTimestamp = new Date().getTime()
       const leftDuration =
