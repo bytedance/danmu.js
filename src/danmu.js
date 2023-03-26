@@ -39,7 +39,8 @@ export class DanmuJs extends BaseClass {
       maxCommentsLength: undefined,
       bulletOffset: undefined,
       interval: 2000,
-      highScorePriority: true // 高积分优先展示
+      highScorePriority: true, // 高积分优先展示
+      chaseEffect: true // 滚动弹幕追逐效果
     })
     deepCopy(config, options)
 
@@ -372,14 +373,14 @@ export class DanmuJs extends BaseClass {
           return false
         }
       })
-    //   self.main.data = self.main.data.filter((item) => {
-    //     const keepIt = item.id !== id
+      //   self.main.data = self.main.data.filter((item) => {
+      //     const keepIt = item.id !== id
 
-    //     if (!keepIt) {
-    //       self.main.dataElHandle([item])
-    //     }
-    //     return keepIt
-    //   })
+      //     if (!keepIt) {
+      //       self.main.dataElHandle([item])
+      //     }
+      //     return keepIt
+      //   })
     }
   }
 
@@ -391,7 +392,7 @@ export class DanmuJs extends BaseClass {
     this.logger && this.logger.info(`updateComments: ${comments.length}, isClear ${isClear}`)
     const { main } = this
     if (typeof isClear === 'boolean' && isClear) {
-    //   main.dataElHandle(main.data)
+      //   main.dataElHandle(main.data)
       main.data = []
     }
     main.data = main.data.concat(comments)

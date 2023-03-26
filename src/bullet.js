@@ -34,7 +34,7 @@ export class Bullet extends BaseClass {
     this.reuseDOM = true
     this.noCopyEl = !!(config.disableCopyDOM || options.disableCopyDOM)
     this.recycler = recycler
-    /** 
+    /**
      * @type {number} - seconds
      * @private
      */
@@ -57,22 +57,26 @@ export class Bullet extends BaseClass {
   }
   get moveV() {
     const self = this
+    const { danmu, options } = self
     let v = self._moveV
 
     if (!v) {
-      if (self.options.moveV) {
-        v = self.options.moveV
+      if (options.moveV) {
+        v = options.moveV
       } else {
         if (self.elPos) {
-          const ctPos = self.danmu.containerPos
-          const distance = self.direction === 'b2t' ? ctPos.height + self.height : ctPos.width + self.width
+          const ctPos = danmu.containerPos
+          const distance =
+            self.direction === 'b2t'
+              ? ctPos.height + (danmu.config.chaseEffect ? self.height : 0)
+              : ctPos.width + (danmu.config.chaseEffect ? self.width : 0)
 
           v = (distance / self.duration) * 1000
         }
       }
 
       if (v) {
-        v *= self.danmu.main.playRate
+        v *= danmu.main.playRate
 
         // 固化速度，否则resize时外部获取当前弹幕时会重新计算速度，导致布局异常（重叠），同时提高性能。
         self._moveV = v
