@@ -117,6 +117,14 @@ export class Bullet extends BaseClass {
     let cssText = ''
     let style = options.style || {}
 
+    // The use of translate3d pushes css animations into hardware acceleration for more power! 
+    // Use 'perspective' to try to fix flickering problem after switching to the transform above
+    style['perspective'] = '500em'
+
+    // !!! 'backface-visibility' will cause translateX/Y stop rendering in firefox
+    // style['backfaceVisibility'] = 'hidden'
+    // style['webkitBackfaceVisibility'] = 'hidden'
+
     if (options.el || options.elLazyInit) {
       if (this.noCopyEl) {
         this.reuseDOM = false
@@ -372,8 +380,6 @@ export class Bullet extends BaseClass {
     if (this.status === 'start') return
 
     this.status = 'start'
-    styleUtil(this.el, 'backface-visibility', 'hidden')
-    styleUtil(this.el, 'perspective', '500em')
 
     if (this.mode === 'scroll') {
       const ctPos = self.danmu.containerPos
