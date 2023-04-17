@@ -6,6 +6,13 @@ import RecyclableDomList from './domRecycle'
 import { addObserver, unObserver } from './resizeObserver'
 import { addClass, deepCopy, isNumber, styleUtil } from './utils/util'
 
+/**
+ * @typedef {import('./baseClass').CommentData} CommentData
+ */
+/**
+ * @typedef {import('./baseClass').GlobalHooks} GlobalHooks
+ */
+
 export class DanmuJs extends BaseClass {
   constructor(options) {
     super()
@@ -22,6 +29,7 @@ export class DanmuJs extends BaseClass {
         end: 1,
         lines: undefined
       },
+      hooks: undefined,
       live: false,
       comments: [],
       direction: 'r2l',
@@ -31,15 +39,24 @@ export class DanmuJs extends BaseClass {
       maxCommentsLength: undefined,
       bulletOffset: undefined,
       interval: 2000,
-      highScorePriority: true // 高积分优先展示
+      highScorePriority: true, // 高积分优先展示
+      chaseEffect: true // 滚动弹幕追逐效果
     })
     deepCopy(config, options)
 
     // Add event subscription handler
     EventEmitter(this)
 
+    /**
+     * @type {GlobalHooks}
+     */
+    this.globalHooks = {}
+    if (config.hooks) {
+      this.hooks(config.hooks)
+    }
+
     this.hideArr = []
-    this.domObj = new RecyclableDomList()
+    this.recycler = new RecyclableDomList()
 
     // freezed comment
     this.freezeId = null
@@ -96,6 +113,13 @@ export class DanmuJs extends BaseClass {
     return this.main.channel.containerPos
   }
 
+  /**
+   * @param {GlobalHooks} options
+   */
+  hooks(options) {
+    deepCopy(this.globalHooks, options)
+  }
+
   addResizeObserver() {
     this.config.needResizeObserver &&
       addObserver(this.container, () => {
@@ -134,7 +158,7 @@ export class DanmuJs extends BaseClass {
     this.logger && this.logger.info('destroy')
     this.stop()
     this.bulletBtn.destroy()
-    this.domObj.destroy()
+    this.recycler.destroy()
     for (let k in this) {
       delete this[k]
     }
@@ -142,18 +166,20 @@ export class DanmuJs extends BaseClass {
   }
 
   /**
-   * @param {import('./main').CommentData} comment
+   * @param {CommentData} comment
    */
   sendComment(comment) {
-    this.logger && this.logger.info(`sendComment: ${comment.txt || '[DOM Element]'}`)
-    const { main } = this
+    const { main, logger } = this
+    logger && logger.info(`sendComment: ${comment.txt || '[DOM Element]'}`)
+
+    if (!main) return
 
     // Set a default bullet show time
     if (!comment.duration) {
       comment.duration = 15000
     }
 
-    if (comment && comment.id && comment.duration && (comment.el || comment.txt)) {
+    if (comment && comment.id && comment.duration && (comment.el || comment.elLazyInit || comment.txt)) {
       comment.duration = comment.duration ? comment.duration : 5000
       if (!comment.style) {
         comment.style = {
@@ -347,26 +373,26 @@ export class DanmuJs extends BaseClass {
           return false
         }
       })
-      self.main.data = self.main.data.filter((item) => {
-        const keepIt = item.id !== id
+      //   self.main.data = self.main.data.filter((item) => {
+      //     const keepIt = item.id !== id
 
-        if (!keepIt) {
-          self.main.dataElHandle([item])
-        }
-        return keepIt
-      })
+      //     if (!keepIt) {
+      //       self.main.dataElHandle([item])
+      //     }
+      //     return keepIt
+      //   })
     }
   }
 
   /**
-   * @param {Array<import('./main').CommentData>} comments
+   * @param {Array<CommentData>} comments
    * @param {boolean} isClear
    */
   updateComments(comments, isClear = true) {
     this.logger && this.logger.info(`updateComments: ${comments.length}, isClear ${isClear}`)
     const { main } = this
     if (typeof isClear === 'boolean' && isClear) {
-      main.dataElHandle(main.data)
+      //   main.dataElHandle(main.data)
       main.data = []
     }
     main.data = main.data.concat(comments)

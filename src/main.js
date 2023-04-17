@@ -1,24 +1,13 @@
 import BaseClass from './baseClass'
 import Bullet from './bullet'
 import Channel from './channel'
-import { attachEventListener, hasOwnProperty } from './utils/util'
+import { hasOwnProperty } from './utils/util'
 
 // 单次尝试入轨弹幕数量越多，长任务及CPU耗时越多
-const MAX_TRY_COUNT = 2
+const MAX_TRY_COUNT = 0
 
 /**
- * @typedef {{
- *  id: string
- *  start: number
- *  duration: number
- *  prior: boolean
- *  score?: number // 积分越高，越容易展示
- *  txt?: string
- *  el?: HTMLElement
- *  onElDestroy?: Function
- *  mode: 'scroll' | 'top' | 'bottom'
- *  attached_: boolean // 内部属性，标记弹幕是否已经被入轨
- * }} CommentData
+ * @typedef {import('./baseClass').CommentData} CommentData
  */
 
 /**
@@ -63,17 +52,124 @@ class Main extends BaseClass {
      * @type {'idle' | 'paused' | 'playing' | 'closed'}
      */
     this._status = 'idle' // 当前弹幕正在闲置
+    /**
+     * @type {Array<[HTMLElement, string, Function]>}
+     */
+    this._events = []
 
-    attachEventListener(danmu, 'bullet_remove', this.updateQueue.bind(this), 'destroy')
-
-    if (danmu.config.mouseControl || danmu.config.mouseEnterControl) {
-      this._onMouseoverEventProxy = this._onMouseover.bind(this)
-      this.container.addEventListener('mouseover', this._onMouseoverEventProxy, false)
-    }
+    this._bindEvents()
   }
 
   get status() {
     return this._status
+  }
+
+  destroy() {
+    this.logger && this.logger.info('destroy')
+    this._unbindEvents()
+    this._cancelDataHandleTimer()
+    this.channel.destroy()
+    // this.dataElHandle(this.data)
+    this.data = []
+    for (let k in this) {
+      delete this[k]
+    }
+  }
+
+  /**
+   * @private
+   */
+  _bindEvents() {
+    const { danmu, container } = this
+    this._unbindEvents()
+
+    /**
+     * 在渲染队列中移除已经展示完的弹幕对象
+     * @param {{
+     *   bullet: Bullet
+     * }} data
+     */
+    const updateQueue = ({ bullet }) => {
+      const { data, queue } = this
+      queue.some((item, index) => {
+        if (item.id === bullet.id) {
+          queue.splice(index, 1)
+          return true
+        } else {
+          return false
+        }
+      })
+      data.some((item) => {
+        if (item.id === bullet.id) {
+          item.attached_ = false
+          return true
+        } else {
+          return false
+        }
+      })
+    }
+    this._events.push([danmu, 'bullet_remove', updateQueue])
+
+    /**
+     * @param {TransitionEvent} e
+     */
+    const onTransitionEnd = (e) => {
+      const bullet = this._getBulletByEvt(e)
+
+      bullet.status = 'end'
+      bullet.remove(false)
+    }
+    this._events.push([container, 'transitionend', onTransitionEnd])
+
+    if (danmu.config.mouseControl || danmu.config.mouseEnterControl) {
+      /**
+       * @param {MouseEvent} e
+       */
+      const onMouseover = (e) => {
+        const { danmu } = this
+        let bullet
+
+        if (!danmu || (danmu.mouseControl && danmu.config.mouseControlPause)) {
+          return
+        }
+
+        bullet = this._getBulletByEvt(e)
+
+        if (bullet) {
+          if (bullet.status !== 'waiting' && bullet.status !== 'end') {
+            danmu.emit('bullet_hover', {
+              bullet: bullet,
+              event: e
+            })
+          }
+        }
+      }
+      this._events.push([container, 'mouseover', onMouseover])
+    }
+
+    this._events.forEach((item) => {
+      if (item[0].addEventListener) {
+        item[0].addEventListener(item[1], item[2], false)
+      } else if (item[0].on) {
+        item[0].on(item[1], item[2])
+      }
+    })
+  }
+
+  /**
+   * @private
+   */
+  _unbindEvents() {
+    if (this._events.length) {
+      this._events.forEach((item) => {
+        if (item[0].removeEventListener) {
+          item[0].removeEventListener(item[1], item[2], false)
+        } else if (item[0].off) {
+          item[0].off(item[1], item[2])
+        }
+      })
+      this._events = []
+    }
   }
 
   /**
@@ -91,40 +187,6 @@ class Main extends BaseClass {
     }
   }
 
-  destroy() {
-    this.logger && this.logger.info('destroy')
-    this._cancelDataHandleTimer()
-    if (this._onMouseoverEventProxy && this.container) {
-      this.container.removeEventListener('mouseover', this._onMouseoverEventProxy, false)
-    }
-    this.channel.destroy()
-    this.dataElHandle(this.data)
-    this.data = []
-    for (let k in this) {
-      delete this[k]
-    }
-  }
-  // 在渲染队列中移除已经展示完的弹幕对象
-  updateQueue(data) {
-    this.logger && this.logger.info('updateQueue')
-    let self = this
-    self.queue.some((item, index) => {
-      if (item.id === data.bullet.id) {
-        self.queue.splice(index, 1)
-        return true
-      } else {
-        return false
-      }
-    })
-    self.data.some((item) => {
-      if (item.id === data.bullet.id) {
-        item.attached_ = false
-        return true
-      } else {
-        return false
-      }
-    })
-  }
   init() {
     const self = this
     self.retryStatus = 'normal'
@@ -183,7 +245,7 @@ class Main extends BaseClass {
   clear() {
     this.logger && this.logger.info('clear')
     this.channel.reset()
-    this.dataElHandle(this.data)
+    // this.dataElHandle(this.data)
     this.data = []
     this.queue = []
     this.container.innerHTML = ''
@@ -287,7 +349,7 @@ class Main extends BaseClass {
       }
 
       if (danmu.live) {
-        self.dataElHandle(this.data)
+        // self.dataElHandle(this.data)
         self.data = []
       }
     } else {
@@ -295,7 +357,7 @@ class Main extends BaseClass {
       if (list.length === 0) list = self.playedData.splice(0, 1)
     }
 
-    if (list.length > 0) {
+    if (list.length > 0 && channel.checkAvailableTrack(list[0].mode)) {
       // 提前更新轨道位置信息, 减少Bullet频繁读取容器dom信息
       channel.updatePos()
 
@@ -390,7 +452,7 @@ class Main extends BaseClass {
     }
 
     if (deleteCount > 0) {
-      this.dataElHandle(data, 0, deleteCount)
+    //   this.dataElHandle(data, 0, deleteCount)
       data.splice(0, deleteCount)
 
       // Keep high-priority comments data.
@@ -398,49 +460,45 @@ class Main extends BaseClass {
     }
   }
 
+//   /**
+//    * El maybe bound events or refs, use this to clean
+//    * @param {Array<CommentData>} comments
+//    * @param {number?} start
+//    * @param {number?} end - not including end
+//    */
+//   dataElHandle(comments, start = 0, end) {
+//     const bulletIds = this.queue.map((item) => item.id)
+
+//     if (Number.isNaN(end)) {
+//       end = comments.length
+//     } else {
+//       if (end > comments.length) {
+//         throw `dataElHandle invalid range: ${start}-${end}`
+//       }
+//     }
+
+//     for (let i = start; i < end; i++) {
+//       let item = comments[i]
+//       if (item && typeof item.onElDestroy === 'function' && bulletIds.indexOf(item.id) === -1) {
+//         try {
+//           item.onElDestroy(item)
+//           item.onElDestroy = null
+//         } catch (e) {
+//           console.error('danmu onElDestroy fail:', e)
+//         }
+//       }
+//     }
+//   }
+
   /**
-   * El maybe bound events or refs, use this to clean
-   * @param {Array<CommentData>} comments
-   * @param {number?} start
-   * @param {number?} end - not including end
-   */
-  dataElHandle(comments, start = 0, end) {
-    const bulletIds = this.queue.map((item) => item.id)
-
-    if (Number.isNaN(end)) {
-      end = comments.length
-    } else {
-      if (end > comments.length) {
-        throw `dataElHandle invalid range: ${start}-${end}`
-      }
-    }
-
-    for (let i = start; i < end; i++) {
-      let item = comments[i]
-      if (item && typeof item.onElDestroy === 'function' && bulletIds.indexOf(item.id) === -1) {
-        try {
-          item.onElDestroy(item)
-          item.onElDestroy = null
-        } catch (e) {
-          console.error('danmu onElDestroy fail:', e)
-        }
-      }
-    }
-  }
-
-  /**
-   * @param {MouseEvent} e
+   * @param {EventTarget} e
    * @private
    */
-  _onMouseover(e) {
+  _getBulletByEvt(e) {
     const target = e.target || e.srcElement
-    const { danmu, queue } = this
+    const { queue } = this
+
     let bullet
-
-    if (!danmu || (danmu.mouseControl && danmu.config.mouseControlPause)) {
-      return
-    }
-
     for (let i = 0, item; i < queue.length; i++) {
       item = queue[i]
       if (item && item.el && (item.el === target || item.el.contains(target))) {
@@ -449,14 +507,7 @@ class Main extends BaseClass {
       }
     }
 
-    if (bullet) {
-      if (bullet.status !== 'waiting' && bullet.status !== 'end') {
-        danmu.emit('bullet_hover', {
-          bullet: bullet,
-          event: e
-        })
-      }
-    }
+    return bullet
   }
 }
 

@@ -3,6 +3,10 @@ import { attachEventListener, hasOwnProperty, isNumber } from './utils/util'
 import { validAreaLineRule } from './utils/validator'
 
 /**
+ * @typedef {import('./bullet').Bullet} Bullet
+ */
+
+/**
  * [Channel 弹幕轨道控制]
  */
 class Channel extends BaseClass {
@@ -18,6 +22,7 @@ class Channel extends BaseClass {
     self.width = 0
     self.height = 0
     self.reset(true)
+    /** @type {Array.<{id: number, queue: {scroll: Array.<Bullet>, top: Array.<Bullet>, bottom: Array.<Bullet>}, operating: {scroll: boolean, top: boolean, bottom: boolean}, bookId: {}}>} */
     self.channels = []
     self.updatePos()
 
@@ -41,6 +46,36 @@ class Channel extends BaseClass {
 
   get direction() {
     return this.danmu.direction
+  }
+
+  checkAvailableTrack(mode = 'scroll') {
+    const { channels } = this
+    let flag = false
+
+    if (mode === 'scroll') {
+      for (let i = 0, channel; i < channels.length; i++) {
+        channel = channels[i]
+        flag = true
+        if (channel.operating[mode]) {
+          flag = false
+          continue
+        }
+
+        // 当前轨道 - 最后入轨弹幕
+        const curBullet = channel.queue[mode][0]
+        if (curBullet && !curBullet.fullySlideIntoScreen) {
+          flag = false
+          continue
+        }
+        if (flag) {
+          break
+        }
+      }
+    } else {
+      flag = true
+    }
+
+    return flag
   }
 
   destroy() {
@@ -172,15 +207,11 @@ class Channel extends BaseClass {
         }
       }
       if (bullet.mode === 'scroll') {
-        for (let i = 0, max = channels.length - occupy; i <= max; i++) {
+        for (let i = 0, max = channels.length - occupy; i <= max; i += occupy) {
           flag = true
           for (let j = i; j < i + occupy; j++) {
             channel = channels[j]
-            if (channel.operating.scroll) {
-              flag = false
-              break
-            }
-            if (channel.bookId.scroll && channel.bookId.scroll !== bullet.id) {
+            if (channel.operating.scroll || (channel.bookId.scroll && channel.bookId.scroll !== bullet.id)) {
               flag = false
               break
             }

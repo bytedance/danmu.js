@@ -153,16 +153,19 @@ export function styleUtil(elem, name, value) {
  * @param {HTMLElement} elem
  * @param {string} value
  */
- export function styleCSSText(elem, value) {
-    const style = elem.style
-    try {
-      style.cssText = value
-    } catch (error) {
-    }
-  }
+export function styleCSSText(elem, value) {
+  const style = elem.style
+  try {
+    style.cssText = value
+  } catch (error) {}
+}
 
 export function isNumber(val) {
   return typeof val === 'number' && !Number.isNaN(val)
+}
+
+export function isFunction(val) {
+  return typeof val === 'function'
 }
 
 /**
