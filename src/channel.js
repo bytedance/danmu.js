@@ -122,6 +122,10 @@ class Channel extends BaseClass {
     }
 
     function channelReset() {
+      if (!self.danmu || !self.danmu.container) {
+        return
+      }
+      const { container } = self.danmu
       let size = container.getBoundingClientRect()
       self.width = size.width
       self.height = size.height
@@ -533,6 +537,9 @@ class Channel extends BaseClass {
    * @private
    */
   _initChannels() {
+    if (!this.danmu || !this.danmu.config) {
+      return
+    }
     const self = this
     const { config } = self.danmu
     const channelSize = config.channelSize || (/mobile/gi.test(navigator.userAgent) ? 10 : 12)

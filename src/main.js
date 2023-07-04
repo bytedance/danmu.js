@@ -116,8 +116,10 @@ class Main extends BaseClass {
     const onTransitionEnd = (e) => {
       const bullet = this._getBulletByEvt(e)
 
-      bullet.status = 'end'
-      bullet.remove(false)
+      if (bullet) {
+        bullet.status = 'end'
+        bullet.remove(false)
+      }
     }
     this._events.push([container, 'transitionend', onTransitionEnd])
 
@@ -323,7 +325,7 @@ class Main extends BaseClass {
        */
       list
 
-    if (!danmu.isReady) return
+    if (!danmu.isReady || !danmu.main) return
 
     if (player) {
       const currentTime = player.currentTime ? Math.floor(player.currentTime * 1000) : 0
@@ -452,7 +454,7 @@ class Main extends BaseClass {
     }
 
     if (deleteCount > 0) {
-    //   this.dataElHandle(data, 0, deleteCount)
+      //   this.dataElHandle(data, 0, deleteCount)
       data.splice(0, deleteCount)
 
       // Keep high-priority comments data.
@@ -460,35 +462,35 @@ class Main extends BaseClass {
     }
   }
 
-//   /**
-//    * El maybe bound events or refs, use this to clean
-//    * @param {Array<CommentData>} comments
-//    * @param {number?} start
-//    * @param {number?} end - not including end
-//    */
-//   dataElHandle(comments, start = 0, end) {
-//     const bulletIds = this.queue.map((item) => item.id)
+  //   /**
+  //    * El maybe bound events or refs, use this to clean
+  //    * @param {Array<CommentData>} comments
+  //    * @param {number?} start
+  //    * @param {number?} end - not including end
+  //    */
+  //   dataElHandle(comments, start = 0, end) {
+  //     const bulletIds = this.queue.map((item) => item.id)
 
-//     if (Number.isNaN(end)) {
-//       end = comments.length
-//     } else {
-//       if (end > comments.length) {
-//         throw `dataElHandle invalid range: ${start}-${end}`
-//       }
-//     }
+  //     if (Number.isNaN(end)) {
+  //       end = comments.length
+  //     } else {
+  //       if (end > comments.length) {
+  //         throw `dataElHandle invalid range: ${start}-${end}`
+  //       }
+  //     }
 
-//     for (let i = start; i < end; i++) {
-//       let item = comments[i]
-//       if (item && typeof item.onElDestroy === 'function' && bulletIds.indexOf(item.id) === -1) {
-//         try {
-//           item.onElDestroy(item)
-//           item.onElDestroy = null
-//         } catch (e) {
-//           console.error('danmu onElDestroy fail:', e)
-//         }
-//       }
-//     }
-//   }
+  //     for (let i = start; i < end; i++) {
+  //       let item = comments[i]
+  //       if (item && typeof item.onElDestroy === 'function' && bulletIds.indexOf(item.id) === -1) {
+  //         try {
+  //           item.onElDestroy(item)
+  //           item.onElDestroy = null
+  //         } catch (e) {
+  //           console.error('danmu onElDestroy fail:', e)
+  //         }
+  //       }
+  //     }
+  //   }
 
   /**
    * @param {EventTarget} e
