@@ -121,11 +121,12 @@ export class DanmuJs extends BaseClass {
   }
 
   addResizeObserver() {
-    this.config.needResizeObserver &&
+    if (this.config.needResizeObserver && this.container) {
       addObserver(this.container, () => {
         this.logger && this.logger.info('needResizeObserver')
         this.resize()
       })
+    }
   }
 
   start() {
@@ -449,7 +450,10 @@ export class DanmuJs extends BaseClass {
 
   setOpacity(opacity) {
     this.logger && this.logger.info(`setOpacity: opacity ${opacity}`)
-    this.container.style.opacity = opacity
+
+    if (this.container) {
+      this.container.style.opacity = opacity
+    }
   }
 
   setFontSize(
