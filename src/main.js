@@ -178,10 +178,10 @@ class Main extends BaseClass {
    * @private
    */
   _cancelDataHandleTimer() {
-    if (this.handleId) {
-      clearTimeout(this.handleId)
-      this.handleId = null
-    }
+    // if (this.handleId) {
+    //   cancelAnimationFrame(this.handleId)
+    //   this.handleId = null
+    // }
 
     if (this.handleTimer) {
       clearTimeout(this.handleTimer)
@@ -205,12 +205,7 @@ class Main extends BaseClass {
         self.dataHandle()
       }
       if (self.retryStatus !== 'stop' || self._status === 'paused') {
-        self.handleTimer = setTimeout(() => {
-          // 在下一帧开始时进行绘制，最大程度减少卡顿
-          self.handleId = requestAnimationFrame(() => {
-            dataHandle()
-          })
-        }, 250)
+        self.handleTimer = setTimeout(dataHandle, 250)
       }
     }
     dataHandle()
@@ -241,16 +236,21 @@ class Main extends BaseClass {
     self._status = 'closed'
     self.retryStatus = 'stop'
     self.queue = []
-    self.container.innerHTML = ''
-    self.channel.reset()
+
+    if (self.container) {
+      self.container.innerHTML = ''
+    }
+    self.channel && self.channel.reset()
   }
   clear() {
     this.logger && this.logger.info('clear')
-    this.channel.reset()
+    this.channel && this.channel.reset()
     // this.dataElHandle(this.data)
     this.data = []
     this.queue = []
-    this.container.innerHTML = ''
+    if (this.container) {
+      this.container.innerHTML = ''
+    }
   }
   play() {
     if (this._status === 'closed') {
@@ -371,7 +371,7 @@ class Main extends BaseClass {
           item.duration = self.forceDuration
         }
         bullet = new Bullet(danmu, item)
-        if (bullet && !bullet.bulletCreateFail) {
+        if (!bullet.bulletCreateFail) {
           bullet.attach()
           item.attached_ = true
           result = channel.addBullet(bullet)
@@ -461,36 +461,6 @@ class Main extends BaseClass {
       this.data = priorComments.concat(data)
     }
   }
-
-  //   /**
-  //    * El maybe bound events or refs, use this to clean
-  //    * @param {Array<CommentData>} comments
-  //    * @param {number?} start
-  //    * @param {number?} end - not including end
-  //    */
-  //   dataElHandle(comments, start = 0, end) {
-  //     const bulletIds = this.queue.map((item) => item.id)
-
-  //     if (Number.isNaN(end)) {
-  //       end = comments.length
-  //     } else {
-  //       if (end > comments.length) {
-  //         throw `dataElHandle invalid range: ${start}-${end}`
-  //       }
-  //     }
-
-  //     for (let i = start; i < end; i++) {
-  //       let item = comments[i]
-  //       if (item && typeof item.onElDestroy === 'function' && bulletIds.indexOf(item.id) === -1) {
-  //         try {
-  //           item.onElDestroy(item)
-  //           item.onElDestroy = null
-  //         } catch (e) {
-  //           console.error('danmu onElDestroy fail:', e)
-  //         }
-  //       }
-  //     }
-  //   }
 
   /**
    * @param {EventTarget} e

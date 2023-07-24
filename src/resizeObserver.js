@@ -17,7 +17,7 @@ class ResizeObserver {
   }
 
   addObserver(target, handler) {
-    if (!this.observer) {
+    if (!this.observer || !target) {
       return
     }
     this.observer && this.observer.observe(target)
@@ -39,6 +39,9 @@ class ResizeObserver {
   }
 
   unObserver(target) {
+    if (!target) {
+      return
+    }
     let i = -1
     this.__handlers.map((item, index) => {
       if (target === item.target) {

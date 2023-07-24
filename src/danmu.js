@@ -131,35 +131,35 @@ export class DanmuJs extends BaseClass {
 
   start() {
     this.logger && this.logger.info('start')
-    this.main.start()
+    this.main && this.main.start()
   }
 
   pause() {
     this.logger && this.logger.info('pause')
-    this.main.pause()
+    this.main && this.main.pause()
   }
 
   play() {
     this.logger && this.logger.info('play')
-    this.main.play()
+    this.main && this.main.play()
   }
 
   stop() {
     this.logger && this.logger.info('stop')
-    this.main.stop()
+    this.main && this.main.stop()
   }
 
   clear() {
     this.logger && this.logger.info('clear')
-    this.main.clear()
+    this.main && this.main.clear()
   }
 
   destroy() {
     unObserver(this.container)
     this.logger && this.logger.info('destroy')
     this.stop()
-    this.bulletBtn.destroy()
-    this.recycler.destroy()
+    this.bulletBtn && this.bulletBtn.destroy()
+    this.recycler && this.recycler.destroy()
     for (let k in this) {
       delete this[k]
     }
