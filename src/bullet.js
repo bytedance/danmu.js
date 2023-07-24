@@ -1,5 +1,9 @@
 import BaseClass from './baseClass'
+import Log from './utils/logger'
 import { copyDom, isFunction, isNumber, styleCSSText, styleUtil } from './utils/util'
+
+// 减少频繁的内存创建
+const logger = new Log('bullet')
 
 /**
  * [Bullet 弹幕构造类]
@@ -16,7 +20,7 @@ export class Bullet extends BaseClass {
     super()
     const { container, recycler, config } = danmu
 
-    this.setLogger('bullet')
+    this.setLogger(logger)
     // this.logger && this.logger.info('options.moveV', options.moveV)
     this.danmu = danmu
     this.options = options
@@ -44,15 +48,11 @@ export class Bullet extends BaseClass {
      * @private
      */
     this._lastMoveTime = undefined
-    this.hooks = {
-      // Bullet内只记录一个离屏 hook，这个钩子使用起来很容易产生副作用，需要业务侧严格管理比如闭包清理
-      bulletDetached: () => {}
-    }
     /** @type {'waiting'|'start'|'end'} */
     this.status = 'waiting'
 
     if (!options.elLazyInit) {
-      return this._makeEl()
+      this.bulletCreateFail = !this._makeEl()
     }
   }
   get moveV() {
@@ -106,6 +106,7 @@ export class Bullet extends BaseClass {
 
   /**
    * @private
+   * @returns {Boolean}
    */
   _makeEl() {
     const { danmu, options } = this
@@ -117,7 +118,7 @@ export class Bullet extends BaseClass {
     let cssText = ''
     let style = options.style || {}
 
-    // The use of translate3d pushes css animations into hardware acceleration for more power! 
+    // The use of translate3d pushes css animations into hardware acceleration for more power!
     // Use 'perspective' to try to fix flickering problem after switching to the transform above
     style['perspective'] = '500em'
 
@@ -139,10 +140,6 @@ export class Bullet extends BaseClass {
               el = result
             } else {
               el = result.el
-
-              if (isFunction(result.bulletDetached)) {
-                this.hooks.bulletDetached = result.bulletDetached
-              }
             }
           } catch (e) {}
         }
@@ -173,8 +170,8 @@ export class Bullet extends BaseClass {
       el.textContent = options.txt
     }
 
-    if (!el) {
-      return { bulletCreateFail: true }
+    if (!el || !danmu.main) {
+      return false
     }
 
     let offset
@@ -203,6 +200,8 @@ export class Bullet extends BaseClass {
     if (options.like && options.like.el) {
       this.setLikeDom(options.like.el, options.like.style)
     }
+
+    return true
   }
 
   updateOffset(val, dryRun = false) {
@@ -221,6 +220,11 @@ export class Bullet extends BaseClass {
 
     if (self.options.elLazyInit && !self.el) {
       self._makeEl()
+    }
+
+    // 防止外部钩子进行弹幕实例销毁，或者其他异常操作
+    if (!self.danmu || !self.danmu.main) {
+      return
     }
 
     const { danmu, options, el } = self
@@ -252,7 +256,7 @@ export class Bullet extends BaseClass {
   detach() {
     // this.logger && this.logger.info(`detach #${this.options.txt || '[DOM Element]'}#`)
     const self = this
-    const { el, danmu, options, hooks } = self
+    const { el, danmu, options } = self
     const { globalHooks } = danmu
 
     if (el) {
@@ -270,10 +274,6 @@ export class Bullet extends BaseClass {
       }
 
       // run hooks
-      if (hooks.bulletDetached) {
-        hooks.bulletDetached(options, el)
-        delete hooks.bulletDetached
-      }
       if (globalHooks.bulletDetached) {
         globalHooks.bulletDetached(options, el)
       }
