@@ -67,9 +67,8 @@ class Main extends BaseClass {
   destroy() {
     this.logger && this.logger.info('destroy')
     this._unbindEvents()
-    this._cancelDataHandleTimer()
-    this.channel.destroy()
-    // this.dataElHandle(this.data)
+    this._cancelTick()
+    this.channel && this.channel.destroy()
     this.data = []
     for (let k in this) {
       delete this[k]
@@ -177,27 +176,26 @@ class Main extends BaseClass {
   /**
    * @private
    */
-  _cancelDataHandleTimer() {
-    // if (this.handleId) {
-    //   cancelAnimationFrame(this.handleId)
-    //   this.handleId = null
-    // }
-
+  _cancelTick() {
     if (this.handleTimer) {
       clearTimeout(this.handleTimer)
       this.handleTimer = null
     }
   }
 
-  init() {
+  /**
+   * @private
+   */
+  _startTick() {
     const self = this
     self.retryStatus = 'normal'
 
+    self._cancelTick()
     self.sortData()
 
     function dataHandle() {
       if (self._status === 'closed' && self.retryStatus === 'stop') {
-        self._cancelDataHandleTimer()
+        self._cancelTick()
         return
       }
       if (self._status === 'playing') {
@@ -223,7 +221,7 @@ class Main extends BaseClass {
     self.queue = []
     self.container.innerHTML = ''
     self.channel.reset()
-    self.init()
+    self._startTick()
   }
   stop() {
     this.logger && this.logger.info('stop')
@@ -241,11 +239,11 @@ class Main extends BaseClass {
       self.container.innerHTML = ''
     }
     self.channel && self.channel.reset()
+    self._cancelTick()
   }
   clear() {
     this.logger && this.logger.info('clear')
     this.channel && this.channel.reset()
-    // this.dataElHandle(this.data)
     this.data = []
     this.queue = []
     if (this.container) {
@@ -275,6 +273,7 @@ class Main extends BaseClass {
         }
       })
     }
+    this._startTick()
   }
   pause() {
     if (this._status === 'closed') {
@@ -284,6 +283,8 @@ class Main extends BaseClass {
 
     this.logger && this.logger.info('pause')
     this._status = 'paused'
+    this._cancelTick()
+
     let channels = this.channel.channels
     if (channels && channels.length > 0) {
       // ['scroll', 'top', 'bottom'].forEach( key => {
@@ -351,7 +352,6 @@ class Main extends BaseClass {
       }
 
       if (danmu.live) {
-        // self.dataElHandle(this.data)
         self.data = []
       }
     } else {
@@ -454,7 +454,6 @@ class Main extends BaseClass {
     }
 
     if (deleteCount > 0) {
-      //   this.dataElHandle(data, 0, deleteCount)
       data.splice(0, deleteCount)
 
       // Keep high-priority comments data.
