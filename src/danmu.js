@@ -374,14 +374,6 @@ export class DanmuJs extends BaseClass {
           return false
         }
       })
-      //   self.main.data = self.main.data.filter((item) => {
-      //     const keepIt = item.id !== id
-
-      //     if (!keepIt) {
-      //       self.main.dataElHandle([item])
-      //     }
-      //     return keepIt
-      //   })
     }
   }
 
@@ -393,7 +385,6 @@ export class DanmuJs extends BaseClass {
     this.logger && this.logger.info(`updateComments: ${comments.length}, isClear ${isClear}`)
     const { main } = this
     if (typeof isClear === 'boolean' && isClear) {
-      //   main.dataElHandle(main.data)
       main.data = []
     }
     main.data = main.data.concat(comments)
