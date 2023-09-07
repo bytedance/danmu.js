@@ -115,7 +115,15 @@
           end: 1
         },
         disableCopyDOM: true,
-        dropStaleComments: true
+        dropStaleComments: true,
+        hooks: {
+        //   bulletCreateEl(item) {
+        //     return el;
+        //   },
+        //   bulletDetached(item, el) {
+        //     // ReactDOM.unmountComponentAtNode(el);
+        //   },
+        }
       })
 
       danmu.on('bullet_hover', (e) => {
