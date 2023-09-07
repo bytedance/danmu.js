@@ -78,8 +78,8 @@ export class DanmuJs extends BaseClass {
       return false
     }
     if (config.containerStyle) {
-      let style = config.containerStyle
-      Object.keys(style).forEach(function (key) {
+      const style = config.containerStyle
+      Object.keys(style).forEach((key) => {
         this.container.style[key] = style[key]
       })
     }
