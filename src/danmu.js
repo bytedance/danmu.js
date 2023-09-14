@@ -364,16 +364,22 @@ export class DanmuJs extends BaseClass {
 
     if (id) {
       const self = this
+      const { main } = self
+      
       self._releaseCtrl(id)
 
-      self.main.queue.some((item) => {
+      // remove bullet from the queue list
+      main.queue = main.queue.filter((item) => {
         if (item.id === id) {
           item.remove()
-          return true
-        } else {
           return false
+        } else {
+          return true
         }
       })
+
+      // remove comment from the data list
+      main.data = main.data.filter((item) => item.id !== id)
     }
   }
 
