@@ -29,7 +29,6 @@
     "event-emitter": "^0.3.5"
   },
   "devDependencies": {
-    "@byted-lint/eslint-plugin-meta": "^0.0.20",
     "babel-core": "^6.26.3",
     "babel-loader": "^7.1.4",
     "babel-plugin-add-module-exports": "^0.2.1",
