@@ -160,12 +160,12 @@ danmu.setCommentLike(id, {
 ```
 $ git clone git@github.com:bytedance/danmu.js.git
 $ cd danmu.js
-$ npm install
-$ npm run build
-$ http-server
+$ yarn
+$ yarn build
+$ yarn serve
 ```
 
-访问 [http://localhost:8080/demo/index.html](http://localhost:8080/demo/index.html)
+访问 [http://localhost:3000/demo/index.html](http://localhost:3000/demo/index.html)
 
 ### License
 
