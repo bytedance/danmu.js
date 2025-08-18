@@ -154,6 +154,10 @@ export class DanmuJs extends BaseClass {
     this.main && this.main.clear()
   }
 
+  clearNot() {
+
+  }
+
   destroy() {
     unObserver(this.container)
     this.logger && this.logger.info('destroy')
@@ -199,6 +203,7 @@ export class DanmuJs extends BaseClass {
       if (comment.prior || comment.realTime) {
         main.data.unshift(comment)
         if (comment.realTime) {
+          console.log('trackAllocationOptimization', this)
           main.readData()
           main.dataHandle()
         }
@@ -288,6 +293,7 @@ export class DanmuJs extends BaseClass {
   }
 
   restartComment(id) {
+    console.log('restartComment', id)
     this.logger && this.logger.info(`restartComment: id ${id}`)
 
     if (id) {
@@ -304,7 +310,8 @@ export class DanmuJs extends BaseClass {
       main.queue.some((item) => {
         if (item.id === id) {
           if (main.status !== 'paused') {
-            item.startMove(true)
+            console.log('restartComment1', id)
+            item.startMove(true);
           } else {
             item.status = 'paused'
           }
@@ -365,7 +372,7 @@ export class DanmuJs extends BaseClass {
     if (id) {
       const self = this
       const { main } = self
-      
+
       self._releaseCtrl(id)
 
       // remove bullet from the queue list

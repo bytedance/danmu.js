@@ -186,7 +186,7 @@ class Main extends BaseClass {
   /**
    * @private
    */
-  _startTick() {
+  _startTickV0() {
     const self = this
     self.retryStatus = 'normal'
 
@@ -208,6 +208,41 @@ class Main extends BaseClass {
     }
     dataHandle()
   }
+
+  _startTickV1() {
+    this.retryStatus = 'normal';
+    this._cancelTick();
+
+    const subTick = () => {
+      if (this._status === 'closed' && this.retryStatus === 'stop') {
+        this._cancelTick();
+        return;
+      }
+      if (this._status === 'playing') {
+        this.readDataV1();
+        if (this.queue.length) {
+          this.queue.forEach((item) => {
+            if (item.status === 'waiting') {
+              item.startMoveV1();
+            }
+          });
+        }
+      }
+      if (this.retryStatus !== 'stop' || this._status === 'paused') {
+        this.handleTimer = setTimeout(subTick, 250);
+      }
+    }
+    subTick();
+  }
+
+  _startTick() {
+    if (this.danmu.config.trackAllocationOptimization) {
+      this._startTickV1();
+    } else {
+      this._startTickV0();
+    }
+  }
+
   // 启动弹幕渲染主进程
   start() {
     this.logger && this.logger.info('start')
@@ -223,6 +258,7 @@ class Main extends BaseClass {
     self.channel.reset()
     self._startTick()
   }
+
   stop() {
     this.logger && this.logger.info('stop')
     const self = this
@@ -250,6 +286,12 @@ class Main extends BaseClass {
       this.container.innerHTML = ''
     }
   }
+
+  clearNot() {
+    this.data = []
+    this.queue = []
+  }
+
   play() {
     if (this._status === 'closed') {
       this.logger && this.logger.info('play ignored')
@@ -414,6 +456,89 @@ class Main extends BaseClass {
       }
     }
   }
+
+  readDataV1() {
+    const { danmu, interval, channel, data, forceDuration } = this;
+    const player = danmu.player;
+    
+    // 如果弹幕初始化未完成，或轨道已满，不进行弹幕数据处理
+    if (!danmu.isReady || !danmu.main || !channel.checkAvailableTrackV1()) {
+      return;
+    }
+    let list = [];
+    if (player) {
+      // player存在的情况下, 获取当前时间戳 +- interval的数据，并按照分数进行排序
+      const currentTime = player.currentTime ? Math.floor(player.currentTime * 1000) : 0;
+
+      list = data.filter(item => {
+        if (!item.start && danmu.hideArr.indexOf(item.mode) < 0) {
+          if (!item.color || danmu.hideArr.indexOf('color') < 0) {
+            item.start = currentTime
+          }
+        }
+        return (
+          !item.attached_ &&
+          danmu.hideArr.indexOf(item.mode) < 0 &&
+          (!item.color || danmu.hideArr.indexOf('color') < 0) &&
+          item.start - interval <= currentTime &&
+          currentTime <= item.start + interval
+        );
+      });
+
+      if (danmu.config.highScorePriority) {
+        list.sort((prev, cur) => (cur.prior && !prev.prior) || (cur.score || -1) - (prev.score || -1));
+      }
+
+      if (danmu.live) {
+        this.data = [];
+      }
+    } else {
+      // 获取弹幕数据列表第一个数据
+      list = this.data.splice(0, 1);
+      if (list.length === 0) {
+        list = this.playedData.splice(0, 1);
+      }
+    }
+
+    // 没有可用数不做处理
+    if (list.length === 0) {
+      return;
+    }
+
+    // 删除轨道位置更新 channel.updatePos()
+    for (let index = 0; index < list.length; index++) {
+      const item = list[index];
+      if (forceDuration && forceDuration !== item.duration) {
+        item.duration = forceDuration;
+      }
+
+      const bullet = new Bullet(danmu, item);
+      if (bullet.bulletCreateFail) {
+        continue;
+      }
+
+      bullet.attachV1();
+      item.attached_ = true;
+      const addResult = channel.addBulletV1(bullet);
+
+      if (addResult) {
+        this.queue.push(bullet);
+        bullet.topInit()
+      } else {
+        bullet.detachV1();
+        for (let k in bullet) {
+          if (hasOwnProperty.call(bullet, k)) {
+            delete bullet[k]
+          }
+        }
+        item.attached_ = false
+      }
+      // if (!channel.checkAvailableTrackV1(list[0].mode)) {
+      //   break; //批量进行元素入轨过程中，如果轨道已满，那么直接跳出循环，等待下一次250ms的轮询执行
+      // }
+    }
+  }
+
   sortData() {
     this.data.sort((prev, cur) => (prev.start || -1) - (cur.start || -1))
   }

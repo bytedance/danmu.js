@@ -1,6 +1,6 @@
 import BaseClass from './baseClass'
 import Log from './utils/logger'
-import { copyDom, isFunction, isNumber, styleCSSText, styleUtil } from './utils/util'
+import { copyDom, getTimeStamp, isFunction, isNumber, styleCSSText, styleUtil } from './utils/util'
 
 // 减少频繁的内存创建
 const logger = new Log('bullet')
@@ -54,6 +54,10 @@ export class Bullet extends BaseClass {
     if (!options.elLazyInit) {
       this.bulletCreateFail = !this._makeEl()
     }
+    this.startTime = 0;
+    this.fullEnterTime = 0;
+    this.fullLeaveTime = 0;
+    this.waitTimeStamp = 0;
   }
   get moveV() {
     const self = this
@@ -84,6 +88,16 @@ export class Bullet extends BaseClass {
     }
     return v
   }
+
+  get moveVV1() {
+    if (!this.width) {
+      this.width = this.el.offsetWidth;
+      this.options.width = this.width;
+    }
+    const containerWidth = this.danmu.containerPos.width || 0;
+    return (containerWidth + this.width) / this.duration;
+  }
+
   get direction() {
     return this.danmu.direction
   }
@@ -204,6 +218,46 @@ export class Bullet extends BaseClass {
     return true
   }
 
+  _makeElV1() {
+    const { danmu, options } = this;
+    const { globalHooks } = danmu;
+    let el;
+    let cssText = ''
+    let style = options.style || {}
+    // 删除 style['perspective'] = '500em'
+    //给元素设置绝对定位，获取宽高时脱离文档流避免连锁重排
+    style.position = 'absolute'; 
+    this.reuseDOM = false
+    if (options.elLazyInit && isFunction(globalHooks.bulletCreateEl)) {
+      try {
+        const result = globalHooks.bulletCreateEl(options);
+        if (result instanceof HTMLElement) {
+          el = result;
+        } else {
+          el = result.el;
+        }
+      } catch (e) {
+        console.log('danmakulogger', '创建dom元素失败', options);
+      }
+    }
+
+    if (!el || !danmu.main) {
+      return false;
+    }
+
+    style.left = this.updateOffset(0, true);
+    Object.keys(style).forEach((key) => {
+      const bbqKey = key.replace(/[A-Z]/g, (val) => {
+        return '-' + val.toLowerCase();
+      })
+      cssText += `${bbqKey}:${style[key]};`;
+    });
+    styleCSSText(el, cssText);
+
+    this.el = el;
+    return true;
+  }
+
   updateOffset(val, dryRun = false) {
     this.random = val
     const left = this.danmu.containerPos.width + val + 'px'
@@ -214,6 +268,7 @@ export class Bullet extends BaseClass {
 
     return left
   }
+
   attach() {
     // this.logger && this.logger.info(`attach #${this.options.txt || '[DOM Element]'}#`)
     const self = this
@@ -253,6 +308,37 @@ export class Bullet extends BaseClass {
       globalHooks.bulletAttached(options, el)
     }
   }
+
+  attachV1() {
+    const { danmu, options } = this;
+    const { globalHooks } = danmu;
+
+    if (!danmu || !danmu.main) {
+      return;
+    }
+
+    if (options.elLazyInit && !this.el) {
+      this._makeElV1();
+    }
+    
+    if (!this.container.contains(this.el)) {
+      this.container.appendChild(this.el);
+    }
+
+    if (!this.width) {
+      if (options.width) {
+        this.width = options.width;
+      } else {
+        this.width = this.el.offsetWidth;
+        options.width = this.width;
+      }
+    }
+
+    if (globalHooks.bulletAttached) {
+      globalHooks.bulletAttached(options, this.el);
+    }
+  }
+
   detach() {
     // this.logger && this.logger.info(`detach #${this.options.txt || '[DOM Element]'}#`)
     const self = this
@@ -283,6 +369,34 @@ export class Bullet extends BaseClass {
 
     self.elPos = undefined
   }
+
+  detachV1 () {
+    const globalHooks = this.danmu.globalHooks;
+    const options = this.options;
+
+    if (this.el) {
+      if (globalHooks.bulletDetaching) {
+        globalHooks.bulletDetaching(options);
+      }
+
+      if (this.reuseDOM) {
+        this.recycler.unused(this.el);
+      } else {
+        if (this.el.parentNode) {
+          this.el.parentNode.removeChild(this.el);
+        }
+      }
+
+      if (globalHooks.bulletDetached) {
+        globalHooks.bulletDetached(options, this.el);
+      }
+      
+      this.el = null;
+    }
+
+    this.elPos = undefined;
+  }
+
   topInit() {
     this.logger && this.logger.info(`topInit #${this.options.txt || '[DOM Element]'}#`)
     if (this.direction === 'b2t') {
@@ -368,7 +482,16 @@ export class Bullet extends BaseClass {
       }
     }
   }
+
   startMove(force) {
+    if (this.danmu.config.trackAllocationOptimization) {
+      this.startMoveV1(force);
+    } else {
+      this.startMoveV0(force);
+    }
+  }
+
+  startMoveV0(force) {
     // this.logger && this.logger.info(`startMove #${this.options.txt || '[DOM Element]'}#`)
     const self = this
     if (!self.hasMove) {
@@ -437,6 +560,53 @@ export class Bullet extends BaseClass {
       this.startTime = newTimestamp
     }
   }
+
+  startMoveV1(force) {
+    if (!this.el || this.status === 'start' || this.status === 'forcedPause' && !force || this.waitTimeStamp > getTimeStamp() ) {
+      return;
+    }
+
+    if (this.status !== 'forcedPause') {
+      if (this.fullLeaveTime && this.fullLeaveTime < getTimeStamp()) {
+        this.remove();
+        this.status = 'end';
+        return;
+      }
+    }
+
+    this.status = 'start';
+    this.waitTimeStamp = 0;
+    const containerPos = this.danmu.containerPos;
+   
+    if (this.paused) {
+      const bulletPos = this.el.getBoundingClientRect();
+      const leftDistance = bulletPos.right - containerPos.left;
+      const leftDuration = leftDistance / this.moveV;
+
+      if (bulletPos.right > containerPos.left) {
+        styleUtil(this.el, 'transition', `transform ${leftDuration}s linear 0s`)
+        styleUtil(this.el, 'transform', `translateX(-${leftDistance}px) translateY(0px) translateZ(0px)`)
+
+        this.moveMoreS = bulletPos.left - containerPos.left
+        this.moveContainerWidth = containerPos.width
+      } else {
+        this.status = 'end'
+        this.remove()
+      }
+    } else {
+      console.log('startMoveV1', this, this.el, this.duration)
+      const els = this.el
+      styleUtil(els, 'transition', `transform ${this.duration / 1000}s linear 0s`);
+      styleUtil(els, 'transform', `translateX(-${containerPos.width + this.width}px) translateY(0px) translateZ(0px)`);
+
+      this.startTime = getTimeStamp();
+      this.endTime = this.startTime + this.duration;
+      this.fullEnterTime = this.startTime + this.width / this.moveVV1;
+      console.log('fullEnterTime11', this.startTime, this.width, this.moveVV1, this.fullEnterTime, `startTime_${this.startTime}`, `width_${this.width}`, `perspective_${this.fullEnterTime}`, `moveVV1_${this.moveVV1}`);
+      this.fullLeaveTime = this.startTime + this.duration;
+    }
+  }
+
   remove(needPause = true) {
     this.logger && this.logger.info(`remove #${this.options.txt || '[DOM Element]'}#`)
     const self = this

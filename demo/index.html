@@ -34,6 +34,7 @@
         left: 0;
         width: 100%;
         height: 100%;
+        background: red;
       }
       #btnwrap {
         position: absolute;
@@ -115,7 +116,15 @@
           end: 1
         },
         disableCopyDOM: true,
-        dropStaleComments: true
+        dropStaleComments: true,
+        hooks: {
+          bulletCreateEl(item) {
+            const el = document.createElement('div');
+            console.log('item', item)
+            el.innerHTML = item.text
+            return el;
+          }
+        }
       })
 
       danmu.on('bullet_hover', (e) => {
@@ -146,13 +155,14 @@
           id++
           // console.log('sendComment: ', id);
           danmu.sendComment({
-            duration: 10000,
+            elLazyInit: true,
+            duration: 5000,
             id: '' + id,
             // prior: id % 20 === 0,
             //   realTime: true,
             // txt,
             start: player.currentTime * 1000,
-            el,
+            text: txt,
             disableCopyDOM: true,
             // realTime: true,
             // start: 1000*currentTime,

@@ -141,6 +141,9 @@ export function attachEventListener(object, event, fn, offEvent) {
  * @param {string} value
  */
 export function styleUtil(elem, name, value) {
+  if (!elem) {
+    console.trace('no elem');
+  }
   const style = elem.style
   try {
     style[name] = value
@@ -180,4 +183,11 @@ export function throttle(func, wait) {
     clearTimeout(timer)
     timer = setTimeout(() => func.apply(this, args), wait)
   }
+}
+
+export const getTimeStamp = () => {
+  if (typeof window !== 'undefined' && window.performance && typeof window.performance.now === 'function') {
+    return performance.now();
+  }
+  return new Date().getTime();
 }
