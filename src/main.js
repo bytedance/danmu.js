@@ -330,13 +330,6 @@ class Main extends BaseClass {
 
     let channels = this.channel.channels
     if (channels && channels.length > 0) {
-      // ['scroll', 'top', 'bottom'].forEach( key => {
-      //   for (let i = 0; i < channels.length; i++) {
-      //     channels[i].queue[key].forEach(item => {
-      //       item.pauseMove()
-      //     })
-      //   }
-      // })
       this.queue.forEach((item) => {
         item.pauseMove()
       })

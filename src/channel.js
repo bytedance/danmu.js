@@ -882,7 +882,16 @@ class Channel extends BaseClass {
     this.height = this.containerHeight;
     this.danmu.main.queue.forEach(item => {
       item.resized = true;
-    })
+    });
+    const { channelCount, channels } = this._initChannels();
+    if (this.channels) {
+      if (this.channels.length <= channelCount) { // 需要扩轨道
+        const currentLen = this.channels.length;
+        this.channels.push(...channels.slice(currentLen));
+      } else { // 需要缩轨道
+        this.channels.length = channelCount;
+      }
+    }
   }
 
   /**
