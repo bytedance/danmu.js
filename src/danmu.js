@@ -203,7 +203,6 @@ export class DanmuJs extends BaseClass {
       if (comment.prior || comment.realTime) {
         main.data.unshift(comment)
         if (comment.realTime) {
-          console.log('trackAllocationOptimization', this)
           main.readData()
           main.dataHandle()
         }
@@ -293,7 +292,6 @@ export class DanmuJs extends BaseClass {
   }
 
   restartComment(id) {
-    console.log('restartComment', id)
     this.logger && this.logger.info(`restartComment: id ${id}`)
 
     if (id) {
@@ -310,7 +308,6 @@ export class DanmuJs extends BaseClass {
       main.queue.some((item) => {
         if (item.id === id) {
           if (main.status !== 'paused') {
-            console.log('restartComment1', id)
             item.startMove(true);
           } else {
             item.status = 'paused'
@@ -483,7 +480,7 @@ export class DanmuJs extends BaseClass {
         item.options.style.fontSize = this.fontSize
         item.setFontSize(this.fontSize)
         if (channelSize) {
-          item.top = item.channel_id[0] * channelSize
+          item.top = this.config.trackAllocationOptimization ? item.channelId * channelSize : item.channel_id[0] * channelSize;
           item.topInit()
         }
       })

@@ -329,7 +329,8 @@ export class Bullet extends BaseClass {
       if (options.width) {
         this.width = options.width;
       } else {
-        this.width = this.el.offsetWidth;
+        this.elPos = this.el.getBoundingClientRect()        
+        this.width = this.elPos.width;
         options.width = this.width;
       }
     }
@@ -368,33 +369,6 @@ export class Bullet extends BaseClass {
     }
 
     self.elPos = undefined
-  }
-
-  detachV1 () {
-    const globalHooks = this.danmu.globalHooks;
-    const options = this.options;
-
-    if (this.el) {
-      if (globalHooks.bulletDetaching) {
-        globalHooks.bulletDetaching(options);
-      }
-
-      if (this.reuseDOM) {
-        this.recycler.unused(this.el);
-      } else {
-        if (this.el.parentNode) {
-          this.el.parentNode.removeChild(this.el);
-        }
-      }
-
-      if (globalHooks.bulletDetached) {
-        globalHooks.bulletDetached(options, this.el);
-      }
-      
-      this.el = null;
-    }
-
-    this.elPos = undefined;
   }
 
   topInit() {
@@ -562,40 +536,44 @@ export class Bullet extends BaseClass {
   }
 
   startMoveV1(force) {
-    if (!this.el || this.status === 'start' || this.status === 'forcedPause' && !force || this.waitTimeStamp > getTimeStamp() ) {
+    const currentTime = getTimeStamp();
+    if (!this.el || this.status === 'start' || this.status === 'forcedPause' && !force || this.waitTimeStamp > currentTime) {
       return;
     }
 
-    if (this.status !== 'forcedPause') {
-      if (this.fullLeaveTime && this.fullLeaveTime < getTimeStamp()) {
+    const originStatus = this.status;
+    if (originStatus !== 'forcedPause') {
+      if (this.fullLeaveTime && this.fullLeaveTime < currentTime) {
         this.remove();
         this.status = 'end';
         return;
       }
     }
 
-    this.status = 'start';
     this.waitTimeStamp = 0;
     const containerPos = this.danmu.containerPos;
-   
-    if (this.paused) {
+    this.status = 'start';
+
+    if (originStatus === 'paused') {
       const bulletPos = this.el.getBoundingClientRect();
       const leftDistance = bulletPos.right - containerPos.left;
-      const leftDuration = leftDistance / this.moveV;
+      const leftDuration = leftDistance / this.moveVV1;
 
-      if (bulletPos.right > containerPos.left) {
-        styleUtil(this.el, 'transition', `transform ${leftDuration}s linear 0s`)
-        styleUtil(this.el, 'transform', `translateX(-${leftDistance}px) translateY(0px) translateZ(0px)`)
+      if (bulletPos.right > containerPos.left) { // 元素还在可视区域内
+        styleUtil(this.el, 'transition', `transform ${leftDuration / 1000}s linear 0s`);
+        styleUtil(this.el, 'transform', `translateX(-${leftDistance}px) translateY(0px) translateZ(0px)`);
 
-        this.moveMoreS = bulletPos.left - containerPos.left
-        this.moveContainerWidth = containerPos.width
+        if (bulletPos.right > containerPos.left) { // 如果元素没有完全进入屏幕，更新完全进入屏幕时间
+          this.fullEnterTime = currentTime + (bulletPos.right - containerPos.left) / this.moveVV1;
+        }
+
+        this.fullLeaveTime = currentTime + leftDuration; // 更新离屏时间
       } else {
-        this.status = 'end'
-        this.remove()
+        this.status = 'end';
+        this.remove();
       }
     } else {
-      console.log('startMoveV1', this, this.el, this.duration)
-      const els = this.el
+      const els = this.el;
       styleUtil(els, 'transition', `transform ${this.duration / 1000}s linear 0s`);
       styleUtil(els, 'transform', `translateX(-${containerPos.width + this.width}px) translateY(0px) translateZ(0px)`);
 

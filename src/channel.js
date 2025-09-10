@@ -529,17 +529,39 @@ class Channel extends BaseClass {
     for (let i = 0; i < this.channels.length; i++) {
       const channel = this.channels[i];
       const lastBullet = channel.queue.scroll[0];
+       
       if (!lastBullet) { // 当前轨道为空
         channelIndex = i;
         break;
       }
 
-      if (lastBullet && lastBullet.fullEnterTime < getTimeStamp() && lastBullet.startTime) { // 元素已上屏
+      if (lastBullet.waitTimeStamp) { //队列中还有元素在等待，队列繁忙
+        return false;
+      }
+
+       const currentTime = getTimeStamp();
+
+      console.log('containerWidth', this.containerWidth, lastBullet.resized);
+
+      if (lastBullet.resized && currentTime < lastBullet.fullLeaveTime) { // 如果resize是true，重新计算碰撞冲突的条件，更新元素的速度
+        const lastBulletPos = lastBullet.el.getBoundingClientRect();
+        
+        if (this.containerRight > lastBulletPos.right) {
+          const diff = lastBullet.fullLeaveTime - currentTime - this.containerWidth / bullet.moveVV1;
+          bullet.waitTimeStamp = currentTime + diff;
+        } else {
+          const lastbulletOriginV = lastBulletPos.right / (lastBullet.fullLeaveTime - currentTime);
+          const interval = (lastBulletPos.right - this.containerWidth) / lastbulletOriginV;
+          const diff = lastBullet.fullLeaveTime - currentTime - interval - this.containerWidth / bullet.moveVV1;
+          bullet.waitTimeStamp = Math.max(currentTime + interval, currentTime + diff); 
+        }
+        channelIndex = i;
+        break;
+      } else if (lastBullet.fullEnterTime < currentTime && lastBullet.startTime) { // 元素已上屏
         if (lastBullet.moveVV1 > bullet.moveVV1) { // 轨道前面元素的速度更小
           channelIndex = i;
           break;
         }
-        const currentTime = getTimeStamp();
        
         if (lastBullet.fullEnterTime < currentTime) { // 已完全进入屏幕
           const diff = lastBullet.fullLeaveTime - currentTime - this.containerWidth / bullet.moveVV1;
@@ -684,6 +706,13 @@ class Channel extends BaseClass {
   }
 
   resize(sync = false) {
+    if (this.danmu.config.trackAllocationOptimization) {
+      return this.resizeV2(sync);
+    }
+    return this.resizeV1(sync);
+  }
+
+  resizeV1(sync) {
     this.logger && this.logger.info('resize')
     let self = this
     if (self.resizing) {
@@ -845,6 +874,15 @@ class Channel extends BaseClass {
       this._cancelResizeTimer()
       this.resizeId = requestAnimationFrame(layout)
     }
+  }
+
+  resizeV2(sync) {
+    this.updatePos();
+    this.width = this.containerWidth;
+    this.height = this.containerHeight;
+    this.danmu.main.queue.forEach(item => {
+      item.resized = true;
+    })
   }
 
   /**

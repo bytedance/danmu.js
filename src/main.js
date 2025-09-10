@@ -114,6 +114,7 @@ class Main extends BaseClass {
      */
     const onTransitionEnd = (e) => {
       const bullet = this._getBulletByEvt(e)
+      console.log('元素remove', bullet.options.text, bullet.fullEnterTime, performance.now(), bullet.el.getBoundingClientRect().right, bullet.container.getBoundingClientRect().left)
 
       if (bullet) {
         bullet.status = 'end'
@@ -525,7 +526,7 @@ class Main extends BaseClass {
         this.queue.push(bullet);
         bullet.topInit()
       } else {
-        bullet.detachV1();
+        bullet.detach();
         for (let k in bullet) {
           if (hasOwnProperty.call(bullet, k)) {
             delete bullet[k]
