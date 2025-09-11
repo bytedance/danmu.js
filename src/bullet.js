@@ -578,6 +578,12 @@ export class Bullet extends BaseClass {
       return;
     }
 
+    if (document.visibilityState !== 'visible') { // 页面不可见时，暂停移动
+      this.remove();
+      this.status = 'end';
+      return;
+    }
+
     const originStatus = this.status;
     if (originStatus !== 'forcedPause' && originStatus !== 'paused') {
       if (this.fullLeaveTime && this.fullLeaveTime < currentTime) {

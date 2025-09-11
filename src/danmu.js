@@ -96,7 +96,10 @@ export class DanmuJs extends BaseClass {
   }
 
   get status() {
-    return this.main.status
+    if (!this.main) {
+      return 'destroy'
+    }
+    return this.main.status;
   }
 
   get state() {

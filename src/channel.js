@@ -84,8 +84,8 @@ class Channel extends BaseClass {
 
   checkAvailableTrackV1(mode = 'scroll') {
     // 当前轨道中没有元素，或者当前轨道中分配的元素已经完全进入屏幕，认为该轨道可用
-    if (mode !== 'scroll') {
-      return true;
+    if (document.visibilityState !== 'visible') {
+      return false;
     }
 
     const available = this.channels.findIndex(channel => {
@@ -535,7 +535,7 @@ class Channel extends BaseClass {
         break;
       }
 
-      if (lastBullet.waitTimeStamp) { //队列中还有元素在等待，队列繁忙
+      if (lastBullet.waitTimeStamp || !lastBullet.startTime || !lastBullet.fullEnterTime) { //队列中还有元素在等待，队列繁忙
         return false;
       }
 
@@ -557,7 +557,7 @@ class Channel extends BaseClass {
         }
         channelIndex = i;
         break;
-      } else if (lastBullet.fullEnterTime < currentTime && lastBullet.startTime) { // 元素已上屏
+      } else if (lastBullet.fullEnterTime < currentTime) { // 元素已上屏
         if (lastBullet.moveVV1 > bullet.moveVV1) { // 轨道前面元素的速度更小
           channelIndex = i;
           break;
@@ -566,7 +566,9 @@ class Channel extends BaseClass {
         if (lastBullet.fullEnterTime < currentTime) { // 已完全进入屏幕
           const diff = lastBullet.fullLeaveTime - currentTime - this.containerWidth / bullet.moveVV1;
           channelIndex = i;
-          bullet.waitTimeStamp = Math.max(currentTime + diff, currentTime);
+          if (diff > 0) {
+            bullet.waitTimeStamp = currentTime + diff;
+          }
           break;
         } 
       }
@@ -577,7 +579,7 @@ class Channel extends BaseClass {
       channel.queue.scroll.unshift(bullet);
       bullet.channelIndex = channelIndex;
       bullet.top = channelIndex * this.channelHeight;
-      bullet.channelId = channelIndex;
+      bullet.channelId = channelIndex;    
       bullet.startMoveV1();
       return true;
     }
@@ -616,12 +618,12 @@ class Channel extends BaseClass {
   }
 
   removeBulletV1(bullet) {
-    if (bullet.channelId && this.channels[bullet.channelId]) {
+    if (bullet && typeof bullet.channelId !== 'undefined' && this.channels[bullet.channelId]) {
       const channel = this.channels[bullet.channelId];
       channel.operating[bullet.mode] = true;
       const currentQueue = channel.queue[bullet.mode];
       for (let index = currentQueue.length - 1; index >= 0; index--) {
-        if (currentQueue[index] === bullet.id) {
+        if (currentQueue[index].id === bullet.id) {
           currentQueue.splice(index, 1);
           channel.operating[bullet.mode] = false;
           break;
