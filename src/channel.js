@@ -539,7 +539,7 @@ class Channel extends BaseClass {
         return false;
       }
 
-       const currentTime = getTimeStamp();
+      const currentTime = getTimeStamp();
 
       console.log('containerWidth', this.containerWidth, lastBullet.resized);
 

@@ -326,13 +326,9 @@ export class Bullet extends BaseClass {
     }
 
     if (!this.width) {
-      if (options.width) {
-        this.width = options.width;
-      } else {
-        this.elPos = this.el.getBoundingClientRect()        
-        this.width = this.elPos.width;
-        options.width = this.width;
-      }
+      this.elPos = this.el.getBoundingClientRect()        
+      this.width = this.elPos.width;
+      options.width = this.width;
     }
 
     if (globalHooks.bulletAttached) {
@@ -467,7 +463,6 @@ export class Bullet extends BaseClass {
   }
 
   pauseMoveV1(isFullscreen = false) {
-    console.log('pauseMoveV1', this.status, this.el)
     if (this.status === 'paused' || !this.el) {
       return;
     }
@@ -488,7 +483,8 @@ export class Bullet extends BaseClass {
       }
       styleUtil(this.el, 'left', `${nowS}px`)
     } else {
-      styleUtil(this.el, 'left', `${this.el.getBoundingClientRect().left - ctPos.left}px`)   
+      styleUtil(this.el, 'left', `${this.el.getBoundingClientRect().left - ctPos.left}px`) 
+      // console.log('updateOffset----', this.danmu.containerPos.width, this.options.text)  
     }
     styleUtil(this.el, 'transform', 'translateX(0px) translateY(0px) translateZ(0px)');
     styleUtil(this.el, 'transition', 'transform 0s linear 0s');

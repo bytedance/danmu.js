@@ -4,7 +4,7 @@ import BaseClass from './baseClass'
 import Control from './control'
 import RecyclableDomList from './domRecycle'
 import { addObserver, unObserver } from './resizeObserver'
-import { addClass, deepCopy, isNumber, styleUtil } from './utils/util'
+import { addClass, deepCopy, getTimeStamp, isNumber, styleUtil } from './utils/util'
 
 /**
  * @typedef {import('./baseClass').CommentData} CommentData
@@ -460,7 +460,15 @@ export class DanmuJs extends BaseClass {
     }
   }
 
-  setFontSize(
+  setFontSize(size, channelSize, options) {
+    if (this.config.trackAllocationOptimization) {
+       this.setFontSizeV1(size, channelSize, options);
+    } else {
+      this.setFontSizeV0(size, channelSize, options);
+    }
+  }
+
+  setFontSizeV0(
     size,
     channelSize,
     options = {
@@ -471,7 +479,7 @@ export class DanmuJs extends BaseClass {
     this.fontSize = `${size}px`
     if (size) {
       this.main.data.forEach((data) => {
-        if (data.style) {
+      if (data.style) {
           data.style.fontSize = this.fontSize
         }
       })
@@ -485,6 +493,52 @@ export class DanmuJs extends BaseClass {
         if (channelSize) {
           item.top = this.config.trackAllocationOptimization ? item.channelId * channelSize : item.channel_id[0] * channelSize;
           item.topInit()
+        }
+      })
+    }
+    if (channelSize) {
+      this.config.channelSize = channelSize
+
+      if (options.reflow) {
+        this.main.channel.resizeSync()
+      }
+    }
+  }
+
+  setFontSizeV1(
+    size,
+    channelSize,
+    options = {
+      reflow: true
+    }
+  ) {
+    this.fontSize = `${size}px`
+    if (size) {
+      this.main.data.forEach((data) => {
+      if (data.style) {
+          data.style.fontSize = this.fontSize
+        }
+      })
+      this.main.queue.forEach((item) => {
+        if (item.el && item.fullLeaveTime && item.fullLeaveTime <= getTimeStamp()) {
+          item.remove(false);
+          item.status = 'end';
+          return;
+        }
+        
+        if (!item.options.style) {
+          item.options.style = {}
+        }
+        item.options.style.fontSize = this.fontSize
+        item.setFontSize(this.fontSize)
+        if (channelSize) {
+          item.top = this.config.trackAllocationOptimization ? item.channelId * channelSize : item.channel_id[0] * channelSize;
+          item.topInit()
+        }
+        
+        if (this.main.status !== 'paused') {
+          item.pauseMove();
+          item.startMove();
         }
       })
     }

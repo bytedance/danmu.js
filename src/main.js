@@ -514,8 +514,8 @@ class Main extends BaseClass {
       bullet.attachV1();
       item.attached_ = true;
       const addResult = channel.addBulletV1(bullet);
-
       if (addResult && bullet.status !== 'end') {
+        // console.log('addbulletv1', bullet.options.text, bullet.el.getBoundingClientRect().left)
         this.queue.push(bullet);
         bullet.topInit()
       } else {
