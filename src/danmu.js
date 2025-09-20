@@ -555,36 +555,41 @@ export class DanmuJs extends BaseClass {
   }
 
   updateQueueTimestamp () {
+
+    if (!this.main.channel || !this.main.channel.channels || !this.main.channel.channels) {
+      return;
+
+    }
     const canRun = this.main.status !== 'paused';
+    const containerLeft = this.main.channel.containerLeft;
   
-
-    this.main.channel && this.main.channel.channels && this.main.channel.channels.forEach(channel => {
-      const containerLeft = this.main.channel.containerLeft;
-
+    this.main.channel.channels.forEach(channel => {
       if (!channel || !channel.queue || !channel.queue.scroll || channel.queue.scroll.length === 0) {
         return;  // 队列为空
       }
 
       const queue = channel.queue.scroll;
+      const queueLen = queue.length;
       const currentTime = getTimeStamp();
 
-      
-
-      for (let index = queue.length - 1; index >= 0; index--) {
+      for (let index = queueLen - 1; index >= 0; index--) {
         
         const bullet = queue[index];
+        // 防止字体变大，后面上屏元素重叠
+        bullet.resized = true;
         const lastBullet = queue[index + 1];
         const curBulletPos = bullet.el.getBoundingClientRect();
+        bullet.width = curBulletPos.width;
         
         if (curBulletPos.right < containerLeft) {
           continue; // 元素已离屏
         }
-
-        if (!lastBullet) { // 如果不存在lastbullet，更新当前元素的位移和时间
+ 
+        if (!lastBullet) { 
           if (canRun) {
             const leftDistance = curBulletPos.right - containerLeft;
             const leftDuration = leftDistance / bullet.moveVV1;
-            bullet.width = curBulletPos.width;
+            
             bullet.fullLeaveTime = currentTime + leftDuration;
             styleUtil(bullet.el, 'transition', `transform ${leftDuration / 1000}s linear 0s`)
             styleUtil(bullet.el, 'transform', `translateX(-${leftDistance}px)`);
@@ -593,72 +598,44 @@ export class DanmuJs extends BaseClass {
           continue;
         }
 
-        console.log('updateTimstanmp', bullet.options.text, lastBullet.options.text)
+        // 上一元素飘屏时间
+        const lastBulletTime = lastBullet.fullLeaveTime - currentTime;  
+        // 上一元素的右边距位置
+        const lastBulletRight = containerLeft + (lastBullet.fullLeaveTime - currentTime) * lastBullet.moveVV1; 
 
-        const lastBulletTime = lastBullet.fullLeaveTime - currentTime; 
-        const curBulletTime = (curBulletPos.left - containerLeft) / bullet.moveVV1;
+        // 当前元素需要走过的时间和距离
+        const bulletLeft = Math.max(lastBulletRight, curBulletPos.left);
+        const curBulletTime = (bulletLeft - containerLeft) / bullet.moveVV1;
 
-        const lastBulletRight = containerLeft + (lastBullet.fullLeaveTime - currentTime) * lastBullet.moveVV1;
+        // 
+        const currentLeft = bulletLeft +  Math.max(lastBulletTime - curBulletTime, 0) * bullet.moveVV1;
+      
 
-        if (lastBulletRight > curBulletPos.left) {
-          const transferCurBulletTime = (lastBulletRight - containerLeft + curBulletPos.width) / bullet.moveVV1;
-          if (transferCurBulletTime < lastBulletTime) {
+        // if (lastBulletRight > curBulletPos.left) {
+        //   const curBulletTime = (lastBulletRight - containerLeft + curBulletPos.width) / bullet.moveVV1;
+        //   currentLeft = lastBulletRight + Math.max(lastBulletTime - curBulletTime, 0) * bullet.moveVV1;
+        // } else {
+        //   const curBulletTime = (curBulletPos.right - containerLeft + curBulletPos.width) / bullet.moveVV1;
+        //   currentLeft = curBulletPos.left + Math.max(lastBulletTime - curBulletTime, 0) * bullet.moveVV1;
+        // }
+        
 
-            const currentLeft = lastBulletRight + (lastBulletTime - transferCurBulletTime) * bullet.moveVV1;
-            const currentPos = currentLeft + curBulletPos.width;
-            const currentDuration = currentPos / bullet.moveVV1;
+        //当前元素的左边距小于上一元素的右边距 或 元素会相遇，需要调整当前元素的位置
+        console.log('updateTimstanmp-', bullet.options.text, '当前元素left', currentLeft, '元素的初始位置', curBulletPos.left, '元素离开屏幕需要经过的时间', curBulletTime, lastBullet.options.text, '上一元素right', lastBulletRight, '上一元素离开屏幕需要的时间', lastBulletTime)
 
-            styleUtil(bullet.el, 'left', `${currentLeft}px`);
-            console.log('setLeft', bullet.options.text, currentLeft, this.main.channel.containerLeft, this.main.channel.containerRight)
-            if (canRun) {
-              styleUtil(bullet.el, 'transition', `transform ${currentDuration / 1000}s linear 0s`);
-              styleUtil(bullet.el, 'transform', `translateX(-${currentPos}px) translateZ(0px)`);
-              bullet.fullLeaveTime = currentTime + currentDuration;
-              bullet.status = 'start';
-            }
-
-          } else {
-
-
-            const currentLeft = lastBulletRight;
-            const currentPos = currentLeft + curBulletPos.width;
-            const currentDuration = currentPos / bullet.moveVV1;
-
-            styleUtil(bullet.el, 'left', `${currentLeft}px`);
-            console.log('setLeft', bullet.options.text, currentLeft, this.main.channel.containerLeft, this.main.channel.containerRight)
-            if (canRun) {
-              styleUtil(bullet.el, 'transition', `transform ${currentDuration / 1000}s linear 0s`);
-              styleUtil(bullet.el, 'transform', `translateX(-${currentPos}px) translateZ(0px)`);
-              bullet.fullLeaveTime = currentTime + currentDuration;
-              bullet.status = 'start';
-            }
-            
-          }
-          continue
+        if (currentLeft !== curBulletPos.left) {
+          // console.log('updateTimstanmp--1', bullet.options.text, currentLeft, curBulletTime, lastBulletTime, lastBulletRight, curBulletPos.left)
+          styleUtil(bullet.el, 'left', `${currentLeft}px`);
         }
 
-
-        if (curBulletTime < lastBulletTime) {
-
-          const currentLeft = curBulletPos.left + (lastBulletTime - curBulletTime) * bullet.moveVV1 / 1000;
+        if (canRun) { 
           const currentPos = currentLeft + curBulletPos.width;
-          const currentDuration = currentPos / bullet.moveVV1 / 1000;
-          
-          styleUtil(bullet.el, bullet.options.text, 'left', `${currentLeft}px`);
-          console.log('setLeft', currentLeft, this.main.channel.containerLeft, this.main.channel.containerRight)
-          if (canRun) {
-            styleUtil(bullet.el, 'transition', `transform ${currentDuration}s linear 0s`);
-            styleUtil(bullet.el, 'transform', `translateX(-${currentPos}px) translateZ(0px)`);
-            bullet.status = 'start';
-          }
-        
-        } else if (canRun) { 
-          const currentPos = curBulletPos.left + curBulletPos.width;
-          const currentDuration = currentPos / bullet.moveVV1 / 1000;
-          styleUtil(bullet.el, 'transition', `transform ${currentDuration}s linear 0s`)
+          const currentDuration = currentPos / bullet.moveVV1;
+          bullet.fullLeaveTime = currentTime + currentDuration;
+          styleUtil(bullet.el, 'transition', `transform ${currentDuration / 1000}s linear 0s`)
           styleUtil(bullet.el, 'transform', `translateX(-${currentPos}px) translateZ(0px)`);
           bullet.status = 'start';
-        } 
+        }
       }
     });
   }

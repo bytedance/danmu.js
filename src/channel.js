@@ -541,8 +541,6 @@ class Channel extends BaseClass {
 
       const currentTime = getTimeStamp();
 
-      console.log('containerWidth', this.containerWidth, lastBullet.resized);
-
       if (lastBullet.resized && currentTime < lastBullet.fullLeaveTime) { // 如果resize是true，重新计算碰撞冲突的条件，更新元素的速度
         const lastBulletPos = lastBullet.el.getBoundingClientRect();
         
