@@ -491,7 +491,7 @@ export class DanmuJs extends BaseClass {
         item.options.style.fontSize = this.fontSize
         item.setFontSize(this.fontSize)
         if (channelSize) {
-          item.top = this.config.trackAllocationOptimization ? item.channelId * channelSize : item.channel_id[0] * channelSize;
+          item.top = item.channel_id[0] * channelSize;
           item.topInit()
         }
       })
@@ -514,13 +514,18 @@ export class DanmuJs extends BaseClass {
   ) {
     this.fontSize = `${size}px`
     if (size) {
+
+      if (this.main.channel && this.main.channel.channelHeight && channelSize) {
+        this.main.channel.channelHeight = channelSize;
+      }
+
       this.main.data.forEach((data) => {
       if (data.style) {
           data.style.fontSize = this.fontSize
         }
       })
       this.main.queue.forEach((item) => {
-        if (item.el && item.fullLeaveTime && item.fullLeaveTime <= getTimeStamp()) {
+        if (item.el && item.fullLeaveTime && item.fullLeaveTime <= getTimeStamp() && item.status === 'start') {
           item.remove(false);
           item.status = 'end';
           return;
@@ -532,23 +537,130 @@ export class DanmuJs extends BaseClass {
         item.options.style.fontSize = this.fontSize
         item.setFontSize(this.fontSize)
         if (channelSize) {
-          item.top = this.config.trackAllocationOptimization ? item.channelId * channelSize : item.channel_id[0] * channelSize;
-          item.topInit()
+          item.top = item.channelId * channelSize;
+          item.topInit();
         }
-        
-        if (this.main.status !== 'paused') {
-          item.pauseMove();
-          item.startMove();
-        }
+        item.pauseMove();
       })
-    }
-    if (channelSize) {
-      this.config.channelSize = channelSize
 
-      if (options.reflow) {
-        this.main.channel.resizeSync()
-      }
+      this.updateQueueTimestamp();
     }
+    // if (channelSize) {
+    //   this.config.channelSize = channelSize
+
+    //   if (options.reflow) {
+    //     this.main.channel.resizeSync()
+    //   }
+    // }
+  }
+
+  updateQueueTimestamp () {
+    const canRun = this.main.status !== 'paused';
+  
+
+    this.main.channel && this.main.channel.channels && this.main.channel.channels.forEach(channel => {
+      const containerLeft = this.main.channel.containerLeft;
+
+      if (!channel || !channel.queue || !channel.queue.scroll || channel.queue.scroll.length === 0) {
+        return;  // 队列为空
+      }
+
+      const queue = channel.queue.scroll;
+      const currentTime = getTimeStamp();
+
+      
+
+      for (let index = queue.length - 1; index >= 0; index--) {
+        
+        const bullet = queue[index];
+        const lastBullet = queue[index + 1];
+        const curBulletPos = bullet.el.getBoundingClientRect();
+        
+        if (curBulletPos.right < containerLeft) {
+          continue; // 元素已离屏
+        }
+
+        if (!lastBullet) { // 如果不存在lastbullet，更新当前元素的位移和时间
+          if (canRun) {
+            const leftDistance = curBulletPos.right - containerLeft;
+            const leftDuration = leftDistance / bullet.moveVV1;
+            bullet.width = curBulletPos.width;
+            bullet.fullLeaveTime = currentTime + leftDuration;
+            styleUtil(bullet.el, 'transition', `transform ${leftDuration / 1000}s linear 0s`)
+            styleUtil(bullet.el, 'transform', `translateX(-${leftDistance}px)`);
+            bullet.status = 'start';
+          }
+          continue;
+        }
+
+        console.log('updateTimstanmp', bullet.options.text, lastBullet.options.text)
+
+        const lastBulletTime = lastBullet.fullLeaveTime - currentTime; 
+        const curBulletTime = (curBulletPos.left - containerLeft) / bullet.moveVV1;
+
+        const lastBulletRight = containerLeft + (lastBullet.fullLeaveTime - currentTime) * lastBullet.moveVV1;
+
+        if (lastBulletRight > curBulletPos.left) {
+          const transferCurBulletTime = (lastBulletRight - containerLeft + curBulletPos.width) / bullet.moveVV1;
+          if (transferCurBulletTime < lastBulletTime) {
+
+            const currentLeft = lastBulletRight + (lastBulletTime - transferCurBulletTime) * bullet.moveVV1;
+            const currentPos = currentLeft + curBulletPos.width;
+            const currentDuration = currentPos / bullet.moveVV1;
+
+            styleUtil(bullet.el, 'left', `${currentLeft}px`);
+            console.log('setLeft', bullet.options.text, currentLeft, this.main.channel.containerLeft, this.main.channel.containerRight)
+            if (canRun) {
+              styleUtil(bullet.el, 'transition', `transform ${currentDuration / 1000}s linear 0s`);
+              styleUtil(bullet.el, 'transform', `translateX(-${currentPos}px) translateZ(0px)`);
+              bullet.fullLeaveTime = currentTime + currentDuration;
+              bullet.status = 'start';
+            }
+
+          } else {
+
+
+            const currentLeft = lastBulletRight;
+            const currentPos = currentLeft + curBulletPos.width;
+            const currentDuration = currentPos / bullet.moveVV1;
+
+            styleUtil(bullet.el, 'left', `${currentLeft}px`);
+            console.log('setLeft', bullet.options.text, currentLeft, this.main.channel.containerLeft, this.main.channel.containerRight)
+            if (canRun) {
+              styleUtil(bullet.el, 'transition', `transform ${currentDuration / 1000}s linear 0s`);
+              styleUtil(bullet.el, 'transform', `translateX(-${currentPos}px) translateZ(0px)`);
+              bullet.fullLeaveTime = currentTime + currentDuration;
+              bullet.status = 'start';
+            }
+            
+          }
+          continue
+        }
+
+
+        if (curBulletTime < lastBulletTime) {
+
+          const currentLeft = curBulletPos.left + (lastBulletTime - curBulletTime) * bullet.moveVV1 / 1000;
+          const currentPos = currentLeft + curBulletPos.width;
+          const currentDuration = currentPos / bullet.moveVV1 / 1000;
+          
+          styleUtil(bullet.el, bullet.options.text, 'left', `${currentLeft}px`);
+          console.log('setLeft', currentLeft, this.main.channel.containerLeft, this.main.channel.containerRight)
+          if (canRun) {
+            styleUtil(bullet.el, 'transition', `transform ${currentDuration}s linear 0s`);
+            styleUtil(bullet.el, 'transform', `translateX(-${currentPos}px) translateZ(0px)`);
+            bullet.status = 'start';
+          }
+        
+        } else if (canRun) { 
+          const currentPos = curBulletPos.left + curBulletPos.width;
+          const currentDuration = currentPos / bullet.moveVV1 / 1000;
+          styleUtil(bullet.el, 'transition', `transform ${currentDuration}s linear 0s`)
+          styleUtil(bullet.el, 'transform', `translateX(-${currentPos}px) translateZ(0px)`);
+          bullet.status = 'start';
+        } 
+      }
+    });
   }
 
   setArea(area) {

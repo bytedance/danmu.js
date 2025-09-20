@@ -384,7 +384,7 @@ export class Bullet extends BaseClass {
 
   pauseMove(force) {
     if (this.danmu.config.trackAllocationOptimization) {
-      this.pauseMoveV1(force);
+      this.pauseMoveV1();
     } else {
       this.pauseMoveV0(force);
     }
@@ -462,7 +462,7 @@ export class Bullet extends BaseClass {
     }
   }
 
-  pauseMoveV1(isFullscreen = false) {
+  pauseMoveV1 (elPosition) {
     if (this.status === 'paused' || !this.el) {
       return;
     }
@@ -470,21 +470,10 @@ export class Bullet extends BaseClass {
       this.status = 'paused'
     }
     const ctPos = this.danmu.containerPos
-    if (isFullscreen) { //TODO全屏的场景需要处理
-      let pastDuration = (new Date().getTime() - this._lastMoveTime) / 1000
-      let pastS = pastDuration * this.moveV
-      let ratio = 0
-      let nowS = 0
-      if (this.moveMoreS - pastS >= 0) {
-        ratio = (this.moveMoreS - pastS) / this.moveContainerWidth
-        nowS = ratio * ctPos.width
-      } else {
-        nowS = this.moveMoreS - pastS
-      }
-      styleUtil(this.el, 'left', `${nowS}px`)
+    if (elPosition) {
+      styleUtil(this.el, 'left', `${elPosition.left - ctPos.left}px`) 
     } else {
       styleUtil(this.el, 'left', `${this.el.getBoundingClientRect().left - ctPos.left}px`) 
-      // console.log('updateOffset----', this.danmu.containerPos.width, this.options.text)  
     }
     styleUtil(this.el, 'transform', 'translateX(0px) translateY(0px) translateZ(0px)');
     styleUtil(this.el, 'transition', 'transform 0s linear 0s');
