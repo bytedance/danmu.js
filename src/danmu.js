@@ -561,7 +561,7 @@ export class DanmuJs extends BaseClass {
 
     }
     const canRun = this.main.status !== 'paused';
-    const containerLeft = this.main.channel.containerLeft;
+    const { containerLeft, containerRight } = this.main.channel || {};
   
     this.main.channel.channels.forEach(channel => {
       if (!channel || !channel.queue || !channel.queue.scroll || channel.queue.scroll.length === 0) {
@@ -587,6 +587,8 @@ export class DanmuJs extends BaseClass {
             const leftDistance = curBulletPos.right - containerLeft;
             const leftDuration = leftDistance / bullet.moveVV1;
             bullet.fullLeaveTime = currentTime + leftDuration;
+            // 更新fullEnterTime 防止字号调整后，元素迟迟不上屏
+            bullet.fullEnterTime = curBulletPos.right > containerRight ? currentTime + (curBulletPos.right - containerRight) / bullet.moveVV1 : -1;
             styleUtil(bullet.el, 'transition', `transform ${leftDuration / 1000}s linear 0s`)
             styleUtil(bullet.el, 'transform', `translateX(-${leftDistance}px)`);
             bullet.status = 'start';
@@ -610,6 +612,8 @@ export class DanmuJs extends BaseClass {
           const currentPos = currentLeft + curBulletPos.width;
           const currentDuration = currentPos / bullet.moveVV1;
           bullet.fullLeaveTime = currentTime + currentDuration;
+          // 更新fullEnterTime 防止字号调整后，元素迟迟不上屏
+          bullet.fullEnterTime = currentPos > containerRight ? currentTime + (currentPos - containerRight) / bullet.moveVV1 : -1;
           styleUtil(bullet.el, 'transition', `transform ${currentDuration / 1000}s linear 0s`)
           styleUtil(bullet.el, 'transform', `translateX(-${currentPos}px) translateZ(0px)`);
           bullet.status = 'start';

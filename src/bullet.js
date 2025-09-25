@@ -469,11 +469,12 @@ export class Bullet extends BaseClass {
     if (this.status !== 'forcedPause') {
       this.status = 'paused'
     }
-    const ctPos = this.danmu.containerPos
+    const ctPos = this.danmu.containerPos;
+    this.recalculate = true;
     if (elPosition) {
       styleUtil(this.el, 'left', `${elPosition.left - ctPos.left}px`) 
     } else {
-      styleUtil(this.el, 'left', `${this.el.getBoundingClientRect().left - ctPos.left}px`) 
+      styleUtil(this.el, 'left', `${this.el.getBoundingClientRect().left - ctPos.left}px`);
     }
     styleUtil(this.el, 'transform', 'translateX(0px) translateY(0px) translateZ(0px)');
     styleUtil(this.el, 'transition', 'transform 0s linear 0s');
@@ -564,6 +565,7 @@ export class Bullet extends BaseClass {
     }
 
     if (document.visibilityState !== 'visible') { // 页面不可见时，暂停移动
+      this.waitTimeStamp = 0;
       this.remove();
       this.status = 'end';
       return;
@@ -591,8 +593,13 @@ export class Bullet extends BaseClass {
         styleUtil(this.el, 'transition', `transform ${leftDuration / 1000}s linear 0s`);
         styleUtil(this.el, 'transform', `translateX(-${leftDistance}px) translateY(0px) translateZ(0px)`);
 
-        if (bulletPos.right > containerPos.left) { // 如果元素没有完全进入屏幕，更新完全进入屏幕时间
-          this.fullEnterTime = currentTime + (bulletPos.right - containerPos.left) / this.moveVV1;
+        if (bulletPos.right > containerPos.right) {
+          // 元素没有完全进入屏幕，更新完全进入屏幕时间
+          this.fullEnterTime = currentTime + (bulletPos.right - containerPos.right) / this.moveVV1;
+          console.log('fullEnterTime2', this.options.text, currentTime, (bulletPos.right - containerPos.left) / this.moveVV1, this.danmu.containerPos, bulletPos);
+        } else {
+          // 如果元素已经离屏，设置为-1
+          this.fullEnterTime = -1
         }
 
         this.fullLeaveTime = currentTime + leftDuration; // 更新离屏时间
@@ -608,7 +615,7 @@ export class Bullet extends BaseClass {
       this.startTime = getTimeStamp();
       this.endTime = this.startTime + this.duration;
       this.fullEnterTime = this.startTime + this.width / this.moveVV1;
-      console.log('fullEnterTime11', this.startTime, this.width, this.moveVV1, this.fullEnterTime, `startTime_${this.startTime}`, `width_${this.width}`, `perspective_${this.fullEnterTime}`, `moveVV1_${this.moveVV1}`);
+      console.log('fullEnterTime1', this.options.text, this.startTime, this.width / this.moveVV1);
       this.fullLeaveTime = this.startTime + this.duration;
     }
   }

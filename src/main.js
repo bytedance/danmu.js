@@ -114,7 +114,7 @@ class Main extends BaseClass {
      */
     const onTransitionEnd = (e) => {
       const bullet = this._getBulletByEvt(e)
-      console.log('元素remove', bullet.options.text, bullet.fullEnterTime, performance.now(), bullet.el.getBoundingClientRect().right, bullet.container.getBoundingClientRect().left)
+      // console.log('元素remove', bullet.options.text, bullet.fullEnterTime, performance.now(), bullet.el.getBoundingClientRect().right, bullet.container.getBoundingClientRect().left)
 
       if (bullet) {
         bullet.status = 'end'
@@ -505,6 +505,13 @@ class Main extends BaseClass {
       if (forceDuration && forceDuration !== item.duration) {
         item.duration = forceDuration;
       }
+  
+      // 创建弹幕元素前，确认轨道是否可用，减少弹幕密度较高情况下，弹幕元素的频繁创建与销毁
+      // 暂停场景下，不再尝试弹幕入轨
+      // 检查弹幕是否已存在于队列中
+      if (!channel.checkAvailableTrackV1() || this._status !== 'playing' || (this.queue && this.queue.find(j => j.id === item.id))) {
+        continue;
+      }
 
       const bullet = new Bullet(danmu, item);
       if (bullet.bulletCreateFail) {
@@ -514,10 +521,10 @@ class Main extends BaseClass {
       bullet.attachV1();
       item.attached_ = true;
       const addResult = channel.addBulletV1(bullet);
+      console.log('addBulletV1_轨道可用', bullet.options.text,addResult, bullet.status)
       if (addResult && bullet.status !== 'end') {
-        // console.log('addbulletv1', bullet.options.text, bullet.el.getBoundingClientRect().left)
         this.queue.push(bullet);
-        bullet.topInit()
+        bullet.topInit();
       } else {
         bullet.detach();
         for (let k in bullet) {
@@ -527,9 +534,6 @@ class Main extends BaseClass {
         }
         item.attached_ = false
       }
-      // if (!channel.checkAvailableTrackV1(list[0].mode)) {
-      //   break; //批量进行元素入轨过程中，如果轨道已满，那么直接跳出循环，等待下一次250ms的轮询执行
-      // }
     }
   }
 
