@@ -536,6 +536,7 @@ export class DanmuJs extends BaseClass {
           data.style.fontSize = this.fontSize
         }
       })
+      const channelSize = Number(size) + 20;
       this.main.queue.forEach((item) => {
         if (item.el && item.fullLeaveTime && item.fullLeaveTime <= getTimeStamp() && item.status === 'start') {
           item.remove(false);
@@ -546,38 +547,21 @@ export class DanmuJs extends BaseClass {
           item.options.style = {}
         }
         item.options.style.fontSize = this.fontSize
-        item.setFontSize(this.fontSize)
-        item.top = item.channelId * (Number(size) + 20);
+        item.setFontSize(this.fontSize);
+        // 修复先切换字号，再更新元素显示区域场景下，轨道间距异常问题
+        item.top = item.channelId * channelSize;
         item.topInit();
         item.pauseMove();
       })
+      this.config.channelSize = channelSize;
       this.updateQueueTimestamp();
-      if (this.main && this.main.channel && this.main.channel._initChannels) {
-        const channel = this.main.channel;
-        const { channelCount, channels, channelSize } = channel._initChannels(Number(size) + 20);
-        const originChannel = channel.channels;
-        if (originChannel) {
-          const currentLen = originChannel.length;
-          if (originChannel.length <= channelCount) {
-            // 需要扩轨道
-            originChannel.push(...channels.slice(currentLen));
-          } else { 
-            // 需要缩轨道
-            originChannel.forEach((item, index) => item.freeze = Boolean(index > channelCount));
-          }
-        } else {
-          // 初始化轨道
-          channel.channels = channels;
-        }
-        if (channel.channelHeight && channelSize) {
-          channel.channelHeight = channelSize;
-        }
+      if (this.main && this.main.channel && this.main.channel.updateChannlState) {
+        this.main.channel.updateChannlState(Number(size) + 20);
       }
     }
   }
 
   updateQueueTimestamp () {
-
     if (!this.main.channel || !this.main.channel.channels || !this.main.channel.channels) {
       return;
 
@@ -648,12 +632,27 @@ export class DanmuJs extends BaseClass {
     });
   }
 
-  setArea(area) {
+  setArea(size, channelSize, options) {
+    if (this.config && this.config.trackAllocationOptimization) {
+       this.setAreaV1(size, channelSize, options);
+    } else {
+      this.setAreaV0(size, channelSize, options);
+    }
+  }
+
+  setAreaV0(area) {
     this.logger && this.logger.info(`setArea: area ${area}`)
     this.config.area = area
 
     if (area.reflow !== false) {
       this.main.channel.resizeSync()
+    }
+  }
+
+  setAreaV1(area) {
+    this.config.area = area;
+    if (this.main && this.main.channel && this.main.channel.updateChannlState) {
+      this.main.channel.updateChannlState();
     }
   }
 

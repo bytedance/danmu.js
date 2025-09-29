@@ -502,7 +502,7 @@ class Main extends BaseClass {
       return;
     }
 
-    // 删除轨道位置更新 channel.updatePos()
+    console.log('轨道可用wsd', list.length)
     for (let index = 0; index < list.length; index++) {
       const item = list[index];
       if (forceDuration && forceDuration !== item.duration) {

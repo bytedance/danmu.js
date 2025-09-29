@@ -610,6 +610,8 @@ export class Bullet extends BaseClass {
       }
     }
 
+    console.log('开始移动元素', this.options.text, performance.now(), this.waitTimeStamp);
+
     this.waitTimeStamp = 0;
     const containerPos = this.danmu.containerPos;
     this.status = 'start';
