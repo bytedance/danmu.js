@@ -159,7 +159,7 @@ export class DanmuJs extends BaseClass {
     this.main && this.main.start()
   }
 
-  clear() {
+  clearData() {
     if (this.main && this.main.data) {
       this.main.data = [];
     } 
