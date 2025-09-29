@@ -85,27 +85,23 @@ class Channel extends BaseClass {
   checkAvailableTrackV1(mode = 'scroll') {
     // 当前轨道中没有元素，或者当前轨道中分配的元素已经完全进入屏幕，认为该轨道可用
     if (document.visibilityState !== 'visible') {
-      console.log('检测轨道可用性2', false);
       return false;
     }
+    let recalculate = false;
 
     const available = this.channels.findIndex(channel => {
       const lastBullet = channel.queue[mode][0];
-      if (lastBullet) {
-        console.log('检测轨道可用性1111', lastBullet.options.text, lastBullet.fullEnterTime, getTimeStamp());
-      }
       if (channel.freeze) {
         return false;
+      }
+      if (lastBullet && lastBullet.recalculate) {
+        recalculate = true;
       }
       if (!lastBullet || lastBullet.fullEnterTime && lastBullet.fullEnterTime <= getTimeStamp()) {
         return true;
       }
     });
-    if (available >= 0) {
-      console.log('轨道可用wsy', available, available >= 0);
-    }
-    
-    return available >= 0;
+    return available >= 0 || recalculate;
   }
 
   destroy() {
@@ -196,7 +192,6 @@ class Channel extends BaseClass {
 
   updatePos() {
     const pos = this.container.getBoundingClientRect();
-    console.log('containerWidth_计算位移')
     if (this.danmu && this.danmu.updateGetBoundingCounts) {
       this.danmu.updateGetBoundingCounts();
     }
@@ -577,7 +572,6 @@ class Channel extends BaseClass {
     const fullEnterChannelSorted = fullEnterChannel.sort((a, b) => a.queue.scroll[0].fell - b.queue.scroll[0].fullLeaveTime);
     // 在元素进行入轨判断前，对轨道可用性进行排序，减少不必要的计算
     const sortChannel = [...emptyChannel, ...fullEnterChannelSorted, ...noWaitChannel, ...recalculateChannel];
-    console.log('sortChannel', emptyChannel.map(item => item.id), fullEnterChannelSorted.map(item => item.id), noWaitChannel.map(item => item.id))
 
     for (let i = 0; i < sortChannel.length; i++) {
       const channel = sortChannel[i];
@@ -597,20 +591,17 @@ class Channel extends BaseClass {
         if (this.containerRight > lastBulletPos.right) {
           const diff = lastBullet.fullLeaveTime - currentTime - this.containerWidth / bullet.moveVV1;
           bullet.waitTimeStamp = currentTime + diff;
-          console.log('waitTimeStamp1', bullet.options.text, diff, performance.now())
         } else {
           const lastbulletOriginV = lastBulletPos.right / (lastBullet.fullLeaveTime - currentTime);
           const interval = (lastBulletPos.right - this.containerWidth) / lastbulletOriginV;
           const diff = lastBullet.fullLeaveTime - currentTime - interval - this.containerWidth / bullet.moveVV1;
           bullet.waitTimeStamp = Math.max(currentTime + interval, currentTime + diff);
-          console.log('waitTimeStamp2', bullet.options.text, diff, performance.now())
         }
         channelIndex = channel.id;
         break;
        
       } else if (lastBullet.waitTimeStamp || !lastBullet.startTime || !lastBullet.fullEnterTime) {
         //队列中还有元素在等待，队列繁忙
-        console.log('addBulletV1_轨道可用1', lastBullet.options.text,  '元素是否重新计算', lastBullet.recalculate, lastBullet.waitTimeStamp, lastBullet.startTime, lastBullet.fullEnterTime)
         return false;
       } else if (lastBullet.fullEnterTime < currentTime) {
         // 元素已上屏
@@ -623,7 +614,6 @@ class Channel extends BaseClass {
         channelIndex = channel.id;
         if (diff > 0) {
           bullet.waitTimeStamp = currentTime + diff;
-          console.log('waitTimeStamp1', bullet.options.text, diff, performance.now())
         }
         break;
       }
@@ -634,7 +624,6 @@ class Channel extends BaseClass {
       channel.queue.scroll.unshift(bullet);
       bullet.channelIndex = channelIndex;
       bullet.top = channelIndex * this.channelHeight;
-      console.log('channelCounu', bullet.options.text, this.channelHeight, channelIndex)
       bullet.channelId = channelIndex;    
       bullet.startMoveV1();
       return true;

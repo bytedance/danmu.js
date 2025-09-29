@@ -142,7 +142,7 @@ export function attachEventListener(object, event, fn, offEvent) {
  */
 export function styleUtil(elem, name, value) {
   if (!elem) {
-    console.trace('no elem');
+    return;
   }
   const style = elem.style
   try {

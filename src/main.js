@@ -117,8 +117,6 @@ class Main extends BaseClass {
      */
     const onTransitionEnd = (e) => {
       const bullet = this._getBulletByEvt(e)
-      // console.log('元素remove', bullet.options.text, bullet.fullEnterTime, performance.now(), bullet.el.getBoundingClientRect().right, bullet.container.getBoundingClientRect().left)
-
       if (bullet) {
         bullet.status = 'end'
         bullet.remove(false)
@@ -502,7 +500,6 @@ class Main extends BaseClass {
       return;
     }
 
-    console.log('轨道可用wsd', list.length)
     for (let index = 0; index < list.length; index++) {
       const item = list[index];
       if (forceDuration && forceDuration !== item.duration) {
@@ -524,7 +521,6 @@ class Main extends BaseClass {
       bullet.attachV1();
       item.attached_ = true;
       const addResult = channel.addBulletV1(bullet);
-      console.log('addBulletV1_轨道可用', bullet.options.text, addResult, bullet.status)
       if (addResult && bullet.status !== 'end' && !this.queue.find(j => j.id === item.id)) { // 防止元素重复上屏
         this.queue.push(bullet);
         bullet.topInit();

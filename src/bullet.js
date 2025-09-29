@@ -95,7 +95,6 @@ export class Bullet extends BaseClass {
       this.options.width = this.width;
     }
     const containerWidth = this.danmu.containerPos.width || 0;
-    console.log('containerWidth', containerWidth, this.danmu.main.channel.containerWidth)
     return (containerWidth + this.width) / this.duration;
   }
 
@@ -397,7 +396,6 @@ export class Bullet extends BaseClass {
   }
 
   pauseMove(force) {
-    console.log('更新元素的时间和位移_元素暂停', this.options.text);
     if (this.danmu && this.danmu.config && this.danmu.config.trackAllocationOptimization) {
       this.pauseMoveV1();
     } else {
@@ -583,15 +581,21 @@ export class Bullet extends BaseClass {
   }
 
   startMoveV1(force) {
+    const originStatus = this.status;
     if (document.visibilityState !== 'visible') { // 页面不可见时，暂停移动
-      this.waitTimeStamp = 0;
-      this.remove();
-      this.status = 'end';
-      return;
+      if (originStatus === 'paused' || originStatus === 'forcedPause' || this.recalculate) {
+        // 解决客户端切换后台后，状态更新不及时导致的元素误移除
+      } else {
+        console.log('元素移除', this.options.text);
+        this.waitTimeStamp = 0;
+        this.remove();
+        this.status = 'end';
+        return;
+      }
     }
 
     const currentTime = getTimeStamp();
-    const originStatus = this.status;
+    
 
     if (!this.el) {
       return;
@@ -609,8 +613,6 @@ export class Bullet extends BaseClass {
         return;
       }
     }
-
-    console.log('开始移动元素', this.options.text, performance.now(), this.waitTimeStamp);
 
     this.waitTimeStamp = 0;
     const containerPos = this.danmu.containerPos;
@@ -633,7 +635,6 @@ export class Bullet extends BaseClass {
         if (bulletPos.right > containerPos.right) {
           // 元素没有完全进入屏幕，更新完全进入屏幕时间
           this.fullEnterTime = currentTime + (bulletPos.right - containerPos.right) / this.moveVV1;
-          console.log('fullEnterTime2', this.options.text, currentTime, (bulletPos.right - containerPos.left) / this.moveVV1, this.danmu.containerPos, bulletPos);
         } else {
           // 如果元素已经离屏，设置为-1
           this.fullEnterTime = -1
@@ -652,7 +653,6 @@ export class Bullet extends BaseClass {
       this.startTime = getTimeStamp();
       this.endTime = this.startTime + this.duration;
       this.fullEnterTime = this.startTime + this.width / this.moveVV1;
-      console.log('fullEnterTime1', this.options.text, this.startTime, this.width / this.moveVV1);
       this.fullLeaveTime = this.startTime + this.duration;
     }
   }

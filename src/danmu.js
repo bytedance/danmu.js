@@ -159,6 +159,12 @@ export class DanmuJs extends BaseClass {
     this.main && this.main.start()
   }
 
+  clear() {
+    if (this.main && this.main.data) {
+      this.main.data = [];
+    } 
+  }
+
   pause() {
     this.logger && this.logger.info('pause')
     this.main && this.main.pause()
@@ -625,7 +631,6 @@ export class DanmuJs extends BaseClass {
           bullet.fullEnterTime = currentPos > containerRight ? currentTime + (currentPos - containerRight) / bullet.moveVV1 : -1;
           styleUtil(bullet.el, 'transition', `transform ${currentDuration / 1000}s linear 0s`)
           styleUtil(bullet.el, 'transform', `translateX(-${currentPos}px) translateZ(0px)`);
-          console.log('更新元素的时间和位移', bullet.options.text, currentPos, currentDuration);
           bullet.status = 'start';
         }
       }
