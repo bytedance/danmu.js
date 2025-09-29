@@ -101,7 +101,10 @@ class Channel extends BaseClass {
         return true;
       }
     });
-    console.log('检测轨道可用性2', available, available >= 0);
+    if (available >= 0) {
+      console.log('轨道可用wsy', available, available >= 0);
+    }
+    
     return available >= 0;
   }
 
@@ -557,10 +560,9 @@ class Channel extends BaseClass {
     
     this.channels.forEach(item => {
       if (item && item.queue && item.queue.scroll) {
-        if (item.queue.scroll.length === 0) {
+        if (item.freeze) {
+        } else if (item.queue.scroll.length === 0) {
           emptyChannel.push(item);
-        } else if (item.freeze) {
-
         } else if (item.queue.scroll[0]) {
           if (item.queue.scroll[0].fullEnterTime < currentTime) {
             fullEnterChannel.push(item);
@@ -575,7 +577,7 @@ class Channel extends BaseClass {
     const fullEnterChannelSorted = fullEnterChannel.sort((a, b) => a.queue.scroll[0].fell - b.queue.scroll[0].fullLeaveTime);
     // 在元素进行入轨判断前，对轨道可用性进行排序，减少不必要的计算
     const sortChannel = [...emptyChannel, ...fullEnterChannelSorted, ...noWaitChannel, ...recalculateChannel];
-    // console.log('sortChannel', sortChannel.map(item => item.id), fullEnterChannelSorted.map(item => item.queue.scroll[0].fullEnterTime))
+    console.log('sortChannel', emptyChannel.map(item => item.id), fullEnterChannelSorted.map(item => item.id), noWaitChannel.map(item => item.id))
 
     for (let i = 0; i < sortChannel.length; i++) {
       const channel = sortChannel[i];
@@ -632,6 +634,7 @@ class Channel extends BaseClass {
       channel.queue.scroll.unshift(bullet);
       bullet.channelIndex = channelIndex;
       bullet.top = channelIndex * this.channelHeight;
+      console.log('channelCounu', bullet.options.text, this.channelHeight, channelIndex)
       bullet.channelId = channelIndex;    
       bullet.startMoveV1();
       return true;
@@ -692,16 +695,23 @@ class Channel extends BaseClass {
     this.resize(true)
   }
 
+  _initChannels(csize) {
+    if (this.danmu && this.danmu.config && this.danmu.config.trackAllocationOptimization) {
+      return this._initChannelsV1(csize);
+    }
+    return this._initChannelsV0(csize);
+  }
+
   /**
    * @private
    */
-  _initChannels(csize) {
+  _initChannelsV0(csize) {
     if (!this.danmu || !this.danmu.config) {
       return
     }
     const self = this
     const { config } = self.danmu
-    const channelSize = csize ||config.channelSize || (/mobile/gi.test(navigator.userAgent) ? 10 : 12)
+    const channelSize = csize || config.channelSize || (/mobile/gi.test(navigator.userAgent) ? 10 : 12)
     /** @type {number} */
     let channelCount
 
@@ -735,6 +745,52 @@ class Channel extends BaseClass {
       }
     }
 
+    let channels = []
+    for (let i = 0; i < channelCount; i++) {
+      channels[i] = {
+        id: i,
+        queue: {
+          scroll: [],
+          top: [],
+          bottom: []
+        },
+        operating: {
+          scroll: false,
+          top: false,
+          bottom: false
+        },
+        bookId: {}
+      }
+    }
+
+    return {
+      channelSize,
+      channelCount,
+      channels
+    }
+  }
+
+  _initChannelsV1(csize) {
+    if (!this.danmu || !this.danmu.config) {
+      return
+    }
+
+    const { config } = this.danmu
+    const channelSize = csize || config.channelSize || (/mobile/gi.test(navigator.userAgent) ? 10 : 12)
+    let channelCount
+
+    if (config.area) {
+      const { lines, start, end } = config.area;
+      if (validAreaLineRule(lines)) {
+        channelCount = Number(lines);
+        this.height = channelCount * channelSize;
+      } else {
+        if (start >= 0 && end >= start) {
+          this.height = Math.floor(this.containerHeight * (end - start));
+          channelCount = Math.floor(this.height / channelSize);
+        }
+      }
+    }
     let channels = []
     for (let i = 0; i < channelCount; i++) {
       channels[i] = {
@@ -931,14 +987,8 @@ class Channel extends BaseClass {
     }
   }
 
-  resizeV1(sync) {
-    this.updatePos();
-    this.width = this.containerWidth;
-    this.height = this.containerHeight;
-    this.danmu.main.queue.forEach(item => {
-      item.recalculate = true;
-    });
-    const { channelCount, channels } = this._initChannels();
+  updateChannlState(csize) {
+    const { channelCount, channels, channelSize } = this._initChannels(csize);
     const originChannel = this.channels;
     if (originChannel) {
       const currentLen = originChannel.length;
@@ -947,13 +997,24 @@ class Channel extends BaseClass {
         originChannel.push(...channels.slice(currentLen));
       } else { 
         // 需要缩轨道
-        originChannel.forEach((item, index) => item.freeze = Boolean(index > channelCount));
+        originChannel.forEach((item, index) => item.freeze = Boolean(index >= channelCount));
       }
+      this.channels = originChannel;
     } else {
       // 初始化轨道
       this.channels = channels;
     }
+    this.channelHeight = channelSize;
+  }
 
+  resizeV1(sync) {
+    this.updatePos();
+    this.width = this.containerWidth;
+    this.height = this.containerHeight;
+    this.danmu.main.queue.forEach(item => {
+      item.recalculate = true;
+    });
+    this.updateChannlState();
     if (!this.danmu || !this.danmu.main || !this.danmu.main.queue) {
       return;
     }
