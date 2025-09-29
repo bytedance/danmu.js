@@ -94,8 +94,11 @@ class Channel extends BaseClass {
       if (lastBullet) {
         console.log('检测轨道可用性1111', lastBullet.options.text, lastBullet.fullEnterTime, getTimeStamp());
       }
+      if (channel.freeze) {
+        return false;
+      }
       if (!lastBullet || lastBullet.fullEnterTime && lastBullet.fullEnterTime <= getTimeStamp()) {
-        return true
+        return true;
       }
     });
     console.log('检测轨道可用性2', available, available >= 0);
@@ -151,6 +154,10 @@ class Channel extends BaseClass {
       }
       const { container } = self.danmu
       let size = container.getBoundingClientRect()
+      if (self.danmu.updateGetBoundingCounts) {
+        self.danmu.updateGetBoundingCounts();
+      }
+      
       self.width = size.width
       self.height = size.height
 
@@ -185,7 +192,11 @@ class Channel extends BaseClass {
   }
 
   updatePos() {
-    const pos = this.container.getBoundingClientRect()
+    const pos = this.container.getBoundingClientRect();
+    console.log('containerWidth_计算位移')
+    if (this.danmu && this.danmu.updateGetBoundingCounts) {
+      this.danmu.updateGetBoundingCounts();
+    }
 
     this.containerPos = pos
     this.containerWidth = pos.width
@@ -251,6 +262,9 @@ class Channel extends BaseClass {
   
               if (curBullet) {
                 const curBulletPos = curBullet.el.getBoundingClientRect()
+                if (danmu && danmu.updateGetBoundingCounts) {
+                  danmu.updateGetBoundingCounts();
+                }
   
                 // 1. 检测最后入轨弹幕是否已经完全飘入容器区域
                 if (self.direction === 'b2t') {
@@ -545,6 +559,8 @@ class Channel extends BaseClass {
       if (item && item.queue && item.queue.scroll) {
         if (item.queue.scroll.length === 0) {
           emptyChannel.push(item);
+        } else if (item.freeze) {
+
         } else if (item.queue.scroll[0]) {
           if (item.queue.scroll[0].fullEnterTime < currentTime) {
             fullEnterChannel.push(item);
@@ -573,6 +589,9 @@ class Channel extends BaseClass {
       // 元素暂停，重新设置字体大小后，增加recalculate标记，在碰到冲突的时候，需要实时计算位置
       if (lastBullet.recalculate) {
         const lastBulletPos = lastBullet.el.getBoundingClientRect();
+        if (this.danmu && this.danmu.updateGetBoundingCounts) {
+          this.danmu.updateGetBoundingCounts();
+        }   
         if (this.containerRight > lastBulletPos.right) {
           const diff = lastBullet.fullLeaveTime - currentTime - this.containerWidth / bullet.moveVV1;
           bullet.waitTimeStamp = currentTime + diff;
@@ -676,13 +695,13 @@ class Channel extends BaseClass {
   /**
    * @private
    */
-  _initChannels() {
+  _initChannels(csize) {
     if (!this.danmu || !this.danmu.config) {
       return
     }
     const self = this
     const { config } = self.danmu
-    const channelSize = config.channelSize || (/mobile/gi.test(navigator.userAgent) ? 10 : 12)
+    const channelSize = csize ||config.channelSize || (/mobile/gi.test(navigator.userAgent) ? 10 : 12)
     /** @type {number} */
     let channelCount
 
@@ -742,13 +761,13 @@ class Channel extends BaseClass {
   }
 
   resize(sync = false) {
-    if (this.danmu.config.trackAllocationOptimization) {
-      return this.resizeV2(sync);
+    if (this.danmu && this.danmu.config && this.danmu.config.trackAllocationOptimization) {
+      return this.resizeV1(sync);
     }
-    return this.resizeV1(sync);
+    return this.resizeV0(sync);
   }
 
-  resizeV1(sync) {
+  resizeV0(sync) {
     this.logger && this.logger.info('resize')
     let self = this
     if (self.resizing) {
@@ -912,7 +931,7 @@ class Channel extends BaseClass {
     }
   }
 
-  resizeV2(sync) {
+  resizeV1(sync) {
     this.updatePos();
     this.width = this.containerWidth;
     this.height = this.containerHeight;
@@ -920,13 +939,31 @@ class Channel extends BaseClass {
       item.recalculate = true;
     });
     const { channelCount, channels } = this._initChannels();
-    if (this.channels) {
-      if (this.channels.length <= channelCount) { // 需要扩轨道
-        const currentLen = this.channels.length;
-        this.channels.push(...channels.slice(currentLen));
-      } else { // 需要缩轨道
-        this.channels.length = channelCount;
+    const originChannel = this.channels;
+    if (originChannel) {
+      const currentLen = originChannel.length;
+      if (originChannel.length <= channelCount) {
+        // 需要扩轨道
+        originChannel.push(...channels.slice(currentLen));
+      } else { 
+        // 需要缩轨道
+        originChannel.forEach((item, index) => item.freeze = Boolean(index > channelCount));
       }
+    } else {
+      // 初始化轨道
+      this.channels = channels;
+    }
+
+    if (!this.danmu || !this.danmu.main || !this.danmu.main.queue) {
+      return;
+    }
+
+    this.danmu.main.queue.forEach((item) => {
+      item.pauseMove();
+    });
+    if (this.danmu && this.danmu.updateQueueTimestamp) {
+      // 更新元素位置与位移
+      this.danmu.updateQueueTimestamp();
     }
   }
 

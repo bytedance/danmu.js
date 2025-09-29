@@ -70,6 +70,9 @@ class Main extends BaseClass {
     this._cancelTick()
     this.channel && this.channel.destroy()
     this.data = []
+    if (this.danmu && this.danmu.updateGetBoundingCounts) {
+      this.danmu.updateGetBoundingCounts(0);
+    }
     for (let k in this) {
       delete this[k]
     }
@@ -237,7 +240,7 @@ class Main extends BaseClass {
   }
 
   _startTick() {
-    if (this.danmu.config.trackAllocationOptimization) {
+    if (this.danmu && this.danmu.config && this.danmu.config.trackAllocationOptimization) {
       this._startTickV1();
     } else {
       this._startTickV0();
@@ -521,8 +524,8 @@ class Main extends BaseClass {
       bullet.attachV1();
       item.attached_ = true;
       const addResult = channel.addBulletV1(bullet);
-      console.log('addBulletV1_轨道可用', bullet.options.text,addResult, bullet.status)
-      if (addResult && bullet.status !== 'end') {
+      console.log('addBulletV1_轨道可用', bullet.options.text, addResult, bullet.status)
+      if (addResult && bullet.status !== 'end' && !this.queue.find(j => j.id === item.id)) { // 防止元素重复上屏
         this.queue.push(bullet);
         bullet.topInit();
       } else {

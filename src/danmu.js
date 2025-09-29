@@ -56,7 +56,9 @@ export class DanmuJs extends BaseClass {
     }
 
     this.hideArr = []
-    this.recycler = new RecyclableDomList()
+    this.recycler = new RecyclableDomList() // TODO删除RecyclableDomList的逻辑
+    this.getBoundingCounts = 0; // 统计获取元素位置次数
+    this.danmuElCreateCounts = 0; // 创建弹幕元素次数
 
     // freezed comment
     this.freezeId = null
@@ -114,6 +116,26 @@ export class DanmuJs extends BaseClass {
 
   get containerPos() {
     return this.main.channel.containerPos
+  }
+
+  updateGetBoundingCounts(counts) {
+    if (this.getBoundingCounts !== undefined) {
+      if (typeof counts === 'number') {
+        this.getBoundingCounts = counts
+      } else {
+        this.getBoundingCounts++;
+      }
+    }
+  }
+
+  updateDanmuElCreateCounts(counts) {
+    if (this.danmuElCreateCounts !== undefined) {
+      if (typeof counts === 'number') {
+        this.danmuElCreateCounts = counts;
+      } else {
+        this.danmuElCreateCounts++;
+      }
+    }
   }
 
   /**
@@ -461,7 +483,7 @@ export class DanmuJs extends BaseClass {
   }
 
   setFontSize(size, channelSize, options) {
-    if (this.config.trackAllocationOptimization) {
+    if (this.config && this.config.trackAllocationOptimization) {
        this.setFontSizeV1(size, channelSize, options);
     } else {
       this.setFontSizeV0(size, channelSize, options);
@@ -505,20 +527,10 @@ export class DanmuJs extends BaseClass {
     }
   }
 
-  setFontSizeV1(
-    size,
-    channelSize,
-    options = {
-      reflow: true
-    }
-  ) {
+  setFontSizeV1(size) {
     this.fontSize = `${size}px`
     if (size) {
-
-      if (this.main.channel && this.main.channel.channelHeight && channelSize) {
-        this.main.channel.channelHeight = channelSize;
-      }
-
+    
       this.main.data.forEach((data) => {
       if (data.style) {
           data.style.fontSize = this.fontSize
@@ -530,28 +542,38 @@ export class DanmuJs extends BaseClass {
           item.status = 'end';
           return;
         }
-        
         if (!item.options.style) {
           item.options.style = {}
         }
         item.options.style.fontSize = this.fontSize
         item.setFontSize(this.fontSize)
-        if (channelSize) {
-          item.top = item.channelId * channelSize;
-          item.topInit();
-        }
+        item.top = item.channelId * (Number(size) + 20);
+        item.topInit();
         item.pauseMove();
       })
-
       this.updateQueueTimestamp();
+      if (this.main && this.main.channel && this.main.channel._initChannels) {
+        const channel = this.main.channel;
+        const { channelCount, channels, channelSize } = channel._initChannels(Number(size) + 20);
+        const originChannel = channel.channels;
+        if (originChannel) {
+          const currentLen = originChannel.length;
+          if (originChannel.length <= channelCount) {
+            // 需要扩轨道
+            originChannel.push(...channels.slice(currentLen));
+          } else { 
+            // 需要缩轨道
+            originChannel.forEach((item, index) => item.freeze = Boolean(index > channelCount));
+          }
+        } else {
+          // 初始化轨道
+          channel.channels = channels;
+        }
+        if (channel.channelHeight && channelSize) {
+          channel.channelHeight = channelSize;
+        }
+      }
     }
-    // if (channelSize) {
-    //   this.config.channelSize = channelSize
-
-    //   if (options.reflow) {
-    //     this.main.channel.resizeSync()
-    //   }
-    // }
   }
 
   updateQueueTimestamp () {
@@ -577,6 +599,9 @@ export class DanmuJs extends BaseClass {
         bullet.resized = true;
         const lastBullet = queue[index + 1];
         const curBulletPos = bullet.el.getBoundingClientRect();
+        if (this.danmu && this.danmu.updateGetBoundingCounts) {
+          this.danmu.updateGetBoundingCounts();
+        }
         bullet.width = curBulletPos.width;
         
         if (curBulletPos.right < containerLeft) {
@@ -616,6 +641,7 @@ export class DanmuJs extends BaseClass {
           bullet.fullEnterTime = currentPos > containerRight ? currentTime + (currentPos - containerRight) / bullet.moveVV1 : -1;
           styleUtil(bullet.el, 'transition', `transform ${currentDuration / 1000}s linear 0s`)
           styleUtil(bullet.el, 'transform', `translateX(-${currentPos}px) translateZ(0px)`);
+          console.log('更新元素的时间和位移', bullet.options.text, currentPos, currentDuration);
           bullet.status = 'start';
         }
       }

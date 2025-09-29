@@ -95,6 +95,7 @@ export class Bullet extends BaseClass {
       this.options.width = this.width;
     }
     const containerWidth = this.danmu.containerPos.width || 0;
+    console.log('containerWidth', containerWidth, this.danmu.main.channel.containerWidth)
     return (containerWidth + this.width) / this.duration;
   }
 
@@ -149,7 +150,10 @@ export class Bullet extends BaseClass {
         if (isFunction(globalHooks.bulletCreateEl)) {
           try {
             const result = globalHooks.bulletCreateEl(options)
-
+            if (danmu && danmu.updateDanmuElCreateCounts) {
+              danmu.updateDanmuElCreateCounts();
+            }
+            
             if (result instanceof HTMLElement) {
               el = result
             } else {
@@ -231,6 +235,9 @@ export class Bullet extends BaseClass {
     if (options.elLazyInit && isFunction(globalHooks.bulletCreateEl)) {
       try {
         const result = globalHooks.bulletCreateEl(options);
+        if (danmu && danmu.updateDanmuElCreateCounts) {
+          danmu.updateDanmuElCreateCounts();
+        }
         if (result instanceof HTMLElement) {
           el = result;
         } else {
@@ -293,6 +300,9 @@ export class Bullet extends BaseClass {
       self.container.appendChild(el)
     }
     self.elPos = el.getBoundingClientRect()
+    if (danmu && danmu.updateGetBoundingCounts) {
+      danmu.updateGetBoundingCounts()
+    }
     if (self.direction === 'b2t') {
       self.width = self.elPos.height
       self.height = self.elPos.width
@@ -326,9 +336,13 @@ export class Bullet extends BaseClass {
     }
 
     if (!this.width) {
-      this.elPos = this.el.getBoundingClientRect()        
+      this.elPos = this.el.getBoundingClientRect();       
       this.width = this.elPos.width;
       options.width = this.width;
+
+      if (danmu && danmu.updateGetBoundingCounts) {
+        danmu.updateGetBoundingCounts();
+      }
     }
 
     if (globalHooks.bulletAttached) {
@@ -383,7 +397,8 @@ export class Bullet extends BaseClass {
   }
 
   pauseMove(force) {
-    if (this.danmu.config.trackAllocationOptimization) {
+    console.log('更新元素的时间和位移_元素暂停', this.options.text);
+    if (this.danmu && this.danmu.config && this.danmu.config.trackAllocationOptimization) {
       this.pauseMoveV1();
     } else {
       this.pauseMoveV0(force);
@@ -444,6 +459,9 @@ export class Bullet extends BaseClass {
           )
         } else {
           styleUtil(this.el, 'left', `${this.el.getBoundingClientRect().left - ctPos.left}px`)
+          if (self.danmu && self.danmu.updateGetBoundingCounts) {
+            self.danmu.updateGetBoundingCounts();
+          }
         }
       }
       if (this.direction === 'b2t') {
@@ -475,13 +493,16 @@ export class Bullet extends BaseClass {
       styleUtil(this.el, 'left', `${elPosition.left - ctPos.left}px`) 
     } else {
       styleUtil(this.el, 'left', `${this.el.getBoundingClientRect().left - ctPos.left}px`);
+      if (this.danmu && this.danmu.updateGetBoundingCounts) {
+        this.danmu.updateGetBoundingCounts();
+      }
     }
     styleUtil(this.el, 'transform', 'translateX(0px) translateY(0px) translateZ(0px)');
     styleUtil(this.el, 'transition', 'transform 0s linear 0s');
   }
 
   startMove(force) {
-    if (this.danmu.config.trackAllocationOptimization) {
+    if (this.danmu && this.danmu.config && this.danmu.config.trackAllocationOptimization) {
       this.startMoveV1(force);
     } else {
       this.startMoveV0(force);
@@ -507,6 +528,9 @@ export class Bullet extends BaseClass {
         return
       }
       const bulletPos = self.el.getBoundingClientRect()
+      if (self.danmu && self.danmu.updateGetBoundingCounts) {
+        self.danmu.updateGetBoundingCounts();
+      }
       let fullyMovedToScreenDistance
 
       if (this.direction === 'b2t') {
@@ -559,11 +583,6 @@ export class Bullet extends BaseClass {
   }
 
   startMoveV1(force) {
-    const currentTime = getTimeStamp();
-    if (!this.el || this.status === 'start' || this.status === 'forcedPause' && !force || this.waitTimeStamp > currentTime) {
-      return;
-    }
-
     if (document.visibilityState !== 'visible') { // 页面不可见时，暂停移动
       this.waitTimeStamp = 0;
       this.remove();
@@ -571,8 +590,19 @@ export class Bullet extends BaseClass {
       return;
     }
 
+    const currentTime = getTimeStamp();
     const originStatus = this.status;
-    if (originStatus !== 'forcedPause' && originStatus !== 'paused') {
+
+    if (!this.el) {
+      return;
+    }
+
+    if (this.recalculate) {
+
+    } else if (originStatus === 'start' || originStatus === 'forcedPause' && !force || this.waitTimeStamp > currentTime) {
+      // 元素状态已经在移动中，或者元素已经离开屏幕，不需要再执行这个逻辑
+      return;
+    } else if (originStatus !== 'forcedPause' && originStatus !== 'paused') {
       if (this.fullLeaveTime && this.fullLeaveTime < currentTime) {
         this.remove();
         this.status = 'end';
@@ -584,8 +614,13 @@ export class Bullet extends BaseClass {
     const containerPos = this.danmu.containerPos;
     this.status = 'start';
 
-    if (originStatus === 'paused') {
+    if (originStatus === 'paused' || originStatus === 'forcedPause' || this.recalculate) {
+      // 需要重新计算位移的场景：元素暂停过，或者更改过可视区域大小
       const bulletPos = this.el.getBoundingClientRect();
+
+      if (this.danmu && this.danmu.updateGetBoundingCounts) {
+        this.danmu.updateGetBoundingCounts();
+      }
       const leftDistance = bulletPos.right - containerPos.left;
       const leftDuration = leftDistance / this.moveVV1;
 
