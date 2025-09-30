@@ -602,7 +602,7 @@ class Channel extends BaseClass {
        
       } else if (lastBullet.waitTimeStamp || !lastBullet.startTime || !lastBullet.fullEnterTime) {
         //队列中还有元素在等待，队列繁忙
-        return false;
+        continue;
       } else if (lastBullet.fullEnterTime < currentTime) {
         // 元素已上屏
         // 轨道前面元素的速度更大

@@ -586,7 +586,6 @@ export class Bullet extends BaseClass {
       if (originStatus === 'paused' || originStatus === 'forcedPause' || this.recalculate) {
         // 解决客户端切换后台后，状态更新不及时导致的元素误移除
       } else {
-        console.log('元素移除', this.options.text);
         this.waitTimeStamp = 0;
         this.remove();
         this.status = 'end';
