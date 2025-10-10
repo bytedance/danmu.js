@@ -478,7 +478,7 @@ export class Bullet extends BaseClass {
     }
   }
 
-  pauseMoveV1 (elPosition) {
+  pauseMoveV1 () {
     if (this.status === 'paused' || !this.el) {
       return;
     }
@@ -487,16 +487,17 @@ export class Bullet extends BaseClass {
     }
     const ctPos = this.danmu.containerPos;
     this.recalculate = true;
-    if (elPosition) {
-      styleUtil(this.el, 'left', `${elPosition.left - ctPos.left}px`) 
-    } else {
-      styleUtil(this.el, 'left', `${this.el.getBoundingClientRect().left - ctPos.left}px`);
-      if (this.danmu && this.danmu.updateGetBoundingCounts) {
-        this.danmu.updateGetBoundingCounts();
-      }
+    const position = this.el.getBoundingClientRect();
+    styleUtil(this.el, 'left', `${position.left - ctPos.left}px`);
+    if (this.danmu && this.danmu.updateGetBoundingCounts) {
+      this.danmu.updateGetBoundingCounts();
     }
     styleUtil(this.el, 'transform', 'translateX(0px) translateY(0px) translateZ(0px)');
     styleUtil(this.el, 'transition', 'transform 0s linear 0s');
+    if (position.right <= ctPos.right) {
+      // 如果元素完全进入屏幕，更新 fullEnterTime，保证轨道可用性检测准确性
+      this.fullEnterTime = -1;
+    }
   }
 
   startMove(force) {
@@ -594,15 +595,15 @@ export class Bullet extends BaseClass {
     }
 
     const currentTime = getTimeStamp();
-    
-
     if (!this.el) {
       return;
     }
 
-    if (this.recalculate) {
-
-    } else if (originStatus === 'start' || originStatus === 'forcedPause' && !force || this.waitTimeStamp > currentTime) {
+    if (this.waitTimeStamp > currentTime) {
+      return;
+    } else if (this.recalculate) {
+      // 元素如果调整过字号大小，或者调整过可视区域的大小，或者暂停过，不需要再走后续的逻辑
+    } else if (originStatus === 'start' || originStatus === 'forcedPause' && !force) {
       // 元素状态已经在移动中，或者元素已经离开屏幕，不需要再执行这个逻辑
       return;
     } else if (originStatus !== 'forcedPause' && originStatus !== 'paused') {
@@ -635,10 +636,9 @@ export class Bullet extends BaseClass {
           // 元素没有完全进入屏幕，更新完全进入屏幕时间
           this.fullEnterTime = currentTime + (bulletPos.right - containerPos.right) / this.moveVV1;
         } else {
-          // 如果元素已经离屏，设置为-1
-          this.fullEnterTime = -1
+          // 如果元素已经完全进入屏幕，设置为-1
+          this.fullEnterTime = -1;
         }
-
         this.fullLeaveTime = currentTime + leftDuration; // 更新离屏时间
       } else {
         this.status = 'end';
@@ -659,6 +659,7 @@ export class Bullet extends BaseClass {
   remove(needPause = true) {
     this.logger && this.logger.info(`remove #${this.options.txt || '[DOM Element]'}#`)
     const self = this
+    this.fullEnterTime = -1;
 
     if (needPause) {
       self.pauseMove()

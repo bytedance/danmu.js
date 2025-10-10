@@ -585,8 +585,14 @@ export class DanmuJs extends BaseClass {
 
       for (let index = queueLen - 1; index >= 0; index--) {
         const bullet = queue[index];
+        if (!bullet || !bullet.el) {
+          // 元素不存在或已移除
+          continue; 
+        }
         // 防止字体变大，后面上屏元素重叠
-        bullet.resized = true;
+        bullet.recalculate = true;
+        // 元素更改位置后，清除waitTimeStamp标记
+        bullet.waitTimeStamp = 0;
         const lastBullet = queue[index + 1];
         const curBulletPos = bullet.el.getBoundingClientRect();
         if (this.danmu && this.danmu.updateGetBoundingCounts) {

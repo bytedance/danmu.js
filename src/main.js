@@ -289,11 +289,6 @@ class Main extends BaseClass {
     }
   }
 
-  clearNot() {
-    this.data = []
-    this.queue = []
-  }
-
   play() {
     if (this._status === 'closed') {
       this.logger && this.logger.info('play ignored')
@@ -466,18 +461,10 @@ class Main extends BaseClass {
       const currentTime = player.currentTime ? Math.floor(player.currentTime * 1000) : 0;
 
       list = data.filter(item => {
-        if (!item.start && danmu.hideArr.indexOf(item.mode) < 0) {
-          if (!item.color || danmu.hideArr.indexOf('color') < 0) {
-            item.start = currentTime
-          }
+        if (!item.start) {
+          item.start = currentTime;
         }
-        return (
-          !item.attached_ &&
-          danmu.hideArr.indexOf(item.mode) < 0 &&
-          (!item.color || danmu.hideArr.indexOf('color') < 0) &&
-          item.start - interval <= currentTime &&
-          currentTime <= item.start + interval
-        );
+        return !item.attached_ && item.start - interval <= currentTime && currentTime <= item.start + interval;
       });
 
       if (danmu.config.highScorePriority) {

@@ -87,21 +87,16 @@ class Channel extends BaseClass {
     if (document.visibilityState !== 'visible') {
       return false;
     }
-    let recalculate = false;
-
     const available = this.channels.findIndex(channel => {
       const lastBullet = channel.queue[mode][0];
       if (channel.freeze) {
         return false;
       }
-      if (lastBullet && lastBullet.recalculate) {
-        recalculate = true;
-      }
       if (!lastBullet || lastBullet.fullEnterTime && lastBullet.fullEnterTime <= getTimeStamp()) {
         return true;
       }
     });
-    return available >= 0 || recalculate;
+    return available >= 0;
   }
 
   destroy() {
@@ -582,24 +577,19 @@ class Channel extends BaseClass {
         break;
       }
   
-      // 元素暂停，重新设置字体大小后，增加recalculate标记，在碰到冲突的时候，需要实时计算位置
+      // 元素暂停，或者重新设置字体大小后，或者缩放后，增加recalculate标记，在碰到冲突的时候，需要实时计算位置
       if (lastBullet.recalculate) {
         const lastBulletPos = lastBullet.el.getBoundingClientRect();
         if (this.danmu && this.danmu.updateGetBoundingCounts) {
           this.danmu.updateGetBoundingCounts();
-        }   
-        if (this.containerRight > lastBulletPos.right) {
-          const diff = lastBullet.fullLeaveTime - currentTime - this.containerWidth / bullet.moveVV1;
-          bullet.waitTimeStamp = currentTime + diff;
-        } else {
-          const lastbulletOriginV = lastBulletPos.right / (lastBullet.fullLeaveTime - currentTime);
-          const interval = (lastBulletPos.right - this.containerWidth) / lastbulletOriginV;
-          const diff = lastBullet.fullLeaveTime - currentTime - interval - this.containerWidth / bullet.moveVV1;
-          bullet.waitTimeStamp = Math.max(currentTime + interval, currentTime + diff);
         }
-        channelIndex = channel.id;
-        break;
-       
+        if (this.containerRight > lastBulletPos.right) {
+          // 元素已经完全进入屏幕
+          const diff = lastBullet.fullLeaveTime - currentTime - this.containerWidth / bullet.moveVV1;
+          bullet.waitTimeStamp = diff >= 0 ? currentTime + diff : 0;
+          channelIndex = channel.id;
+          break;
+        }
       } else if (lastBullet.waitTimeStamp || !lastBullet.startTime || !lastBullet.fullEnterTime) {
         //队列中还有元素在等待，队列繁忙
         continue;
