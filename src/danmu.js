@@ -603,11 +603,12 @@ export class DanmuJs extends BaseClass {
         if (curBulletPos.right < containerLeft) {
           continue; // 元素已离屏
         }
-        if (!lastBullet) { 
+        if (!lastBullet) {
+          // canRun之前更新元素离屏时间，修复暂停后，调整字体大小导致的重叠问题
+          const leftDistance = curBulletPos.right - containerLeft;
+          const leftDuration = leftDistance / bullet.moveVV1;
+          bullet.fullLeaveTime = currentTime + leftDuration;
           if (canRun) {
-            const leftDistance = curBulletPos.right - containerLeft;
-            const leftDuration = leftDistance / bullet.moveVV1;
-            bullet.fullLeaveTime = currentTime + leftDuration;
             // 更新fullEnterTime 防止字号调整后，元素迟迟不上屏
             bullet.fullEnterTime = curBulletPos.right > containerRight ? currentTime + (curBulletPos.right - containerRight) / bullet.moveVV1 : -1;
             styleUtil(bullet.el, 'transition', `transform ${leftDuration / 1000}s linear 0s`)
@@ -629,10 +630,10 @@ export class DanmuJs extends BaseClass {
         if (currentLeft !== curBulletPos.left) {
           styleUtil(bullet.el, 'left', `${currentLeft}px`);
         }
-        if (canRun) { 
-          const currentPos = currentLeft + curBulletPos.width;
-          const currentDuration = currentPos / bullet.moveVV1;
-          bullet.fullLeaveTime = currentTime + currentDuration;
+        const currentPos = currentLeft + curBulletPos.width;
+        const currentDuration = currentPos / bullet.moveVV1;
+        bullet.fullLeaveTime = currentTime + currentDuration;
+        if (canRun) {
           // 更新fullEnterTime 防止字号调整后，元素迟迟不上屏
           bullet.fullEnterTime = currentPos > containerRight ? currentTime + (currentPos - containerRight) / bullet.moveVV1 : -1;
           styleUtil(bullet.el, 'transition', `transform ${currentDuration / 1000}s linear 0s`)
