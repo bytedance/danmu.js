@@ -968,17 +968,17 @@ class Channel extends BaseClass {
 
   updateChannlState(csize) {
     const { channelCount, channels, channelSize } = this._initChannels(csize);
-    const originChannel = this.channels;
+    const originChannel = this.channels; // 原始轨道
+    const availableChannel = originChannel.filter(item => !item.freeze); // 可用轨道
+
     if (originChannel) {
-      const currentLen = originChannel.length;
-      if (originChannel.length <= channelCount) {
-        // 需要扩轨道
-        originChannel.push(...channels.slice(currentLen));
-      } else { 
-        // 需要缩轨道
+      const currentLen = availableChannel.length;
+      if (availableChannel.length < channelCount) { // 需要扩轨道
+        this.channels = [...availableChannel, ...channels.slice(currentLen)];
+      } else {
         originChannel.forEach((item, index) => item.freeze = Boolean(index >= channelCount));
+        this.channels = originChannel;
       }
-      this.channels = originChannel;
     } else {
       // 初始化轨道
       this.channels = channels;
