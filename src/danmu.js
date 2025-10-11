@@ -601,6 +601,7 @@ export class DanmuJs extends BaseClass {
         bullet.width = curBulletPos.width;
         
         if (curBulletPos.right < containerLeft) {
+          bullet.remove(false);
           continue; // 元素已离屏
         }
         if (!lastBullet) {

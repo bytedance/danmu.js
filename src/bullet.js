@@ -498,6 +498,9 @@ export class Bullet extends BaseClass {
       // 如果元素完全进入屏幕，更新 fullEnterTime，保证轨道可用性检测准确性
       this.fullEnterTime = -1;
     }
+    if (position.right < ctPos.left) {
+      this.remove(false);
+    }
   }
 
   startMove(force) {
@@ -588,7 +591,7 @@ export class Bullet extends BaseClass {
         // 解决客户端切换后台后，状态更新不及时导致的元素误移除
       } else {
         this.waitTimeStamp = 0;
-        this.remove();
+        this.remove(false);
         this.status = 'end';
         return;
       }
@@ -608,7 +611,7 @@ export class Bullet extends BaseClass {
       return;
     } else if (originStatus !== 'forcedPause' && originStatus !== 'paused') {
       if (this.fullLeaveTime && this.fullLeaveTime < currentTime) {
-        this.remove();
+        this.remove(false);
         this.status = 'end';
         return;
       }
@@ -642,7 +645,7 @@ export class Bullet extends BaseClass {
         this.fullLeaveTime = currentTime + leftDuration; // 更新离屏时间
       } else {
         this.status = 'end';
-        this.remove();
+        this.remove(false);
       }
     } else {
       const els = this.el;
