@@ -54,7 +54,7 @@ export class Bullet extends BaseClass {
     if (!options.elLazyInit) {
       this.bulletCreateFail = !this._makeEl()
     }
-    this.startTime = 0;
+    this.startsTime = 0;
     this.fullEnterTime = 0;
     this.fullLeaveTime = 0;
     this.waitTimeStamp = 0;
@@ -651,11 +651,10 @@ export class Bullet extends BaseClass {
       const els = this.el;
       styleUtil(els, 'transition', `transform ${this.duration / 1000}s linear 0s`);
       styleUtil(els, 'transform', `translateX(-${containerPos.width + this.width}px) translateY(0px) translateZ(0px)`);
-
-      this.startTime = getTimeStamp();
-      this.endTime = this.startTime + this.duration;
-      this.fullEnterTime = this.startTime + this.width / this.moveVV1;
-      this.fullLeaveTime = this.startTime + this.duration;
+      this.startsTime = getTimeStamp();
+      this.endTime = this.startsTime + this.duration;
+      this.fullEnterTime = this.startsTime + this.width / this.moveVV1;
+      this.fullLeaveTime = this.startsTime + this.duration;
     }
   }
 

@@ -590,7 +590,7 @@ class Channel extends BaseClass {
           channelIndex = channel.id;
           break;
         }
-      } else if (lastBullet.waitTimeStamp || !lastBullet.startTime || !lastBullet.fullEnterTime) {
+      } else if (lastBullet.waitTimeStamp || !lastBullet.startsTime || !lastBullet.fullEnterTime) {
         //队列中还有元素在等待，队列繁忙
         continue;
       } else if (lastBullet.fullEnterTime < currentTime) {
