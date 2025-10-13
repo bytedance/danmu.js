@@ -572,7 +572,7 @@ class Channel extends BaseClass {
       const channel = sortChannel[i];
       const lastBullet = channel.queue.scroll[0];
       // 当前轨道为空
-      if (!lastBullet) { 
+      if (!lastBullet || !lastBullet.el) {
         channelIndex = channel.id;
         break;
       }

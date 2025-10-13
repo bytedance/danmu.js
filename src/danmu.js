@@ -235,10 +235,10 @@ export class DanmuJs extends BaseClass {
         main.data.unshift(comment)
         if (comment.realTime) {
           if (this.config && this.config.trackAllocationOptimization) {
+            main.readDataV1();
+          } else {
             main.readData();
             main.dataHandle();
-          } else {
-            main.readDataV1();
           }
         }
       } else {
