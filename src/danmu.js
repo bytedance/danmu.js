@@ -537,7 +537,7 @@ export class DanmuJs extends BaseClass {
       });
       const channelSize = Number(size) + 20;
       const queue = this.main.queue;
-      const maxTryLimit = 100;
+      const maxTryLimit = 1000;
       let tryCount = 0;
 
       // 轨道元素在动态变化，不能直接用forEach
@@ -547,14 +547,14 @@ export class DanmuJs extends BaseClass {
         i = preIndex >= 0 ? preIndex : 0;
         const item = queue[i];
         
-        if (i >= queue.length) {
+        if (i >= queue.length || preIndex < 0) {
           break;
         }
         if (!item.options.style) {
           item.options.style = {};
         }
         item.options.style.fontSize = this.fontSize;
-        item.setFontSize(this.fontSize, item.options.text);
+        item.setFontSize(this.fontSize);
         // 修复先切换字号，再更新元素显示区域场景下，轨道间距异常问题
         item.top = item.channelId * channelSize;
         item.topInit();
