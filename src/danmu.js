@@ -560,7 +560,6 @@ export class DanmuJs extends BaseClass {
         if (i >= queue.length) {
           break;
         }
-        danmuId = item.id;
         if (!item.options.style) {
           item.options.style = {};
         }
