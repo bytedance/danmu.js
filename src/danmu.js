@@ -159,12 +159,6 @@ export class DanmuJs extends BaseClass {
     this.main && this.main.start()
   }
 
-  clearData() {
-    if (this.main && this.main.data) {
-      this.main.data = [];
-    } 
-  }
-
   pause() {
     this.logger && this.logger.info('pause')
     this.main && this.main.pause()
@@ -183,10 +177,6 @@ export class DanmuJs extends BaseClass {
   clear() {
     this.logger && this.logger.info('clear')
     this.main && this.main.clear()
-  }
-
-  clearNot() {
-
   }
 
   destroy() {
@@ -605,11 +595,7 @@ export class DanmuJs extends BaseClass {
         // 元素更改位置后，清除waitTimeStamp标记
         bullet.waitTimeStamp = 0;
         const lastBullet = queue[index + 1];
-        const curBulletPos = bullet.el.getBoundingClientRect();
-        if (this.danmu && this.danmu.updateGetBoundingCounts) {
-          this.danmu.updateGetBoundingCounts();
-        }
-        bullet.width = curBulletPos.width;
+        const curBulletPos = bullet.updatePosition();
         
         if (curBulletPos.right < containerLeft) {
           bullet.remove(false);

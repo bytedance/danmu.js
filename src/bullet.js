@@ -90,8 +90,8 @@ export class Bullet extends BaseClass {
   }
 
   get moveVV1() {
-    if (!this.width) {
-      this.width = this.el.offsetWidth;
+    if (!this.width && this.el) {
+      this.updatePosition();
       this.options.width = this.width;
     }
     const containerWidth = this.danmu.containerPos.width || 0;
@@ -275,6 +275,19 @@ export class Bullet extends BaseClass {
     return left
   }
 
+  updatePosition() {
+    if (this.el) {
+      this.elPos = this.el.getBoundingClientRect();
+      this.width = this.elPos.width;
+      this.options.width = this.elPos.width;
+      if (this.danmu && this.danmu.updateGetBoundingCounts) {
+        this.danmu.updateGetBoundingCounts()
+      }
+      return this.elPos;
+    }
+    return {};
+  }
+
   attach() {
     // this.logger && this.logger.info(`attach #${this.options.txt || '[DOM Element]'}#`)
     const self = this
@@ -335,13 +348,7 @@ export class Bullet extends BaseClass {
     }
 
     if (!this.width) {
-      this.elPos = this.el.getBoundingClientRect();       
-      this.width = this.elPos.width;
-      options.width = this.width;
-
-      if (danmu && danmu.updateGetBoundingCounts) {
-        danmu.updateGetBoundingCounts();
-      }
+      this.updatePosition();
     }
 
     if (globalHooks.bulletAttached) {
@@ -487,11 +494,8 @@ export class Bullet extends BaseClass {
     }
     const ctPos = this.danmu.containerPos;
     this.recalculate = true;
-    const position = this.el.getBoundingClientRect();
+    const position = this.updatePosition();
     styleUtil(this.el, 'left', `${position.left - ctPos.left}px`);
-    if (this.danmu && this.danmu.updateGetBoundingCounts) {
-      this.danmu.updateGetBoundingCounts();
-    }
     styleUtil(this.el, 'transform', 'translateX(0px) translateY(0px) translateZ(0px)');
     styleUtil(this.el, 'transition', 'transform 0s linear 0s');
     if (position.right <= ctPos.right) {
@@ -623,11 +627,7 @@ export class Bullet extends BaseClass {
 
     if (originStatus === 'paused' || originStatus === 'forcedPause' || this.recalculate) {
       // 需要重新计算位移的场景：元素暂停过，或者更改过可视区域大小
-      const bulletPos = this.el.getBoundingClientRect();
-
-      if (this.danmu && this.danmu.updateGetBoundingCounts) {
-        this.danmu.updateGetBoundingCounts();
-      }
+      const bulletPos = this.updatePosition();
       const leftDistance = bulletPos.right - containerPos.left;
       const leftDuration = leftDistance / this.moveVV1;
 

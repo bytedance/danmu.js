@@ -211,303 +211,286 @@ class Channel extends BaseClass {
     // this.logger && this.logger.info(`addBullet ${bullet.options.txt || '[DOM Element]'}`)
     const self = this
     const danmu = this.danmu
-      const channels = this.channels
-      let channelHeight, channelWidth, occupy
-  
-      if (self.direction === 'b2t') {
-        channelWidth = this.channelWidth
-        occupy = Math.ceil(bullet.width / channelWidth)
-      } else {
-        channelHeight = this.channelHeight
-        occupy = Math.ceil(bullet.height / channelHeight)
+    const channels = this.channels
+    let channelHeight, channelWidth, occupy
+
+    if (self.direction === 'b2t') {
+      channelWidth = this.channelWidth
+      occupy = Math.ceil(bullet.width / channelWidth)
+    } else {
+      channelHeight = this.channelHeight
+      occupy = Math.ceil(bullet.height / channelHeight)
+    }
+    // 检查弹幕需要占据的轨道数量是否超过可用轨道总数
+    if (occupy > channels.length) {
+      return {
+        result: false,
+        message: `exceed channels.length, occupy=${occupy},channelsSize=${channels.length}`
       }
-      // 检查弹幕需要占据的轨道数量是否超过可用轨道总数
-      if (occupy > channels.length) {
-        return {
-          result: false,
-          message: `exceed channels.length, occupy=${occupy},channelsSize=${channels.length}`
-        }
-      } else {
-        let flag = true,
-          channel,
-          pos = -1
-        for (let i = 0, max = channels.length; i < max; i++) {
-          if (channels[i].queue[bullet.mode].some((item) => item.id === bullet.id)) {
-            return {
-              result: false,
-              message: `exited, channelOrder=${i},danmu_id=${bullet.id}`
-            }
-          }
-        }
-        if (bullet.mode === 'scroll') {
-          for (let i = 0, max = channels.length - occupy; i <= max; i += occupy) {
-            flag = true
-            for (let j = i; j < i + occupy; j++) {
-              channel = channels[j]
-              if (channel.operating.scroll || (channel.bookId.scroll && channel.bookId.scroll !== bullet.id)) {
-                flag = false
-                break
-              }
-              channel.operating.scroll = true
-  
-              // 当前轨道 - 最后入轨弹幕
-              const curBullet = channel.queue.scroll[0]
-  
-              if (curBullet) {
-                const curBulletPos = curBullet.el.getBoundingClientRect()
-                if (danmu && danmu.updateGetBoundingCounts) {
-                  danmu.updateGetBoundingCounts();
-                }
-  
-                // 1. 检测最后入轨弹幕是否已经完全飘入容器区域
-                if (self.direction === 'b2t') {
-                  if (curBulletPos.bottom >= self.containerPos.bottom) {
-                    flag = false
-                    channel.operating.scroll = false
-                    break
-                  }
-                } else {
-                  if (curBulletPos.right >= self.containerPos.right) {
-                    flag = false
-                    channel.operating.scroll = false
-                    break
-                  }
-                }
-  
-                let curS,
-                  curV = curBullet.moveV,
-                  curT,
-                  newV = bullet.moveV,
-                  catchS
-                if (self.direction === 'b2t') {
-                  curS = curBulletPos.bottom - self.containerTop
-                  curT = curS / curV
-  
-                  catchS = self.containerHeight + bullet.random - curS
-                } else {
-                  curS = curBulletPos.right - self.containerLeft
-                  curT = curS / curV
-  
-                  catchS = self.containerWidth + bullet.random - curS
-                }
-  
-                // 2. 当前轨道内，新弹幕速度大于最后一个入轨弹幕速度，考虑碰撞问题
-                if (newV > curV) {
-                  let catchT = catchS / (newV - curV)
-  
-                  if (!danmu.config.bOffset) {
-                    danmu.config.bOffset = 0
-                  }
-  
-                  // 3. 相遇时间小于最后弹幕飘出时间
-                  if (curT + danmu.config.bOffset >= catchT) {
-                    // 根据前一个弹幕剩余飘出时间，计算新弹幕需要增加的offset
-                    const offset = curT * newV - self.containerPos.width
-                    if (offset > 0) {
-                      bullet.updateOffset(offset + (1 + Math.ceil(5 * Math.random())) /* 防止最后过于接近 */)
-                    }
-                  }
-                }
-              }
-              channel.operating.scroll = false
-            }
-            if (flag) {
-              pos = i
-              break
-            }
-          }
-        } else if (bullet.mode === 'top') {
-          for (let i = 0, max = channels.length - occupy; i <= max; i++) {
-            flag = true
-            for (let j = i; j < i + occupy; j++) {
-              if (j > Math.floor(channels.length / 2)) {
-                flag = false
-                break
-              }
-              channel = channels[j]
-              if (channel.operating[bullet.mode]) {
-                flag = false
-                break
-              }
-              if ((channel.bookId[bullet.mode] || bullet.prior) && channel.bookId[bullet.mode] !== bullet.id) {
-                flag = false
-                break
-              }
-              channel.operating[bullet.mode] = true
-              if (channel.queue[bullet.mode].length > 0) {
-                flag = false
-                channel.operating[bullet.mode] = false
-                break
-              }
-              channel.operating[bullet.mode] = false
-            }
-            if (flag) {
-              pos = i
-              break
-            }
-          }
-        } else if (bullet.mode === 'bottom') {
-          for (let i = channels.length - occupy; i >= 0; i--) {
-            flag = true
-            for (let j = i; j < i + occupy; j++) {
-              if (j <= Math.floor(channels.length / 2)) {
-                flag = false
-                break
-              }
-              channel = channels[j]
-              if (channel.operating[bullet.mode]) {
-                flag = false
-                break
-              }
-              if ((channel.bookId[bullet.mode] || bullet.prior) && channel.bookId[bullet.mode] !== bullet.id) {
-                flag = false
-                break
-              }
-              channel.operating[bullet.mode] = true
-              if (channel.queue[bullet.mode].length > 0) {
-                flag = false
-                channel.operating[bullet.mode] = false
-                break
-              }
-              channel.operating[bullet.mode] = false
-            }
-            if (flag) {
-              pos = i
-              break
-            }
-          }
-        }
-
-        if (pos !== -1) {
-          for (let i = pos, max = pos + occupy; i < max; i++) {
-            channel = channels[i]
-            channel.operating[bullet.mode] = true
-            channel.queue[bullet.mode].unshift(bullet)
-            if (bullet.prior) {
-              delete channel.bookId[bullet.mode]
-              self.logger && self.logger.info(i + '号轨道恢复正常使用')
-            }
-            channel.operating[bullet.mode] = false
-          }
-          if (bullet.prior) {
-            self.logger && self.logger.info(bullet.id + '号优先弹幕运行完毕')
-            delete bullet['bookChannelId']
-            if (danmu.player) {
-              let dataList = danmu.bulletBtn.main.data
-              dataList.some(function (item) {
-                if (item.id === bullet.id) {
-                  delete item['bookChannelId']
-                  return true
-                } else {
-                  return false
-                }
-              })
-            }
-          }
-          bullet.channel_id = [pos, occupy]
-          bullet.el.setAttribute('data-line-index', pos + 1)
-
-          if (self.direction === 'b2t') {
-            bullet.top = pos * channelWidth
-            if (self.danmu.config.area && self.danmu.config.area.start) {
-              bullet.top += self.containerWidth * self.danmu.config.area.start
-            }
-          } else {
-            bullet.top = pos * channelHeight
-            if (self.danmu.config.area && self.danmu.config.area.start) {
-              bullet.top += self.containerHeight * self.danmu.config.area.start
-            }
-          }
+    } else {
+      let flag = true,
+        channel,
+        pos = -1
+      for (let i = 0, max = channels.length; i < max; i++) {
+        if (channels[i].queue[bullet.mode].some((item) => item.id === bullet.id)) {
           return {
-            result: bullet,
-            message: 'success'
+            result: false,
+            message: `exited, channelOrder=${i},danmu_id=${bullet.id}`
           }
-        } else {
-          if (bullet.options.realTime) {
-            // 找到应该被删的 danmu
-            let start = 0
-            let deleteIndex = -1
-            let deleteItem = null
-            self.danmu.bulletBtn.main.queue.forEach((item, index) => {
-              if (
-                !item.prior &&
-                !item.options.realTime &&
-                item.el &&
-                item.el.getBoundingClientRect().left > self.containerPos.right &&
-                item.start >= start
-              ) {
-                start = item.start
-                deleteIndex = index
-                deleteItem = item
-              }
-            })
-            if (deleteItem) {
-              deleteItem.remove()
-              self.removeBullet(deleteItem)
-              self.danmu.bulletBtn.main.queue.splice(deleteIndex, 1)
-              bullet.channel_id = deleteItem.channel_id
-              for (
-                let i = deleteItem.channel_id[0], max = deleteItem.channel_id[0] + deleteItem.channel_id[1];
-                i < max;
-                i++
-              ) {
-                channel = channels[i]
-                channel.operating[bullet.mode] = true
-                channel.queue[bullet.mode].unshift(bullet)
-                if (bullet.prior) {
-                  delete channel.bookId[bullet.mode]
-                }
-                channel.operating[bullet.mode] = false
-              }
-              bullet.top = deleteItem.top
-              if (self.danmu.config.area && self.danmu.config.area.start) {
-                bullet.top += self.containerHeight * self.danmu.config.area.start
-              }
-              return {
-                result: bullet,
-                message: 'success'
-              }
+        }
+      }
+      if (bullet.mode === 'scroll') {
+        for (let i = 0, max = channels.length - occupy; i <= max; i += occupy) {
+          flag = true
+          for (let j = i; j < i + occupy; j++) {
+            channel = channels[j]
+            if (channel.operating.scroll || (channel.bookId.scroll && channel.bookId.scroll !== bullet.id)) {
+              flag = false
+              break
             }
-          }
+            channel.operating.scroll = true
 
-          if (bullet.prior) {
-            if (!bullet.bookChannelId && !self.danmu.live) {
-              pos = -1
-              for (let i = 0, max = channels.length - occupy; i <= max; i++) {
-                flag = true
-                for (let j = i; j < i + occupy; j++) {
-                  if (channels[j].bookId[bullet.mode]) {
-                    flag = false
-                    break
-                  }
+            // 当前轨道 - 最后入轨弹幕
+            const curBullet = channel.queue.scroll[0]
+
+            if (curBullet) {
+              const curBulletPos = curBullet.el.getBoundingClientRect()
+              if (danmu && danmu.updateGetBoundingCounts) {
+                danmu.updateGetBoundingCounts();
+              }
+
+              // 1. 检测最后入轨弹幕是否已经完全飘入容器区域
+              if (self.direction === 'b2t') {
+                if (curBulletPos.bottom >= self.containerPos.bottom) {
+                  flag = false
+                  channel.operating.scroll = false
+                  break
                 }
-                if (flag) {
-                  pos = i
+              } else {
+                if (curBulletPos.right >= self.containerPos.right) {
+                  flag = false
+                  channel.operating.scroll = false
                   break
                 }
               }
-              if (pos !== -1) {
-                for (let j = pos; j < pos + occupy; j++) {
-                  channels[j].bookId[bullet.mode] = bullet.id
-                  self.logger && self.logger.info(j + '号轨道被' + bullet.id + '号优先弹幕预定')
+
+              let curS,
+                curV = curBullet.moveV,
+                curT,
+                newV = bullet.moveV,
+                catchS
+              if (self.direction === 'b2t') {
+                curS = curBulletPos.bottom - self.containerTop
+                curT = curS / curV
+
+                catchS = self.containerHeight + bullet.random - curS
+              } else {
+                curS = curBulletPos.right - self.containerLeft
+                curT = curS / curV
+
+                catchS = self.containerWidth + bullet.random - curS
+              }
+
+              // 2. 当前轨道内，新弹幕速度大于最后一个入轨弹幕速度，考虑碰撞问题
+              if (newV > curV) {
+                let catchT = catchS / (newV - curV)
+
+                if (!danmu.config.bOffset) {
+                  danmu.config.bOffset = 0
                 }
-                let nextAddTime = 2
-                if (danmu.player) {
-                  let dataList = danmu.bulletBtn.main.data
-                  dataList.some(function (item) {
-                    if (item.id === bullet.id) {
-                      self.logger && self.logger.info(bullet.id + '号优先弹幕将于' + nextAddTime + '秒后再次请求注册')
-                      item.start += nextAddTime * 1000
-                      item.bookChannelId = [pos, occupy]
-                      self.logger && self.logger.info(`${bullet.id}号优先弹幕预定了${pos}~${pos + occupy - 1}号轨道`)
-                      return true
-                    } else {
-                      return false
-                    }
-                  })
+
+                // 3. 相遇时间小于最后弹幕飘出时间
+                if (curT + danmu.config.bOffset >= catchT) {
+                  // 根据前一个弹幕剩余飘出时间，计算新弹幕需要增加的offset
+                  const offset = curT * newV - self.containerPos.width
+                  if (offset > 0) {
+                    bullet.updateOffset(offset + (1 + Math.ceil(5 * Math.random())) /* 防止最后过于接近 */)
+                  }
                 }
               }
-            } else {
+            }
+            channel.operating.scroll = false
+          }
+          if (flag) {
+            pos = i
+            break
+          }
+        }
+      } else if (bullet.mode === 'top') {
+        for (let i = 0, max = channels.length - occupy; i <= max; i++) {
+          flag = true
+          for (let j = i; j < i + occupy; j++) {
+            if (j > Math.floor(channels.length / 2)) {
+              flag = false
+              break
+            }
+            channel = channels[j]
+            if (channel.operating[bullet.mode]) {
+              flag = false
+              break
+            }
+            if ((channel.bookId[bullet.mode] || bullet.prior) && channel.bookId[bullet.mode] !== bullet.id) {
+              flag = false
+              break
+            }
+            channel.operating[bullet.mode] = true
+            if (channel.queue[bullet.mode].length > 0) {
+              flag = false
+              channel.operating[bullet.mode] = false
+              break
+            }
+            channel.operating[bullet.mode] = false
+          }
+          if (flag) {
+            pos = i
+            break
+          }
+        }
+      } else if (bullet.mode === 'bottom') {
+        for (let i = channels.length - occupy; i >= 0; i--) {
+          flag = true
+          for (let j = i; j < i + occupy; j++) {
+            if (j <= Math.floor(channels.length / 2)) {
+              flag = false
+              break
+            }
+            channel = channels[j]
+            if (channel.operating[bullet.mode]) {
+              flag = false
+              break
+            }
+            if ((channel.bookId[bullet.mode] || bullet.prior) && channel.bookId[bullet.mode] !== bullet.id) {
+              flag = false
+              break
+            }
+            channel.operating[bullet.mode] = true
+            if (channel.queue[bullet.mode].length > 0) {
+              flag = false
+              channel.operating[bullet.mode] = false
+              break
+            }
+            channel.operating[bullet.mode] = false
+          }
+          if (flag) {
+            pos = i
+            break
+          }
+        }
+      }
+
+      if (pos !== -1) {
+        for (let i = pos, max = pos + occupy; i < max; i++) {
+          channel = channels[i]
+          channel.operating[bullet.mode] = true
+          channel.queue[bullet.mode].unshift(bullet)
+          if (bullet.prior) {
+            delete channel.bookId[bullet.mode]
+            self.logger && self.logger.info(i + '号轨道恢复正常使用')
+          }
+          channel.operating[bullet.mode] = false
+        }
+        if (bullet.prior) {
+          self.logger && self.logger.info(bullet.id + '号优先弹幕运行完毕')
+          delete bullet['bookChannelId']
+          if (danmu.player) {
+            let dataList = danmu.bulletBtn.main.data
+            dataList.some(function (item) {
+              if (item.id === bullet.id) {
+                delete item['bookChannelId']
+                return true
+              } else {
+                return false
+              }
+            })
+          }
+        }
+        bullet.channel_id = [pos, occupy]
+        bullet.el.setAttribute('data-line-index', pos + 1)
+
+        if (self.direction === 'b2t') {
+          bullet.top = pos * channelWidth
+          if (self.danmu.config.area && self.danmu.config.area.start) {
+            bullet.top += self.containerWidth * self.danmu.config.area.start
+          }
+        } else {
+          bullet.top = pos * channelHeight
+          if (self.danmu.config.area && self.danmu.config.area.start) {
+            bullet.top += self.containerHeight * self.danmu.config.area.start
+          }
+        }
+        return {
+          result: bullet,
+          message: 'success'
+        }
+      } else {
+        if (bullet.options.realTime) {
+          // 找到应该被删的 danmu
+          let start = 0
+          let deleteIndex = -1
+          let deleteItem = null
+          self.danmu.bulletBtn.main.queue.forEach((item, index) => {
+            if (
+              !item.prior &&
+              !item.options.realTime &&
+              item.el &&
+              item.el.getBoundingClientRect().left > self.containerPos.right &&
+              item.start >= start
+            ) {
+              start = item.start
+              deleteIndex = index
+              deleteItem = item
+            }
+          })
+          if (deleteItem) {
+            deleteItem.remove()
+            self.removeBullet(deleteItem)
+            self.danmu.bulletBtn.main.queue.splice(deleteIndex, 1)
+            bullet.channel_id = deleteItem.channel_id
+            for (
+              let i = deleteItem.channel_id[0], max = deleteItem.channel_id[0] + deleteItem.channel_id[1];
+              i < max;
+              i++
+            ) {
+              channel = channels[i]
+              channel.operating[bullet.mode] = true
+              channel.queue[bullet.mode].unshift(bullet)
+              if (bullet.prior) {
+                delete channel.bookId[bullet.mode]
+              }
+              channel.operating[bullet.mode] = false
+            }
+            bullet.top = deleteItem.top
+            if (self.danmu.config.area && self.danmu.config.area.start) {
+              bullet.top += self.containerHeight * self.danmu.config.area.start
+            }
+            return {
+              result: bullet,
+              message: 'success'
+            }
+          }
+        }
+
+        if (bullet.prior) {
+          if (!bullet.bookChannelId && !self.danmu.live) {
+            pos = -1
+            for (let i = 0, max = channels.length - occupy; i <= max; i++) {
+              flag = true
+              for (let j = i; j < i + occupy; j++) {
+                if (channels[j].bookId[bullet.mode]) {
+                  flag = false
+                  break
+                }
+              }
+              if (flag) {
+                pos = i
+                break
+              }
+            }
+            if (pos !== -1) {
+              for (let j = pos; j < pos + occupy; j++) {
+                channels[j].bookId[bullet.mode] = bullet.id
+                self.logger && self.logger.info(j + '号轨道被' + bullet.id + '号优先弹幕预定')
+              }
               let nextAddTime = 2
               if (danmu.player) {
                 let dataList = danmu.bulletBtn.main.data
@@ -515,6 +498,8 @@ class Channel extends BaseClass {
                   if (item.id === bullet.id) {
                     self.logger && self.logger.info(bullet.id + '号优先弹幕将于' + nextAddTime + '秒后再次请求注册')
                     item.start += nextAddTime * 1000
+                    item.bookChannelId = [pos, occupy]
+                    self.logger && self.logger.info(`${bullet.id}号优先弹幕预定了${pos}~${pos + occupy - 1}号轨道`)
                     return true
                   } else {
                     return false
@@ -522,14 +507,29 @@ class Channel extends BaseClass {
                 })
               }
             }
-          }
-
-          return {
-            result: false,
-            message: 'no surplus will right'
+          } else {
+            let nextAddTime = 2
+            if (danmu.player) {
+              let dataList = danmu.bulletBtn.main.data
+              dataList.some(function (item) {
+                if (item.id === bullet.id) {
+                  self.logger && self.logger.info(bullet.id + '号优先弹幕将于' + nextAddTime + '秒后再次请求注册')
+                  item.start += nextAddTime * 1000
+                  return true
+                } else {
+                  return false
+                }
+              })
+            }
           }
         }
+
+        return {
+          result: false,
+          message: 'no surplus will right'
+        }
       }
+    }
   }
 
   addBulletV1(bullet) {
@@ -579,10 +579,7 @@ class Channel extends BaseClass {
   
       // 元素暂停，或者重新设置字体大小后，或者缩放后，增加recalculate标记，在碰到冲突的时候，需要实时计算位置
       if (lastBullet.recalculate) {
-        const lastBulletPos = lastBullet.el.getBoundingClientRect();
-        if (this.danmu && this.danmu.updateGetBoundingCounts) {
-          this.danmu.updateGetBoundingCounts();
-        }
+        const lastBulletPos = lastBullet.updatePosition();
         if (this.containerRight > lastBulletPos.right) {
           // 元素已经完全进入屏幕
           const diff = lastBullet.fullLeaveTime - currentTime - this.containerWidth / bullet.moveVV1;

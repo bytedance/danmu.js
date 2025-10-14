@@ -221,15 +221,13 @@ class Main extends BaseClass {
         return;
       }
       if (this._status === 'playing') {
-        this.readDataV1();
-        if (this.queue.length) {
-          this.queue.forEach((item) => {
-            if (item.status === 'waiting' || item.status === 'paused') {
-              // 修复频繁切换倍速场景下，元素状态被置为paused时，无法继续播放的问题
-              item.startMoveV1();
-            }
-          });
-        }
+        this.readDataV1();  
+        this.queue.forEach((item) => {
+          if (item.status === 'waiting' || item.status === 'paused') {
+            // 修复频繁切换倍速场景下，元素状态被置为paused时，无法继续播放的问题
+            item.startMoveV1();
+          }
+        });
       }
       if (this.retryStatus !== 'stop' || this._status === 'paused') {
         this.handleTimer = setTimeout(subTick, 250);
