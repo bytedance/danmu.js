@@ -70,6 +70,9 @@ class Main extends BaseClass {
     this._cancelTick()
     this.channel && this.channel.destroy()
     this.data = []
+    if (this.danmu && this.danmu.updateGetBoundingCounts) {
+      this.danmu.updateGetBoundingCounts(0);
+    }
     for (let k in this) {
       delete this[k]
     }
@@ -114,7 +117,6 @@ class Main extends BaseClass {
      */
     const onTransitionEnd = (e) => {
       const bullet = this._getBulletByEvt(e)
-
       if (bullet) {
         bullet.status = 'end'
         bullet.remove(false)
@@ -186,7 +188,7 @@ class Main extends BaseClass {
   /**
    * @private
    */
-  _startTick() {
+  _startTickV0() {
     const self = this
     self.retryStatus = 'normal'
 
@@ -208,6 +210,40 @@ class Main extends BaseClass {
     }
     dataHandle()
   }
+
+  _startTickV1() {
+    this.retryStatus = 'normal';
+    this._cancelTick();
+
+    const subTick = () => {
+      if (this._status === 'closed' && this.retryStatus === 'stop') {
+        this._cancelTick();
+        return;
+      }
+      if (this._status === 'playing') {
+        this.readDataV1();  
+        this.queue.forEach((item) => {
+          if (item.status === 'waiting' || item.status === 'paused') {
+            // 修复频繁切换倍速场景下，元素状态被置为paused时，无法继续播放的问题
+            item.startMoveV1();
+          }
+        });
+      }
+      if (this.retryStatus !== 'stop' || this._status === 'paused') {
+        this.handleTimer = setTimeout(subTick, 250);
+      }
+    }
+    subTick();
+  }
+
+  _startTick() {
+    if (this.danmu && this.danmu.config && this.danmu.config.trackAllocationOptimization) {
+      this._startTickV1();
+    } else {
+      this._startTickV0();
+    }
+  }
+
   // 启动弹幕渲染主进程
   start() {
     this.logger && this.logger.info('start')
@@ -223,6 +259,7 @@ class Main extends BaseClass {
     self.channel.reset()
     self._startTick()
   }
+
   stop() {
     this.logger && this.logger.info('stop')
     const self = this
@@ -250,6 +287,7 @@ class Main extends BaseClass {
       this.container.innerHTML = ''
     }
   }
+
   play() {
     if (this._status === 'closed') {
       this.logger && this.logger.info('play ignored')
@@ -287,13 +325,6 @@ class Main extends BaseClass {
 
     let channels = this.channel.channels
     if (channels && channels.length > 0) {
-      // ['scroll', 'top', 'bottom'].forEach( key => {
-      //   for (let i = 0; i < channels.length; i++) {
-      //     channels[i].queue[key].forEach(item => {
-      //       item.pauseMove()
-      //     })
-      //   }
-      // })
       this.queue.forEach((item) => {
         item.pauseMove()
       })
@@ -414,6 +445,83 @@ class Main extends BaseClass {
       }
     }
   }
+
+  readDataV1() {
+    const { danmu, interval, channel, data, forceDuration } = this;
+    const player = danmu.player;
+    
+    // 如果弹幕初始化未完成，或轨道已满，不进行弹幕数据处理
+    if (!danmu.isReady || !danmu.main || !channel.checkAvailableTrackV1()) {
+      return;
+    }
+    let list = [];
+    if (player) {
+      // player存在的情况下, 获取当前时间戳 +- interval的数据，并按照分数进行排序
+      const currentTime = player.currentTime ? Math.floor(player.currentTime * 1000) : 0;
+
+      list = data.filter(item => {
+        if (!item.start) {
+          item.start = currentTime;
+        }
+        return !item.attached_ && item.start - interval <= currentTime && currentTime <= item.start + interval;
+      });
+
+      if (danmu.config.highScorePriority) {
+        list.sort((prev, cur) => (cur.prior && !prev.prior) || (cur.score || -1) - (prev.score || -1));
+      }
+
+      if (danmu.live) {
+        this.data = [];
+      }
+    } else {
+      // 获取弹幕数据列表第一个数据
+      list = this.data.splice(0, 1);
+      if (list.length === 0) {
+        list = this.playedData.splice(0, 1);
+      }
+    }
+
+    // 没有可用数不做处理
+    if (list.length === 0) {
+      return;
+    }
+
+    for (let index = 0; index < list.length; index++) {
+      const item = list[index];
+      if (forceDuration && forceDuration !== item.duration) {
+        item.duration = forceDuration;
+      }
+  
+      // 创建弹幕元素前，确认轨道是否可用，减少弹幕密度较高情况下，弹幕元素的频繁创建与销毁
+      // 暂停场景下，不再尝试弹幕入轨
+      // 检查弹幕是否已存在于队列中
+      if (!channel.checkAvailableTrackV1() || this._status !== 'playing' || (this.queue && this.queue.find(j => j.id === item.id))) {
+        continue;
+      }
+
+      const bullet = new Bullet(danmu, item);
+      if (bullet.bulletCreateFail) {
+        continue;
+      }
+
+      bullet.attachV1();
+      item.attached_ = true;
+      const addResult = channel.addBulletV1(bullet);
+      if (addResult && bullet.status !== 'end' && !this.queue.find(j => j.id === item.id)) { // 防止元素重复上屏
+        this.queue.push(bullet);
+        bullet.topInit();
+      } else {
+        bullet.detach();
+        for (let k in bullet) {
+          if (hasOwnProperty.call(bullet, k)) {
+            delete bullet[k]
+          }
+        }
+        item.attached_ = false
+      }
+    }
+  }
+
   sortData() {
     this.data.sort((prev, cur) => (prev.start || -1) - (cur.start || -1))
   }

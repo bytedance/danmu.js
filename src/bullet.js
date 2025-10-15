@@ -1,6 +1,6 @@
 import BaseClass from './baseClass'
 import Log from './utils/logger'
-import { copyDom, isFunction, isNumber, styleCSSText, styleUtil } from './utils/util'
+import { copyDom, getTimeStamp, isFunction, isNumber, styleCSSText, styleUtil } from './utils/util'
 
 // 减少频繁的内存创建
 const logger = new Log('bullet')
@@ -54,6 +54,10 @@ export class Bullet extends BaseClass {
     if (!options.elLazyInit) {
       this.bulletCreateFail = !this._makeEl()
     }
+    this.startsTime = 0;
+    this.fullEnterTime = 0;
+    this.fullLeaveTime = 0;
+    this.waitTimeStamp = 0;
   }
   get moveV() {
     const self = this
@@ -84,6 +88,16 @@ export class Bullet extends BaseClass {
     }
     return v
   }
+
+  get moveVV1() {
+    if (!this.width && this.el) {
+      this.updatePosition();
+      this.options.width = this.width;
+    }
+    const containerWidth = this.danmu.containerPos.width || 0;
+    return (containerWidth + this.width) / this.duration;
+  }
+
   get direction() {
     return this.danmu.direction
   }
@@ -135,7 +149,10 @@ export class Bullet extends BaseClass {
         if (isFunction(globalHooks.bulletCreateEl)) {
           try {
             const result = globalHooks.bulletCreateEl(options)
-
+            if (danmu && danmu.updateDanmuElCreateCounts) {
+              danmu.updateDanmuElCreateCounts();
+            }
+            
             if (result instanceof HTMLElement) {
               el = result
             } else {
@@ -204,6 +221,49 @@ export class Bullet extends BaseClass {
     return true
   }
 
+  _makeElV1() {
+    const { danmu, options } = this;
+    const { globalHooks } = danmu;
+    let el;
+    let cssText = ''
+    let style = options.style || {}
+    // 删除 style['perspective'] = '500em'
+    //给元素设置绝对定位，获取宽高时脱离文档流避免连锁重排
+    style.position = 'absolute'; 
+    this.reuseDOM = false
+    if (options.elLazyInit && isFunction(globalHooks.bulletCreateEl)) {
+      try {
+        const result = globalHooks.bulletCreateEl(options);
+        if (danmu && danmu.updateDanmuElCreateCounts) {
+          danmu.updateDanmuElCreateCounts();
+        }
+        if (result instanceof HTMLElement) {
+          el = result;
+        } else {
+          el = result.el;
+        }
+      } catch (e) {
+        console.log('danmakulogger', '创建dom元素失败', options);
+      }
+    }
+
+    if (!el || !danmu.main) {
+      return false;
+    }
+
+    style.left = this.updateOffset(0, true);
+    Object.keys(style).forEach((key) => {
+      const bbqKey = key.replace(/[A-Z]/g, (val) => {
+        return '-' + val.toLowerCase();
+      })
+      cssText += `${bbqKey}:${style[key]};`;
+    });
+    styleCSSText(el, cssText);
+
+    this.el = el;
+    return true;
+  }
+
   updateOffset(val, dryRun = false) {
     this.random = val
     const left = this.danmu.containerPos.width + val + 'px'
@@ -214,6 +274,23 @@ export class Bullet extends BaseClass {
 
     return left
   }
+
+  updatePosition() {
+    if (this.el) {
+      this.elPos = this.el.getBoundingClientRect();
+      this.width = this.elPos.width;
+      this.options.width = this.elPos.width;
+      if (this.danmu && this.danmu.updateGetBoundingCounts) {
+        this.danmu.updateGetBoundingCounts();
+      }
+      if (this.el && this.el.style && this.el.style.fontSize) {
+         this.danmu.fontSizeItem = this.el.style.fontSize;
+      }
+      return this.elPos;
+    }
+    return {};
+  }
+
   attach() {
     // this.logger && this.logger.info(`attach #${this.options.txt || '[DOM Element]'}#`)
     const self = this
@@ -238,6 +315,9 @@ export class Bullet extends BaseClass {
       self.container.appendChild(el)
     }
     self.elPos = el.getBoundingClientRect()
+    if (danmu && danmu.updateGetBoundingCounts) {
+      danmu.updateGetBoundingCounts()
+    }
     if (self.direction === 'b2t') {
       self.width = self.elPos.height
       self.height = self.elPos.width
@@ -253,6 +333,32 @@ export class Bullet extends BaseClass {
       globalHooks.bulletAttached(options, el)
     }
   }
+
+  attachV1() {
+    const { danmu, options } = this;
+    const { globalHooks } = danmu;
+
+    if (!danmu || !danmu.main) {
+      return;
+    }
+
+    if (options.elLazyInit && !this.el) {
+      this._makeElV1();
+    }
+    
+    if (!this.container.contains(this.el)) {
+      this.container.appendChild(this.el);
+    }
+
+    if (!this.width) {
+      this.updatePosition();
+    }
+
+    if (globalHooks.bulletAttached) {
+      globalHooks.bulletAttached(options, this.el);
+    }
+  }
+
   detach() {
     // this.logger && this.logger.info(`detach #${this.options.txt || '[DOM Element]'}#`)
     const self = this
@@ -283,6 +389,7 @@ export class Bullet extends BaseClass {
 
     self.elPos = undefined
   }
+
   topInit() {
     this.logger && this.logger.info(`topInit #${this.options.txt || '[DOM Element]'}#`)
     if (this.direction === 'b2t') {
@@ -297,7 +404,16 @@ export class Bullet extends BaseClass {
       styleUtil(this.el, 'top', `${this.top}px`)
     }
   }
-  pauseMove(isFullscreen = false) {
+
+  pauseMove(force) {
+    if (this.danmu && this.danmu.config && this.danmu.config.trackAllocationOptimization) {
+      this.pauseMoveV1();
+    } else {
+      this.pauseMoveV0(force);
+    }
+  }
+
+  pauseMoveV0(isFullscreen = false) {
     // this.logger && this.logger.info(`pauseMove #${this.options.txt || '[DOM Element]'}#`)
     const self = this
     if (self.status === 'paused') {
@@ -351,6 +467,9 @@ export class Bullet extends BaseClass {
           )
         } else {
           styleUtil(this.el, 'left', `${this.el.getBoundingClientRect().left - ctPos.left}px`)
+          if (self.danmu && self.danmu.updateGetBoundingCounts) {
+            self.danmu.updateGetBoundingCounts();
+          }
         }
       }
       if (this.direction === 'b2t') {
@@ -368,7 +487,38 @@ export class Bullet extends BaseClass {
       }
     }
   }
+
+  pauseMoveV1 () {
+    if (this.status === 'paused' || !this.el) {
+      return;
+    }
+    if (this.status !== 'forcedPause') {
+      this.status = 'paused'
+    }
+    const ctPos = this.danmu.containerPos;
+    this.recalculate = true;
+    const position = this.updatePosition();
+    styleUtil(this.el, 'left', `${position.left - ctPos.left}px`);
+    styleUtil(this.el, 'transform', 'translateX(0px) translateY(0px) translateZ(0px)');
+    styleUtil(this.el, 'transition', 'transform 0s linear 0s');
+    if (position.right <= ctPos.right) {
+      // 如果元素完全进入屏幕，更新 fullEnterTime，保证轨道可用性检测准确性
+      this.fullEnterTime = -1;
+    }
+    if (position.right < ctPos.left) {
+      this.remove(false);
+    }
+  }
+
   startMove(force) {
+    if (this.danmu && this.danmu.config && this.danmu.config.trackAllocationOptimization) {
+      this.startMoveV1(force);
+    } else {
+      this.startMoveV0(force);
+    }
+  }
+
+  startMoveV0(force) {
     // this.logger && this.logger.info(`startMove #${this.options.txt || '[DOM Element]'}#`)
     const self = this
     if (!self.hasMove) {
@@ -387,6 +537,9 @@ export class Bullet extends BaseClass {
         return
       }
       const bulletPos = self.el.getBoundingClientRect()
+      if (self.danmu && self.danmu.updateGetBoundingCounts) {
+        self.danmu.updateGetBoundingCounts();
+      }
       let fullyMovedToScreenDistance
 
       if (this.direction === 'b2t') {
@@ -437,9 +590,80 @@ export class Bullet extends BaseClass {
       this.startTime = newTimestamp
     }
   }
+
+  startMoveV1(force) {
+    const originStatus = this.status;
+    if (document.visibilityState !== 'visible') { // 页面不可见时，暂停移动
+      if (originStatus === 'paused' || originStatus === 'forcedPause' || this.recalculate) {
+        // 解决客户端切换后台后，状态更新不及时导致的元素误移除
+      } else {
+        this.waitTimeStamp = 0;
+        this.remove(false);
+        this.status = 'end';
+        return;
+      }
+    }
+
+    const currentTime = getTimeStamp();
+    if (!this.el) {
+      return;
+    }
+
+    if (this.waitTimeStamp > currentTime) {
+      return;
+    } else if (this.recalculate) {
+      // 元素如果调整过字号大小，或者调整过可视区域的大小，或者暂停过，不需要再走后续的逻辑
+    } else if (originStatus === 'start' || originStatus === 'forcedPause' && !force) {
+      // 元素状态已经在移动中，或者元素已经离开屏幕，不需要再执行这个逻辑
+      return;
+    } else if (originStatus !== 'forcedPause' && originStatus !== 'paused') {
+      if (this.fullLeaveTime && this.fullLeaveTime < currentTime) {
+        this.remove(false);
+        this.status = 'end';
+        return;
+      }
+    }
+
+    this.waitTimeStamp = 0;
+    const containerPos = this.danmu.containerPos;
+    this.status = 'start';
+
+    if (originStatus === 'paused' || originStatus === 'forcedPause' || this.recalculate) {
+      // 需要重新计算位移的场景：元素暂停过，或者更改过可视区域大小
+      const bulletPos = this.updatePosition();
+      const leftDistance = bulletPos.right - containerPos.left;
+      const leftDuration = leftDistance / this.moveVV1;
+
+      if (bulletPos.right > containerPos.left) { // 元素还在可视区域内
+        styleUtil(this.el, 'transition', `transform ${leftDuration / 1000}s linear 0s`);
+        styleUtil(this.el, 'transform', `translateX(-${leftDistance}px) translateY(0px) translateZ(0px)`);
+        if (bulletPos.right > containerPos.right) {
+          // 元素没有完全进入屏幕，更新完全进入屏幕时间
+          this.fullEnterTime = currentTime + (bulletPos.right - containerPos.right) / this.moveVV1;
+        } else {
+          // 如果元素已经完全进入屏幕，设置为-1
+          this.fullEnterTime = -1;
+        }
+        this.fullLeaveTime = currentTime + leftDuration; // 更新离屏时间
+      } else {
+        this.status = 'end';
+        this.remove(false);
+      }
+    } else {
+      const els = this.el;
+      styleUtil(els, 'transition', `transform ${this.duration / 1000}s linear 0s`);
+      styleUtil(els, 'transform', `translateX(-${containerPos.width + this.width}px) translateY(0px) translateZ(0px)`);
+      this.startsTime = getTimeStamp();
+      this.endTime = this.startsTime + this.duration;
+      this.fullEnterTime = this.startsTime + this.width / this.moveVV1;
+      this.fullLeaveTime = this.startsTime + this.duration;
+    }
+  }
+
   remove(needPause = true) {
     this.logger && this.logger.info(`remove #${this.options.txt || '[DOM Element]'}#`)
     const self = this
+    this.fullEnterTime = -1;
 
     if (needPause) {
       self.pauseMove()

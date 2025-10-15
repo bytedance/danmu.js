@@ -4,7 +4,7 @@ import BaseClass from './baseClass'
 import Control from './control'
 import RecyclableDomList from './domRecycle'
 import { addObserver, unObserver } from './resizeObserver'
-import { addClass, deepCopy, isNumber, styleUtil } from './utils/util'
+import { addClass, deepCopy, getTimeStamp, isNumber, styleUtil } from './utils/util'
 
 /**
  * @typedef {import('./baseClass').CommentData} CommentData
@@ -56,7 +56,9 @@ export class DanmuJs extends BaseClass {
     }
 
     this.hideArr = []
-    this.recycler = new RecyclableDomList()
+    this.recycler = new RecyclableDomList() // TODO删除RecyclableDomList的逻辑
+    this.getBoundingCounts = 0; // 统计获取元素位置次数
+    this.danmuElCreateCounts = 0; // 创建弹幕元素次数
 
     // freezed comment
     this.freezeId = null
@@ -96,7 +98,10 @@ export class DanmuJs extends BaseClass {
   }
 
   get status() {
-    return this.main.status
+    if (!this.main) {
+      return 'destroy'
+    }
+    return this.main.status;
   }
 
   get state() {
@@ -111,6 +116,26 @@ export class DanmuJs extends BaseClass {
 
   get containerPos() {
     return this.main.channel.containerPos
+  }
+
+  updateGetBoundingCounts(counts) {
+    if (this.getBoundingCounts !== undefined) {
+      if (typeof counts === 'number') {
+        this.getBoundingCounts = counts
+      } else {
+        this.getBoundingCounts++;
+      }
+    }
+  }
+
+  updateDanmuElCreateCounts(counts) {
+    if (this.danmuElCreateCounts !== undefined) {
+      if (typeof counts === 'number') {
+        this.danmuElCreateCounts = counts;
+      } else {
+        this.danmuElCreateCounts++;
+      }
+    }
   }
 
   /**
@@ -199,8 +224,12 @@ export class DanmuJs extends BaseClass {
       if (comment.prior || comment.realTime) {
         main.data.unshift(comment)
         if (comment.realTime) {
-          main.readData()
-          main.dataHandle()
+          if (this.config && this.config.trackAllocationOptimization) {
+            main.readDataV1();
+          } else {
+            main.readData();
+            main.dataHandle();
+          }
         }
       } else {
         main.data.push(comment)
@@ -304,7 +333,7 @@ export class DanmuJs extends BaseClass {
       main.queue.some((item) => {
         if (item.id === id) {
           if (main.status !== 'paused') {
-            item.startMove(true)
+            item.startMove(true);
           } else {
             item.status = 'paused'
           }
@@ -365,7 +394,7 @@ export class DanmuJs extends BaseClass {
     if (id) {
       const self = this
       const { main } = self
-      
+
       self._releaseCtrl(id)
 
       // remove bullet from the queue list
@@ -392,6 +421,9 @@ export class DanmuJs extends BaseClass {
     const { main } = this
     if (typeof isClear === 'boolean' && isClear) {
       main.data = []
+    }
+    if (!main.data) {
+      main.data = [];
     }
     main.data = main.data.concat(comments)
     main.sortData()
@@ -453,7 +485,15 @@ export class DanmuJs extends BaseClass {
     }
   }
 
-  setFontSize(
+  setFontSize(size, channelSize, options) {
+    if (this.config && this.config.trackAllocationOptimization) {
+       this.setFontSizeV1(size, channelSize, options);
+    } else {
+      this.setFontSizeV0(size, channelSize, options);
+    }
+  }
+
+  setFontSizeV0(
     size,
     channelSize,
     options = {
@@ -464,7 +504,7 @@ export class DanmuJs extends BaseClass {
     this.fontSize = `${size}px`
     if (size) {
       this.main.data.forEach((data) => {
-        if (data.style) {
+      if (data.style) {
           data.style.fontSize = this.fontSize
         }
       })
@@ -476,7 +516,7 @@ export class DanmuJs extends BaseClass {
         item.options.style.fontSize = this.fontSize
         item.setFontSize(this.fontSize)
         if (channelSize) {
-          item.top = item.channel_id[0] * channelSize
+          item.top = item.channel_id[0] * channelSize;
           item.topInit()
         }
       })
@@ -490,12 +530,148 @@ export class DanmuJs extends BaseClass {
     }
   }
 
-  setArea(area) {
+  setFontSizeV1(size) {
+    if (!size || this.fontSize === `${size}px`) {
+      return;
+    }
+    if (!this.fontSize && this.fontSizeItem === `${size}px`) { // 字体大小相等时，不做处理
+      this.fontSize = this.fontSizeItem;
+      return;
+    }
+
+    this.fontSize = `${size}px`
+    this.main.data.forEach((data) => {
+      if (data.style) {
+        data.style.fontSize = this.fontSize;
+      }
+    });
+    const channelSize = Number(size) + 20;
+    const queue = this.main.queue;
+    const maxTryLimit = 1000;
+    let tryCount = 0;
+
+    // 轨道元素在动态变化，不能直接用forEach
+    for (let i = 0; i < queue.length && tryCount < maxTryLimit; tryCount++) {
+      // 如果当前元素弹幕和目标弹幕id相同，记录id，证明该元素已经处理过，索引++
+      const preIndex = queue.findIndex(item => item.el && item.el.style && item.el.style.fontSize !== this.fontSize);
+      i = preIndex >= 0 ? preIndex : 0;
+      const item = queue[i];
+      
+      if (i >= queue.length || preIndex < 0) {
+        break;
+      }
+      if (!item.options.style) {
+        item.options.style = {};
+      }
+      item.options.style.fontSize = this.fontSize;
+      item.setFontSize(this.fontSize);
+      // 修复先切换字号，再更新元素显示区域场景下，轨道间距异常问题
+      item.top = item.channelId * channelSize;
+      item.topInit();
+      item.pauseMove();
+    }
+    this.config.channelSize = channelSize;
+    this.updateQueueTimestamp();
+    if (this.main && this.main.channel && this.main.channel.updateChannlState) {
+      this.main.channel.updateChannlState(Number(size) + 20);
+    }
+  }
+
+  updateQueueTimestamp () {
+    if (!this.main.channel || !this.main.channel.channels || !this.main.channel.channels) {
+      return;
+
+    }
+    const canRun = this.main.status !== 'paused';
+    const { containerLeft, containerRight } = this.main.channel || {};
+  
+    this.main.channel.channels.forEach(channel => {
+      if (!channel || !channel.queue || !channel.queue.scroll || channel.queue.scroll.length === 0) {
+        return;  // 队列为空
+      }
+      const queue = channel.queue.scroll;
+      const queueLen = queue.length;
+      const currentTime = getTimeStamp();
+
+      for (let index = queueLen - 1; index >= 0; index--) {
+        const bullet = queue[index];
+        if (!bullet || !bullet.el) {
+          // 元素不存在或已移除
+          continue; 
+        }
+        // 防止字体变大，后面上屏元素重叠
+        bullet.recalculate = true;
+        // 元素更改位置后，清除waitTimeStamp标记
+        bullet.waitTimeStamp = 0;
+        const lastBullet = queue[index + 1];
+        const curBulletPos = bullet.updatePosition();
+        
+        if (curBulletPos.right < containerLeft) {
+          bullet.remove(false);
+          continue; // 元素已离屏
+        }
+        if (!lastBullet) {
+          // canRun之前更新元素离屏时间，修复暂停后，调整字体大小导致的重叠问题
+          const leftDistance = curBulletPos.right - containerLeft;
+          const leftDuration = leftDistance / bullet.moveVV1;
+          bullet.fullLeaveTime = currentTime + leftDuration;
+          if (canRun) {
+            // 更新fullEnterTime 防止字号调整后，元素迟迟不上屏
+            bullet.fullEnterTime = curBulletPos.right > containerRight ? currentTime + (curBulletPos.right - containerRight) / bullet.moveVV1 : -1;
+            styleUtil(bullet.el, 'transition', `transform ${leftDuration / 1000}s linear 0s`)
+            styleUtil(bullet.el, 'transform', `translateX(-${leftDistance}px)`);
+            bullet.status = 'start';
+          }
+          continue;
+        }
+        // 上一元素飘屏时间
+        const lastBulletTime = lastBullet.fullLeaveTime - currentTime;  
+        // 上一元素的右边距位置
+        const lastBulletRight = containerLeft + (lastBullet.fullLeaveTime - currentTime) * lastBullet.moveVV1; 
+        // 当前元素需要走过的时间和距离
+        const bulletLeft = Math.max(lastBulletRight, curBulletPos.left);
+        const curBulletTime = (bulletLeft - containerLeft) / bullet.moveVV1;
+        // 检测冲突后，当前元素的偏移距离
+        const currentLeft = bulletLeft +  Math.max(lastBulletTime - curBulletTime, 0) * bullet.moveVV1;
+
+        if (currentLeft !== curBulletPos.left) {
+          styleUtil(bullet.el, 'left', `${currentLeft}px`);
+        }
+        const currentPos = currentLeft + curBulletPos.width;
+        const currentDuration = currentPos / bullet.moveVV1;
+        bullet.fullLeaveTime = currentTime + currentDuration;
+        if (canRun) {
+          // 更新fullEnterTime 防止字号调整后，元素迟迟不上屏
+          bullet.fullEnterTime = currentPos > containerRight ? currentTime + (currentPos - containerRight) / bullet.moveVV1 : -1;
+          styleUtil(bullet.el, 'transition', `transform ${currentDuration / 1000}s linear 0s`)
+          styleUtil(bullet.el, 'transform', `translateX(-${currentPos}px) translateZ(0px)`);
+          bullet.status = 'start';
+        }
+      }
+    });
+  }
+
+  setArea(size, channelSize, options) {
+    if (this.config && this.config.trackAllocationOptimization) {
+       this.setAreaV1(size, channelSize, options);
+    } else {
+      this.setAreaV0(size, channelSize, options);
+    }
+  }
+
+  setAreaV0(area) {
     this.logger && this.logger.info(`setArea: area ${area}`)
     this.config.area = area
 
     if (area.reflow !== false) {
       this.main.channel.resizeSync()
+    }
+  }
+
+  setAreaV1(area) {
+    this.config.area = area;
+    if (this.main && this.main.channel && this.main.channel.updateChannlState) {
+      this.main.channel.updateChannlState();
     }
   }
 

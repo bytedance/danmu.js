@@ -104,7 +104,7 @@ danmu.sendComment({
   //发送弹幕
   duration: 15000,
   id: 'id',
-  start: 3000, //不提供该项则立即发送
+  start: 3001, //不提供该项则立即发送
   txt: '弹幕内容',
   style: {
     color: '#ff9500',
@@ -121,7 +121,7 @@ danmu.updateComments([
   {
     duration: 15000,
     id: 'id',
-    start: 3000, //不提供该项则立即发送
+    start: 3001, //不提供该项则立即发送
     txt: '弹幕内容',
     style: {
       color: '#ff9500',
