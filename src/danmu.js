@@ -422,6 +422,9 @@ export class DanmuJs extends BaseClass {
     if (typeof isClear === 'boolean' && isClear) {
       main.data = []
     }
+    if (!main.data) {
+      main.data = [];
+    }
     main.data = main.data.concat(comments)
     main.sortData()
     main.keepPoolWatermark()
@@ -528,43 +531,49 @@ export class DanmuJs extends BaseClass {
   }
 
   setFontSizeV1(size) {
-    this.fontSize = `${size}px`
-    if (size) {
-      this.main.data.forEach((data) => {
-      if (data.style) {
-          data.style.fontSize = this.fontSize
-        }
-      });
-      const channelSize = Number(size) + 20;
-      const queue = this.main.queue;
-      const maxTryLimit = 1000;
-      let tryCount = 0;
+    if (!size || this.fontSize === `${size}px`) {
+      return;
+    }
+    if (!this.fontSize && this.fontSizeItem === `${size}px`) { // 字体大小相等时，不做处理
+      this.fontSize = this.fontSizeItem;
+      return;
+    }
 
-      // 轨道元素在动态变化，不能直接用forEach
-      for (let i = 0; i < queue.length && tryCount < maxTryLimit; tryCount++) {
-        // 如果当前元素弹幕和目标弹幕id相同，记录id，证明该元素已经处理过，索引++
-        const preIndex = queue.findIndex(item => item.el && item.el.style && item.el.style.fontSize !== this.fontSize);
-        i = preIndex >= 0 ? preIndex : 0;
-        const item = queue[i];
-        
-        if (i >= queue.length || preIndex < 0) {
-          break;
-        }
-        if (!item.options.style) {
-          item.options.style = {};
-        }
-        item.options.style.fontSize = this.fontSize;
-        item.setFontSize(this.fontSize);
-        // 修复先切换字号，再更新元素显示区域场景下，轨道间距异常问题
-        item.top = item.channelId * channelSize;
-        item.topInit();
-        item.pauseMove();
+    this.fontSize = `${size}px`
+    this.main.data.forEach((data) => {
+      if (data.style) {
+        data.style.fontSize = this.fontSize;
       }
-      this.config.channelSize = channelSize;
-      this.updateQueueTimestamp();
-      if (this.main && this.main.channel && this.main.channel.updateChannlState) {
-        this.main.channel.updateChannlState(Number(size) + 20);
+    });
+    const channelSize = Number(size) + 20;
+    const queue = this.main.queue;
+    const maxTryLimit = 1000;
+    let tryCount = 0;
+
+    // 轨道元素在动态变化，不能直接用forEach
+    for (let i = 0; i < queue.length && tryCount < maxTryLimit; tryCount++) {
+      // 如果当前元素弹幕和目标弹幕id相同，记录id，证明该元素已经处理过，索引++
+      const preIndex = queue.findIndex(item => item.el && item.el.style && item.el.style.fontSize !== this.fontSize);
+      i = preIndex >= 0 ? preIndex : 0;
+      const item = queue[i];
+      
+      if (i >= queue.length || preIndex < 0) {
+        break;
       }
+      if (!item.options.style) {
+        item.options.style = {};
+      }
+      item.options.style.fontSize = this.fontSize;
+      item.setFontSize(this.fontSize);
+      // 修复先切换字号，再更新元素显示区域场景下，轨道间距异常问题
+      item.top = item.channelId * channelSize;
+      item.topInit();
+      item.pauseMove();
+    }
+    this.config.channelSize = channelSize;
+    this.updateQueueTimestamp();
+    if (this.main && this.main.channel && this.main.channel.updateChannlState) {
+      this.main.channel.updateChannlState(Number(size) + 20);
     }
   }
 

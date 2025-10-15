@@ -281,7 +281,10 @@ export class Bullet extends BaseClass {
       this.width = this.elPos.width;
       this.options.width = this.elPos.width;
       if (this.danmu && this.danmu.updateGetBoundingCounts) {
-        this.danmu.updateGetBoundingCounts()
+        this.danmu.updateGetBoundingCounts();
+      }
+      if (this.el && this.el.style && this.el.style.fontSize) {
+         this.danmu.fontSizeItem = this.el.style.fontSize;
       }
       return this.elPos;
     }
@@ -634,7 +637,6 @@ export class Bullet extends BaseClass {
       if (bulletPos.right > containerPos.left) { // 元素还在可视区域内
         styleUtil(this.el, 'transition', `transform ${leftDuration / 1000}s linear 0s`);
         styleUtil(this.el, 'transform', `translateX(-${leftDistance}px) translateY(0px) translateZ(0px)`);
-
         if (bulletPos.right > containerPos.right) {
           // 元素没有完全进入屏幕，更新完全进入屏幕时间
           this.fullEnterTime = currentTime + (bulletPos.right - containerPos.right) / this.moveVV1;
