@@ -3,11 +3,11 @@ import { throttle } from './utils/util'
 class ResizeObserver {
   constructor() {
     this.__handlers = []
-    if (!window.ResizeObserver) {
+    if (typeof window === 'undefined' || !window.ResizeObserver) {
       return
     }
     try {
-      this.observer = new window.ResizeObserver(
+      this.observer = new ResizeObserver(
         throttle((entries) => {
           this.__trigger(entries)
         }, 100)
