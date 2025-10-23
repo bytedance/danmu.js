@@ -1,9 +1,9 @@
 import { throttle } from './utils/util'
 
-class ResizeObserver {
+class ResizeObserverWrapper {
   constructor() {
     this.__handlers = []
-    if (typeof window === 'undefined' || !window.ResizeObserver) {
+    if (typeof ResizeObserver === 'undefined') {
       return
     }
     try {
@@ -82,7 +82,7 @@ class ResizeObserver {
   }
 }
 
-const resizeObserver = new ResizeObserver()
+const resizeObserver = new ResizeObserverWrapper()
 
 function addObserver(target, handler) {
   resizeObserver.addObserver(target, handler)

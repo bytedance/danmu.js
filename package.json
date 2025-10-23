@@ -1,6 +1,7 @@
 {
   "name": "danmu.js",
-  "version": "1.1.14",
+  "version": "1.2.0-rc.8",
+  "type": "module",
   "description": "HTML5 danmu (danmaku) plugin for any DOM element",
   "main": "./dist/index.js",
   "files": [
@@ -8,14 +9,17 @@
     "browser"
   ],
   "unpkgFiles": [
-    "browser",
-    "dist"
+    "dist",
+    "browser"
   ],
   "scripts": {
-    "dev": "npm run build -- --watch",
-    "build": "node ./src/version.js && webpack --progress --display-chunks -p",
+    "prepare": "npm run build",
+    "dev": "rslib build --watch",
+    "build": "rslib build",
     "serve": "serve ./",
-    "lint": "eslint src/**/*.js --fix"
+    "lint": "eslint src/**/*.js --fix",
+    "release": "npm run lint && npm run build && npm publish",
+    "release:rc": "npm run release --tag rc"
   },
   "keywords": [
     "danmu",
@@ -30,28 +34,23 @@
     "event-emitter": "^0.3.5"
   },
   "devDependencies": {
-    "babel-core": "^6.26.3",
-    "babel-loader": "^7.1.4",
-    "babel-plugin-add-module-exports": "^0.2.1",
-    "babel-plugin-bulk-import": "^1.0.2",
-    "babel-preset-es2015": "^6.24.1",
-    "css-loader": "^1.0.0",
+    "@rsbuild/plugin-sass": "^1.4.0",
+    "@rslib/core": "^0.16.1",
+    "css-loader": "^7.1.2",
     "cz-conventional-changelog": "^2.1.0",
     "eslint": "^7.32.0",
-    "postcss-cssnext": "^3.1.0",
-    "postcss-loader": "^2.1.5",
     "sass": "^1.54.0",
-    "sass-loader": "^10.3.1",
+    "sass-loader": "^16.0.5",
     "serve": "^14.2.1",
-    "style-loader": "^0.21.0",
-    "webpack": "^4.11.0",
-    "webpack-cli": "^3.0.2",
-    "webpack-merge": "^5.8.0",
+    "style-loader": "^4.0.0",
     "yargs": "^17.5.1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/bytedance/danmu.js"
+    "url": "git+https://github.com/bytedance/danmu.js.git"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
   },
   "author": "zhangxin.frontend@bytedance.com",
   "license": "MIT"
