@@ -1,5 +1,4 @@
 import EventEmitter from 'event-emitter'
-import { version } from '../version.json'
 import BaseClass from './baseClass'
 import Control from './control'
 import RecyclableDomList from './domRecycle'
@@ -19,7 +18,7 @@ export class DanmuJs extends BaseClass {
 
     // logger
     this.setLogger('danmu')
-    this.logger && this.logger.info(`danmu.js version: ${version}`)
+    this.logger && this.logger.info(`danmu.js version: ${__VERSION__}`)
 
     // configure
     const config = (this.config = {

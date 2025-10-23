@@ -2,6 +2,7 @@
 module.exports = {
   extends: ['eslint:recommended'],
   plugins: [],
+  ignorePatterns: ['dist/**/*', 'browser/**/*'],
   env: {
     // Your environments (which contains several predefined global variables)
     //
@@ -15,6 +16,9 @@ module.exports = {
   parserOptions: {
     ecmaVersion: 'latest',
     sourceType: 'module',
+  },
+  globals: {
+    __VERSION__: 'readonly'
   },
   rules: {
     'linebreak-style': ['error', 'unix'],
