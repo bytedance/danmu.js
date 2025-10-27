@@ -214,6 +214,7 @@ class Main extends BaseClass {
   _startTickV1() {
     this.retryStatus = 'normal';
     this._cancelTick();
+    this.sortData();
 
     const subTick = () => {
       if (this._status === 'closed' && this.retryStatus === 'stop') {
@@ -451,7 +452,7 @@ class Main extends BaseClass {
     const player = danmu.player;
     
     // 如果弹幕初始化未完成，或轨道已满，不进行弹幕数据处理
-    if (!danmu.isReady || !danmu.main || !channel.checkAvailableTrackV1()) {
+    if (!danmu.isReady || !danmu.main) {
       return;
     }
     let list = [];

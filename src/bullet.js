@@ -338,16 +338,17 @@ export class Bullet extends BaseClass {
     const { danmu, options } = this;
     const { globalHooks } = danmu;
 
-    if (!danmu || !danmu.main) {
-      return;
-    }
-
     if (options.elLazyInit && !this.el) {
       this._makeElV1();
     }
-    
-    if (!this.container.contains(this.el)) {
-      this.container.appendChild(this.el);
+
+    if (!danmu || !danmu.main) {
+      return;
+    }
+    const el = this.el;
+  
+    if (el instanceof Element && !this.container.contains(el)) {
+      this.container.appendChild(el);
     }
 
     if (!this.width) {
