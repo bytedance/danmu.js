@@ -562,7 +562,7 @@ export class Bullet extends BaseClass {
         const leftDuration = leftDistance / self.moveV
 
         if (self.danmu && self.danmu.updateStartMoveTimes && self.danmu.player) {
-          danmu.updateStartMoveTimes(self.danmu.player.currentTime * 1000);
+          self.danmu.updateStartMoveTimes(self.danmu.player.currentTime * 1000);
         }
 
         if (bulletPos.right > ctPos.left) {
@@ -634,7 +634,7 @@ export class Bullet extends BaseClass {
     this.status = 'start';
 
     if (this.danmu && this.danmu.updateStartMoveTimes && this.danmu.player) {
-      danmu.updateStartMoveTimes(this.danmu.player.currentTime * 1000);
+      this.danmu.updateStartMoveTimes(this.danmu.player.currentTime * 1000);
     }
     if (originStatus === 'paused' || originStatus === 'forcedPause' || this.recalculate) {
       // 需要重新计算位移的场景：元素暂停过，或者更改过可视区域大小
