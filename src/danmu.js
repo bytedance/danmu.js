@@ -141,21 +141,21 @@ export class DanmuJs extends BaseClass {
     }
   }
 
-  updateReadDataTimes(times) {
+  updateReadDataTimes() {
     if (this.readDataTimes < 0) {
-      this.readDataTimes = times;
+      this.readDataTimes = getTimeStamp();
     }
   }
 
-  updateAttachTimes(times) {
+  updateAttachTimes() {
     if (this.attachTimes < 0) {
-      this.attachTimes = times;
+      this.attachTimes = getTimeStamp();
     }
   }
 
-  updateStartMoveTimes(times) {
+  updateStartMoveTimes() {
     if (this.startMoveTimes < 0) {
-      this.startMoveTimes = times
+      this.startMoveTimes = getTimeStamp();
     }
   }
 

@@ -379,8 +379,8 @@ class Channel extends BaseClass {
       }
 
       if (pos !== -1) {
-        if (danmu && danmu.updateAttachTimes && danmu.player) {
-          danmu.updateAttachTimes(danmu.player.currentTime * 1000);
+        if (danmu && danmu.updateAttachTimes) {
+          danmu.updateAttachTimes();
         }
         for (let i = pos, max = pos + occupy; i < max; i++) {
           channel = channels[i]
@@ -581,8 +581,8 @@ class Channel extends BaseClass {
       }
     }
     if (channelIndex > -1) {
-      if (this.danmu && this.danmu.updateAttachTimes && this.danmu.player) {
-        this.danmu.updateAttachTimes(this.danmu.player.currentTime * 1000);
+      if (this.danmu && this.danmu.updateAttachTimes) {
+        this.danmu.updateAttachTimes();
       }
       const channel = this.channels[channelIndex];
       channel.queue.scroll.unshift(bullet);

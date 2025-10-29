@@ -393,8 +393,8 @@ class Main extends BaseClass {
 
     if (list.length > 0 && channel.checkAvailableTrack(list[0].mode)) {
 
-      if (danmu && danmu.updateReadDataTimes && player) {
-        danmu.updateReadDataTimes(player.currentTime * 1000);
+      if (danmu && danmu.updateReadDataTimes) {
+        danmu.updateReadDataTimes();
       }
 
       // 提前更新轨道位置信息, 减少Bullet频繁读取容器dom信息
@@ -494,8 +494,8 @@ class Main extends BaseClass {
 
     for (let index = 0; index < list.length; index++) {
 
-      if (danmu && danmu.updateReadDataTimes && player) {
-        danmu.updateReadDataTimes(player.currentTime * 1000);
+      if (danmu && danmu.updateReadDataTimes) {
+        danmu.updateReadDataTimes();
       }
       const item = list[index];
       if (forceDuration && forceDuration !== item.duration) {
