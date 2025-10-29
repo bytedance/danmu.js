@@ -582,7 +582,7 @@ class Channel extends BaseClass {
     }
     if (channelIndex > -1) {
       if (this.danmu && this.danmu.updateAttachTimes && this.danmu.player) {
-        danmu.updateAttachTimes(this.danmu.player.currentTime * 1000);
+        this.danmu.updateAttachTimes(this.danmu.player.currentTime * 1000);
       }
       const channel = this.channels[channelIndex];
       channel.queue.scroll.unshift(bullet);
