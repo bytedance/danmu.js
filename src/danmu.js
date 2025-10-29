@@ -59,6 +59,9 @@ export class DanmuJs extends BaseClass {
     this.recycler = new RecyclableDomList() // TODO删除RecyclableDomList的逻辑
     this.getBoundingCounts = 0; // 统计获取元素位置次数
     this.danmuElCreateCounts = 0; // 创建弹幕元素次数
+    this.readDataTimes = -1; // 第一次成功readData的时间（相对于播放进度时间差）
+    this.attachTimes = -1; // 弹幕元素挂载时间(相对于播放进度时间差)
+    this.startMoveTimes = -1; // 弹幕元素开始调用移动方法
 
     // freezed comment
     this.freezeId = null
@@ -135,6 +138,24 @@ export class DanmuJs extends BaseClass {
       } else {
         this.danmuElCreateCounts++;
       }
+    }
+  }
+
+  updateReadDataTimes(times) {
+    if (this.readDataTimes < 0) {
+      this.readDataTimes = times;
+    }
+  }
+
+  updateAttachTimes(times) {
+    if (this.attachTimes < 0) {
+      this.attachTimes = times;
+    }
+  }
+
+  updateStartMoveTimes(times) {
+    if (this.startMoveTimes < 0) {
+      this.startMoveTimes = times
     }
   }
 

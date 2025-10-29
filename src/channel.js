@@ -379,6 +379,9 @@ class Channel extends BaseClass {
       }
 
       if (pos !== -1) {
+        if (danmu && danmu.updateAttachTimes && danmu.player) {
+          danmu.updateAttachTimes(danmu.player.currentTime * 1000);
+        }
         for (let i = pos, max = pos + occupy; i < max; i++) {
           channel = channels[i]
           channel.operating[bullet.mode] = true
@@ -533,43 +536,15 @@ class Channel extends BaseClass {
   }
 
   addBulletV1(bullet) {
-    if (!this.checkAvailableTrackV1()) {
-      return false;
-    }
     let channelIndex = -1;
-
-    // 空轨道
-    const emptyChannel = [];
-    // 已经完全进入屏幕的轨道
-    const fullEnterChannel = [];
-    // 不需要等待时间的轨道 
-    const noWaitChannel = [];
-    // 需要重新计算元素宽高的轨道
-    const recalculateChannel = [];
     const currentTime = getTimeStamp();
     
-    this.channels.forEach(item => {
-      if (item && item.queue && item.queue.scroll) {
-        if (item.freeze) {
-        } else if (item.queue.scroll.length === 0) {
-          emptyChannel.push(item);
-        } else if (item.queue.scroll[0]) {
-          if (item.queue.scroll[0].fullEnterTime < currentTime) {
-            fullEnterChannel.push(item);
-          } else if (!item.queue.scroll[0].waitTimeStamp) {
-            noWaitChannel.push(item);
-          } else if (item.queue.scroll[0].recalculate) {
-            recalculateChannel.push(item);
-          } 
-        }
+    for (let i = 0; i < this.channels.length; i++) {
+      const channel = this.channels[i];
+      // 轨道被冻结，不能入轨
+      if (channel.freeze) {
+        continue;
       }
-    }); 
-    const fullEnterChannelSorted = fullEnterChannel.sort((a, b) => a.queue.scroll[0].fell - b.queue.scroll[0].fullLeaveTime);
-    // 在元素进行入轨判断前，对轨道可用性进行排序，减少不必要的计算
-    const sortChannel = [...emptyChannel, ...fullEnterChannelSorted, ...noWaitChannel, ...recalculateChannel];
-
-    for (let i = 0; i < sortChannel.length; i++) {
-      const channel = sortChannel[i];
       const lastBullet = channel.queue.scroll[0];
       // 当前轨道为空
       if (!lastBullet || !lastBullet.el) {
@@ -605,8 +580,10 @@ class Channel extends BaseClass {
         break;
       }
     }
-    
     if (channelIndex > -1) {
+      if (this.danmu && this.danmu.updateAttachTimes && this.danmu.player) {
+        danmu.updateAttachTimes(this.danmu.player.currentTime * 1000);
+      }
       const channel = this.channels[channelIndex];
       channel.queue.scroll.unshift(bullet);
       bullet.channelIndex = channelIndex;
@@ -615,7 +592,6 @@ class Channel extends BaseClass {
       bullet.startMoveV1();
       return true;
     }
-
     return false;
   }
 
