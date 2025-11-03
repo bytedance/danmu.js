@@ -189,5 +189,5 @@ export const getTimeStamp = () => {
   if (typeof window !== 'undefined' && window.performance && typeof window.performance.now === 'function') {
     return performance.now();
   }
-  return new Date().getTime();
+  return Date.now();
 }

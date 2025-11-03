@@ -369,6 +369,15 @@ class Main extends BaseClass {
             item.start = currentTime
           }
         }
+
+        if (danmu.config.postOptimization) {
+           return (
+            !item.attached_ &&
+            danmu.hideArr.indexOf(item.mode) < 0 &&
+            (!item.color || danmu.hideArr.indexOf('color') < 0) &&
+            item.start - interval <= currentTime && (currentTime <= item.start + interval || item.prior)
+          );
+        }
         return (
           !item.attached_ &&
           danmu.hideArr.indexOf(item.mode) < 0 &&
@@ -378,7 +387,17 @@ class Main extends BaseClass {
         )
       })
 
-      if (danmu.config.highScorePriority) {
+      if (danmu.config.postOptimization) {
+        list.sort((prev, cur) => {
+          if (prev.prior && !cur.prior) {
+            return -1;
+          } else if (!prev.prior && cur.prior) {
+            return 1;
+          } else {
+            return (cur.score || -1) - (prev.score || -1);
+          }
+        });
+      } else if (danmu.config.highScorePriority) {
         // 高积分弹幕优先展示
         list.sort((prev, cur) => (cur.prior && !prev.prior) || (cur.score || -1) - (prev.score || -1))
       }
@@ -469,10 +488,24 @@ class Main extends BaseClass {
         if (!item.start) {
           item.start = currentTime;
         }
+        if (danmu.config.postOptimization) {
+          return !item.attached_ && item.start - interval <= currentTime && (currentTime <= item.start + interval || item.prior);
+        }
         return !item.attached_ && item.start - interval <= currentTime && currentTime <= item.start + interval;
       });
 
-      if (danmu.config.highScorePriority) {
+      if (danmu.config.postOptimization) {
+        list.sort((prev, cur) => {
+          if (prev.prior && !cur.prior) {
+              return -1;
+          } else if (!prev.prior && cur.prior) {
+              return 1;
+          } else {
+              // 然后按score降序排列
+              return (cur.score || -1) - (prev.score || -1);
+          }
+        });
+      } else if (danmu.config.highScorePriority) {
         list.sort((prev, cur) => (cur.prior && !prev.prior) || (cur.score || -1) - (prev.score || -1));
       }
 
