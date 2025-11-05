@@ -551,7 +551,7 @@ export class DanmuJs extends BaseClass {
     }
   }
 
-  setFontSizeV1(size) {
+  setFontSizeV1(size, channelSize) {
     if (!size || this.fontSize === `${size}px`) {
       return;
     }
@@ -566,7 +566,6 @@ export class DanmuJs extends BaseClass {
         data.style.fontSize = this.fontSize;
       }
     });
-    const channelSize = Number(size) + 20;
     const queue = this.main.queue;
     const maxTryLimit = 1000;
     let tryCount = 0;
@@ -594,7 +593,7 @@ export class DanmuJs extends BaseClass {
     this.config.channelSize = channelSize;
     this.updateQueueTimestamp();
     if (this.main && this.main.channel && this.main.channel.updateChannlState) {
-      this.main.channel.updateChannlState(Number(size) + 20);
+      this.main.channel.updateChannlState(channelSize);
     }
   }
 
