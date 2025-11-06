@@ -692,6 +692,9 @@ export class Bullet extends BaseClass {
     if (this.el) {
       this.el.style['fontSize'] = size
     }
+    if (this.danmu && this.danmu.config && this.danmu.config.fontSizeAdjust) {
+      this.el.style['height'] = size
+    }
   }
   setLikeDom(el, style) {
     if (el) {
