@@ -101,9 +101,12 @@ class Main extends BaseClass {
           return false
         }
       })
-      data.some((item) => {
+      data.some((item, index) => {
         if (item.id === bullet.id) {
-          item.attached_ = false
+          item.attached_ = false;
+          if (this.danmu && this.danmu.config && this.danmu.config.postOptimization && item.prior) {
+            data.splice(index, 1);
+          }
           return true
         } else {
           return false
