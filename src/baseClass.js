@@ -10,16 +10,16 @@ export default BaseClass
 
 /**
  * @typedef {{
- *  id: string
+ *  id?: string
  *  start: number
  *  duration: number
- *  prior: boolean
+ *  prior?: boolean
  *  score?: number // 积分越高，越容易展示
  *  txt?: string
  *  el?: HTMLElement | Function
  *  elLazyInit?: boolean // 配置了elLazyInit后，则通过hooks提供的时机进行el创建，该方式可减少dom数量
  *  mode: 'scroll' | 'top' | 'bottom'
- *  attached_: boolean // 内部属性，标记弹幕是否已经被入轨
+ *  attached_?: boolean // 内部属性，标记弹幕是否已经被入轨
  *  realTime?: boolean,
  *  color?: string,
  *  bookChannelId?: [number, any]
