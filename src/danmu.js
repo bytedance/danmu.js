@@ -593,7 +593,7 @@ export class DanmuJs extends BaseClass {
     this.config.channelSize = channelSize;
     this.updateQueueTimestamp();
     if (this.main && this.main.channel && this.main.channel.updateChannlState) {
-      this.main.channel.updateChannlState(channelSize);
+      this.main.channel.updateChannlState({ csize: channelSize });
     }
   }
 
@@ -688,10 +688,10 @@ export class DanmuJs extends BaseClass {
     }
   }
 
-  setAreaV1(area) {
+  setAreaV1(area, clearRedundant) {
     this.config.area = area;
     if (this.main && this.main.channel && this.main.channel.updateChannlState) {
-      this.main.channel.updateChannlState();
+      this.main.channel.updateChannlState({ clearRedundant });
     }
   }
 

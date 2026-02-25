@@ -939,7 +939,7 @@ class Channel extends BaseClass {
     }
   }
 
-  updateChannlState(csize) {
+  updateChannlState({ csize , clearRedundant }) {
     const { channelCount, channels, channelSize } = this._initChannels(csize);
     const originChannel = this.channels; // 原始轨道
     const availableChannel = originChannel.filter(item => !item.freeze); // 可用轨道
@@ -949,7 +949,14 @@ class Channel extends BaseClass {
       if (availableChannel.length < channelCount) { // 需要扩轨道
         this.channels = [...availableChannel, ...channels.slice(currentLen)];
       } else {
-        originChannel.forEach((item, index) => item.freeze = Boolean(index >= channelCount));
+        originChannel.forEach((item, index) => {
+          if (clearRedundant && index >= channelCount) {
+            item.queue.scroll.forEach(danmu => {
+              danmu.remove();
+            });
+          }
+          item.freeze = Boolean(index >= channelCount);
+        });
         this.channels = originChannel;
       }
     } else {
