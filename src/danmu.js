@@ -671,11 +671,11 @@ export class DanmuJs extends BaseClass {
     });
   }
 
-  setArea(size, channelSize, options) {
+  setArea(area, clearRedundant) {
     if (this.config && this.config.trackAllocationOptimization) {
-       this.setAreaV1(size, channelSize, options);
+       this.setAreaV1(area, clearRedundant);
     } else {
-      this.setAreaV0(size, channelSize, options);
+      this.setAreaV0(area);
     }
   }
 
