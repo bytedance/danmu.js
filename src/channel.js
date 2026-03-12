@@ -538,6 +538,9 @@ class Channel extends BaseClass {
   addBulletV1(bullet) {
     let channelIndex = -1;
     const currentTime = getTimeStamp();
+    if (!this.channels) {
+      return false;
+    }
     
     for (let i = 0; i < this.channels.length; i++) {
       const channel = this.channels[i];
