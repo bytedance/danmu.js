@@ -87,7 +87,7 @@ class Channel extends BaseClass {
     if (document.visibilityState !== 'visible') {
       return false;
     }
-    const available = this.channels.findIndex(channel => {
+    const available = this.channels && this.channels.findIndex(channel => {
       const lastBullet = channel.queue[mode][0];
       if (channel.freeze) {
         return false;

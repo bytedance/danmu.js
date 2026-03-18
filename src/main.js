@@ -226,7 +226,7 @@ class Main extends BaseClass {
       }
       if (this._status === 'playing') {
         this.readDataV1();  
-        this.queue.forEach((item) => {
+        this.queue && this.queue.forEach((item) => {
           if (item.status === 'waiting' || item.status === 'paused') {
             // 修复频繁切换倍速场景下，元素状态被置为paused时，无法继续播放的问题
             item.startMoveV1();
