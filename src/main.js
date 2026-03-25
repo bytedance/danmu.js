@@ -198,6 +198,8 @@ class Main extends BaseClass {
     self._cancelTick()
     self.sortData()
 
+    const interval = (self.danmu && self.danmu.config && self.danmu.config.pollingInterval) || 250
+
     function dataHandle() {
       if (self._status === 'closed' && self.retryStatus === 'stop') {
         self._cancelTick()
@@ -208,7 +210,7 @@ class Main extends BaseClass {
         self.dataHandle()
       }
       if (self.retryStatus !== 'stop' || self._status === 'paused') {
-        self.handleTimer = setTimeout(dataHandle, 250)
+        self.handleTimer = setTimeout(dataHandle, interval)
       }
     }
     dataHandle()
@@ -218,6 +220,8 @@ class Main extends BaseClass {
     this.retryStatus = 'normal';
     this._cancelTick();
     this.sortData();
+    const self = this
+    const interval = (self.danmu && self.danmu.config && self.danmu.config.pollingInterval) || 250
 
     const subTick = () => {
       if (this._status === 'closed' && this.retryStatus === 'stop') {
@@ -234,7 +238,7 @@ class Main extends BaseClass {
         });
       }
       if (this.retryStatus !== 'stop' || this._status === 'paused') {
-        this.handleTimer = setTimeout(subTick, 250);
+        this.handleTimer = setTimeout(subTick, interval);
       }
     }
     subTick();

@@ -118,7 +118,10 @@ export class DanmuJs extends BaseClass {
   }
 
   get containerPos() {
-    return this.main.channel.containerPos
+    if (this.main && this.main.channel && this.main.channel.containerPos) {
+      return this.main.channel.containerPos
+    }
+    return {}
   }
 
   updateGetBoundingCounts(counts) {
